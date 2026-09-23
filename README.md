@@ -31,17 +31,19 @@ The host imports the same types to drive the other end of the bridge.
 
 ## What the package exports
 
-| Import                            | Contents                                                                                                      |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `@lightfern/plugin-sdk`           | `connect()`, `ViewContext`/`FilesApi` types, manifest types and zod schema, `matchesPattern`, wire types.     |
-| `@lightfern/plugin-sdk/view`      | The root barrel plus the React bindings `usePath`, `useFile`, `useFileObjectUrl`. Served as `lightfern:host`. |
-| `@lightfern/plugin-sdk/manifest`  | Manifest types and `MANIFEST_VERSION`.                                                                        |
-| `@lightfern/plugin-sdk/match`     | The segment-aware glob matcher used for view `match` patterns.                                                |
-| `@lightfern/plugin-sdk/protocol`  | The message shapes that cross the sandbox boundary.                                                           |
-| `@lightfern/plugin-sdk/testing`   | `testManifest()` for tests.                                                                                   |
-| `@lightfern/plugin-sdk/theme.css` | The default plugin theme: `--lf-*` tokens for light and dark, plus base element rules.                        |
+| Import                             | Contents                                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `@lightfern/plugin-sdk`            | `connect()`, `ViewContext`/`FilesApi` types, manifest types and zod schema, `matchesPattern`, wire types.     |
+| `@lightfern/plugin-sdk/view`       | The root barrel plus the React bindings `usePath`, `useFile`, `useFileObjectUrl`. Served as `lightfern:host`. |
+| `@lightfern/plugin-sdk/manifest`   | Manifest types and `MANIFEST_VERSION`.                                                                        |
+| `@lightfern/plugin-sdk/match`      | The segment-aware glob matcher used for view `match` patterns.                                                |
+| `@lightfern/plugin-sdk/protocol`   | The message shapes that cross the sandbox boundary.                                                           |
+| `@lightfern/plugin-sdk/testing`    | `testManifest()` for tests.                                                                                   |
+| `@lightfern/plugin-sdk/theme.css`  | The default plugin theme: `--lf-*` tokens for light and dark, plus base element rules.                        |
+| `@lightfern/plugin-sdk/docs/*`     | The guide as raw markdown, for tools that serve it.                                                           |
+| `@lightfern/plugin-sdk/examples/*` | The reference plugin source.                                                                                  |
 
-Every export points at TypeScript source; there is no build step. The root barrel stays free of
+Every code export points at TypeScript source; there is no build step. The root barrel stays free of
 React so Node-side consumers can import it.
 
 ## Versioning
