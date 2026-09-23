@@ -3,7 +3,7 @@
 // an absolute filesystem path, and every operation is brokered and permission-checked
 // on the other side of the RPC channel.
 
-import type { FileChange, FileEncoding, FileEntry, PluginUser } from "./protocol";
+import type { CurrentUser, FileChange, FileEncoding, FileEntry } from "./protocol";
 
 export interface FileWriteOptions {
   /**
@@ -66,9 +66,9 @@ export interface FilesApi {
 export interface ViewContext {
   readonly pluginId: string;
   /** The signed-in Lightfern user, or `null` while signed out. Updates with the host's auth state. */
-  readonly user: PluginUser | null;
+  readonly currentUser: CurrentUser | null;
   /** Subscribe to sign-in, sign-out, or user changes. Returns an unsubscribe. */
-  onUserChange(listener: (user: PluginUser | null) => void): () => void;
+  onCurrentUserChange(listener: (user: CurrentUser | null) => void): () => void;
   /**
    * The opened node's path relative to the activation root: the file for a file view,
    * the folder for a folder view. A live value, not a snapshot — Lightfern keeps the view

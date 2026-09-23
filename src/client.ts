@@ -1,11 +1,11 @@
 import type { FilesApi, ViewContext } from "./context";
 import type {
+  CurrentUser,
   FileChange,
   FileEncoding,
   FileEntry,
   HostInitMessage,
   HostPushMessage,
-  PluginUser,
   RpcMethod,
   RpcRequest,
   RpcResponse,
@@ -68,7 +68,7 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
   let path = context.path;
   let user = context.user;
   const pathListeners = new Set<(path: string) => void>();
-  const userListeners = new Set<(user: PluginUser | null) => void>();
+  const userListeners = new Set<(user: CurrentUser | null) => void>();
   const watchers = new Set<{ path: string; listener: (change: FileChange) => void }>();
 
   const call = openChannel(port, (push) => {
@@ -111,10 +111,10 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
 
   return {
     pluginId: context.pluginId,
-    get user() {
+    get currentUser() {
       return user;
     },
-    onUserChange: (listener) => {
+    onCurrentUserChange: (listener) => {
       userListeners.add(listener);
       return () => userListeners.delete(listener);
     },

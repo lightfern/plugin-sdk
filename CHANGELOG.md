@@ -7,8 +7,8 @@ SDK implements.
 
 ## [Unreleased]
 
-- Expose the signed-in user's ID, name, email, and profile picture URL as `ctx.user`, with
-  `ctx.onUserChange` for sign-in state changes.
+- Expose the signed-in user's ID, name, email, and profile picture URL as `ctx.currentUser`, with
+  `ctx.onCurrentUserChange` and `useCurrentUser()` for sign-in state changes.
 
 ## [1.1.0] - 2026-09-23
 

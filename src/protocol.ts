@@ -18,10 +18,10 @@ export interface SerializableContext {
   pluginId: string;
   path: string;
   homePath: string;
-  user: PluginUser | null;
+  user: CurrentUser | null;
 }
 
-export interface PluginUser {
+export interface CurrentUser {
   id: string;
   name: string | null;
   email: string;
@@ -104,7 +104,7 @@ export interface PathChangedMessage {
 export interface UserChangedMessage {
   source: "lf-plugin-host";
   type: "user";
-  user: PluginUser | null;
+  user: CurrentUser | null;
 }
 
 // One node under the activation root that changed on disk. `path` is relative to the

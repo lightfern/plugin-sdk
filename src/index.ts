@@ -20,6 +20,7 @@ export {
 export { matchesPattern, validateMatchPattern } from "./match";
 export { validateNetworkPermission } from "./network";
 export type {
+  CurrentUser,
   FileChange,
   FileEncoding,
   FileEntry,
@@ -34,7 +35,6 @@ export type {
   HostSelectionMessage,
   OpenParams,
   PathChangedMessage,
-  PluginUser,
   RpcError,
   RpcMethod,
   RpcRequest,

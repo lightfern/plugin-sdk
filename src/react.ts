@@ -6,7 +6,13 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { hostContext } from "./client";
-import type { FileEncoding } from "./protocol";
+import type { CurrentUser, FileEncoding } from "./protocol";
+
+/** The signed-in user, re-rendering when the desktop auth state changes. */
+export function useCurrentUser(): CurrentUser | null {
+  const ctx = hostContext();
+  return useSyncExternalStore(ctx.onCurrentUserChange, () => ctx.currentUser);
+}
 
 /** The opened node's path, re-rendering the view whenever the user navigates. */
 export function usePath(): string {

@@ -106,12 +106,12 @@ describe("connect", () => {
     expect(ctx.pluginId).toBe("com.lightfern.csv");
     expect(ctx.path).toBe("data.csv");
     expect(ctx.homePath).toBe("csv-viewer");
-    expect(ctx.user?.name).toBe("Ada Lovelace");
+    expect(ctx.currentUser?.name).toBe("Ada Lovelace");
 
     const onUserChange = vi.fn();
-    const offUserChange = ctx.onUserChange(onUserChange);
+    const offUserChange = ctx.onCurrentUserChange(onUserChange);
     port.push({ source: "lf-plugin-host", type: "user", user: null });
-    expect(ctx.user).toBeNull();
+    expect(ctx.currentUser).toBeNull();
     expect(onUserChange).toHaveBeenCalledWith(null);
     offUserChange();
 

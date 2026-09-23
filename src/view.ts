@@ -3,4 +3,4 @@
 // Node-side tooling imports it, where react is neither wanted nor resolvable.
 
 export * from "./index";
-export { useFile, useFileObjectUrl, usePath } from "./react";
+export { useCurrentUser, useFile, useFileObjectUrl, usePath } from "./react";
