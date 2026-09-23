@@ -1,0 +1,143 @@
+/*
+ * Lightfern's default plugin theme. The host links this stylesheet into every plugin
+ * view, so a plugin that does nothing already looks like Lightfern; a plugin that wants
+ * its own look overrides these from its own styles.css (loaded after this one).
+ *
+ * It exposes the --lf-* design tokens a view should build from — surfaces, ink, borders,
+ * accent, elevation, radius, spacing, motion — resolved for both colour schemes, plus a
+ * few base element rules. Style with `var(--lf-…)` rather than hard-coded colours so a
+ * view tracks light and dark for free.
+ *
+ * Deliberately static and self-contained: no external variables, no runtime messaging.
+ * A plugin view is its own document with no access to the app's stylesheets, so the token
+ * values are baked here as literals, mirroring the Lightfern app's design tokens. The
+ * frame follows dark mode through its own prefers-color-scheme — the same signal the app
+ * follows — so the two stay in step with nothing sent across the sandbox boundary.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --font-geist: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+
+  --lf-surface: #ffffff;
+  --lf-surface-page: #faf8f5;
+  --lf-surface-quiet: #fefdfc;
+  --lf-surface-raised: #ffffff;
+  --lf-surface-inset: #eeedea;
+  --lf-surface-hover: oklch(0 0 0 / 0.04);
+  --lf-surface-selected: oklch(0 0 0 / 0.06);
+
+  /*
+   * A card inside the view. The frame's ground is the app's elevated surface, so which
+   * neighbour reads as a card flips by scheme: on a light ground the raised step is the
+   * same white, while on a dark one the step down to highlight is a hole. So the card is
+   * highlight on light and raised on dark.
+   */
+  --lf-surface-card: #fefdfc;
+
+  --lf-content: #3b3935;
+  --lf-content-secondary: #54514b;
+  --lf-content-muted: #706d67;
+  --lf-content-subtle: #908d87;
+
+  --lf-border-subtle: oklch(0 0 0 / 0.06);
+  --lf-border: oklch(0 0 0 / 0.08);
+  --lf-border-strong: oklch(0 0 0 / 0.12);
+
+  --lf-accent: #6c77a7;
+  --lf-success: #899d8e;
+  --lf-danger: #a87062;
+  --lf-ring: #b5b2ac;
+
+  --lf-shadow:
+    0 1px 2px 0 oklch(0.3 0.02 72 / 0.07), inset 0 0 0 0.5px oklch(0 0 0 / 0.17);
+  --lf-shadow-lg:
+    0 1px 2px 0 oklch(0.3 0.02 72 / 0.07), 0 6px 10px -1px oklch(0.35 0.016 74 / 0.08),
+    inset 0 0 0 0.5px oklch(0 0 0 / 0.18);
+  --lf-hairline: inset 0 0 0 1px oklch(0 0 0 / 0.08);
+
+  --lf-radius-sm: 8px;
+  --lf-radius: 9px;
+  --lf-radius-lg: 12px;
+
+  --lf-gap-xs: 4px;
+  --lf-gap-sm: 8px;
+  --lf-gap: 12px;
+  --lf-gap-lg: 16px;
+
+  --lf-duration: 120ms;
+  --lf-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --lf-surface: oklch(0.18 0 0);
+    --lf-surface-page: oklch(0.14 0 0);
+    --lf-surface-quiet: oklch(0.12 0 0);
+    --lf-surface-raised: oklch(0.23 0 0);
+    --lf-surface-inset: oklch(1 0 0 / 0.055);
+    --lf-surface-hover: oklch(1 0 0 / 0.035);
+    --lf-surface-selected: oklch(1 0 0 / 0.065);
+    --lf-surface-card: oklch(0.23 0 0);
+
+    --lf-content: oklch(0.95 0 0);
+    --lf-content-secondary: oklch(0.78 0 0);
+    --lf-content-muted: oklch(0.58 0 0);
+    --lf-content-subtle: oklch(0.48 0 0);
+
+    --lf-border-subtle: oklch(1 0 0 / 0.07);
+    --lf-border: oklch(1 0 0 / 0.1);
+    --lf-border-strong: oklch(1 0 0 / 0.14);
+
+    --lf-ring: #f8f7f5;
+
+    --lf-shadow: 0 1px 2px 0 oklch(0 0 0 / 0.4), inset 0 0 0 0.5px oklch(1 0 0 / 0.08);
+    --lf-shadow-lg:
+      0 1px 3px 0 oklch(0 0 0 / 0.4), 0 6px 16px -4px oklch(0 0 0 / 0.45),
+      inset 0 0 0 0.5px oklch(1 0 0 / 0.1);
+    --lf-hairline: inset 0 0 0 1px oklch(1 0 0 / 0.08);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/*
+ * min-height, never height: the iframe already has a resolved height from its slot, and
+ * pinning it would make a long view unscrollable.
+ */
+html {
+  min-height: 100%;
+}
+
+/*
+ * The frame is mounted inside an elevated surface, so that surface — not the page field —
+ * is what makes it read as one piece.
+ *
+ * No font-variation-settings anywhere in this sheet: Geist carries a 100..900 weight
+ * range, so plain font-weight interpolates the axis. Setting the axis here would inherit
+ * to everything and quietly make every font-weight in a plugin's own CSS inert. And no
+ * user-select: none — a plugin's view is content, and content is selectable.
+ */
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--lf-surface);
+  color: var(--lf-content);
+  font-family: var(--font-geist);
+  font-size: 14px;
+  line-height: 1.43;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  accent-color: var(--lf-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--lf-ring);
+  outline-offset: 2px;
+}

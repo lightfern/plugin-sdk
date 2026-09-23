@@ -1,0 +1,57 @@
+{
+  "name": "@lightfern/plugin-sdk",
+  "version": "1.0.0",
+  "description": "The contract between Lightfern plugins and the Lightfern desktop host: manifest schema, view context, React bindings, wire protocol and theme tokens.",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lightfern/plugin-sdk.git"
+  },
+  "homepage": "https://github.com/lightfern/plugin-sdk#readme",
+  "bugs": "https://github.com/lightfern/plugin-sdk/issues",
+  "type": "module",
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./view": "./src/view.ts",
+    "./match": "./src/match.ts",
+    "./manifest": "./src/manifest.ts",
+    "./testing": "./src/testing.ts",
+    "./protocol": "./src/protocol.ts",
+    "./theme.css": "./src/theme.css"
+  },
+  "scripts": {
+    "test": "vitest",
+    "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.examples.json",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "globals": "^17.4.0",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.7.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.61.1",
+    "vitest": "^4.1.11"
+  },
+  "peerDependencies": {
+    "react": "^19.2.8"
+  }
+}

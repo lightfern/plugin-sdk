@@ -1,0 +1,12 @@
+{
+  "manifestVersion": 1,
+  "id": "recruiting-ats",
+  "name": "Recruiting ATS",
+  "version": "1.0.0",
+  "dependencies": { "react": "19.2.0", "react-dom": "19.2.0" },
+  "permissions": ["files.read", "files.write"],
+  "contributes": {
+    "home": { "entry": "src/home.tsx" },
+    "views": [{ "match": "candidates/*.md", "entry": "src/candidate.tsx" }]
+  }
+}
