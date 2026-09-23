@@ -18,6 +18,14 @@ export interface SerializableContext {
   pluginId: string;
   path: string;
   homePath: string;
+  user: PluginUser | null;
+}
+
+export interface PluginUser {
+  id: string;
+  name: string | null;
+  email: string;
+  profilePictureUrl: string | null;
 }
 
 export interface ViewReadyMessage {
@@ -65,7 +73,10 @@ export interface ViewFixRequestMessage {
 
 // Everything the view posts up to the host window (not over the port).
 export type ViewMessage =
-  ViewReadyMessage | ViewKeyDownMessage | ViewSelectionMessage | ViewFixRequestMessage;
+  | ViewReadyMessage
+  | ViewKeyDownMessage
+  | ViewSelectionMessage
+  | ViewFixRequestMessage;
 
 // Selection commands the host posts to the view window (not over the port — they are
 // answered by the same host-authored script that forwards the selection up, which runs
@@ -90,6 +101,12 @@ export interface PathChangedMessage {
   path: string;
 }
 
+export interface UserChangedMessage {
+  source: "lf-plugin-host";
+  type: "user";
+  user: PluginUser | null;
+}
+
 // One node under the activation root that changed on disk. `path` is relative to the
 // activation root. A move or rename is reported as a `deleted` at the old path plus a
 // `created` at the new one — the snapshot diff can't pair the two halves. Folders never
@@ -110,10 +127,18 @@ export interface FilesChangedMessage {
 }
 
 // Everything the host pushes to a view over the port after the handshake.
-export type HostPushMessage = PathChangedMessage | FilesChangedMessage;
+export type HostPushMessage =
+  | PathChangedMessage
+  | FilesChangedMessage
+  | UserChangedMessage;
 
 export type RpcMethod =
-  "files.read" | "files.write" | "files.list" | "files.move" | "files.delete" | "open";
+  | "files.read"
+  | "files.write"
+  | "files.list"
+  | "files.move"
+  | "files.delete"
+  | "open";
 
 // "utf-8" (the default) decodes to a string; "binary" returns the raw bytes untouched,
 // for content a text decode would corrupt (an image, a PDF).

@@ -218,6 +218,14 @@ folder for a home view, the opened file for a file view. `ctx.homePath` is the p
 (where its `manifest.json` sits) relative to that same root. It never moves as `ctx.path` does, so a
 file view can reach its home without hardcoding the folder name. `ctx.pluginId` is also available.
 
+`ctx.user` is the signed-in Lightfern user, or `null` when signed out. It has `id`, `email`, `name`
+(nullable), and `profilePictureUrl` (nullable). Use the stable `id` for ownership in shared data
+such as a game leaderboard, and `name` or `profilePictureUrl` for display. The value updates when
+desktop sign-in state changes; subscribe with `ctx.onUserChange(listener)` if the view needs to
+react while it stays open. This identity is public to the plugin and is not an authentication
+credential. Rendering a remote `profilePictureUrl` requires its origin in the plugin's
+`network_permissions`.
+
 `ctx.open(path, newTab?)` → `void` opens another node exactly as a click in the library would:
 routing to a file's view, opening a plugin's `home` view for its own folder, or revealing an
 ordinary folder in the tree. The path may not reach beyond the folder the plugin lives in;

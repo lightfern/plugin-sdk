@@ -5,6 +5,11 @@ All notable changes to this package are documented here. The format follows
 [docs/versioning.md](docs/versioning.md), where the major version equals the `manifestVersion` the
 SDK implements.
 
+## [Unreleased]
+
+- Expose the signed-in user's ID, name, email, and profile picture URL as `ctx.user`, with
+  `ctx.onUserChange` for sign-in state changes.
+
 ## [1.1.0] - 2026-09-23
 
 - Export `./docs/*` and `./examples/*`, so a consumer can load the guide and the reference plugin
