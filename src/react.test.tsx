@@ -42,7 +42,7 @@ async function connectTo(port: ReturnType<typeof fakeHost>, path: string) {
     data: {
       source: "lf-plugin-host",
       type: "init",
-      context: { pluginId: "deck", path },
+      context: { pluginId: "deck", path, homePath: "deck", user: null },
     },
   });
   Object.defineProperty(init, "ports", { value: [port] });
@@ -51,6 +51,36 @@ async function connectTo(port: ReturnType<typeof fakeHost>, path: string) {
 }
 
 describe("the React bindings", () => {
+  it("re-renders the current user on sign-in and sign-out", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "deck");
+    const { useCurrentUser } = await import("./react");
+
+    function View() {
+      return <span>{useCurrentUser()?.name ?? "Signed out"}</span>;
+    }
+
+    render(<View />);
+    expect(screen.getByText("Signed out")).toBeDefined();
+    await act(async () => {
+      port.push({
+        source: "lf-plugin-host",
+        type: "user",
+        user: {
+          id: "user-1",
+          name: "Ada Lovelace",
+          email: "ada@example.com",
+          profilePictureUrl: null,
+        },
+      });
+    });
+    expect(screen.getByText("Ada Lovelace")).toBeDefined();
+    await act(async () => {
+      port.push({ source: "lf-plugin-host", type: "user", user: null });
+    });
+    expect(screen.getByText("Signed out")).toBeDefined();
+  });
+
   it("re-renders the open file's text on navigation, and never shows the previous file's", async () => {
     const port = fakeHost({
       "Lightfern.md": "# Lightfern",

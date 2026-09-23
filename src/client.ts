@@ -1,5 +1,6 @@
 import type { FilesApi, ViewContext } from "./context";
 import type {
+  CurrentUser,
   FileChange,
   FileEncoding,
   FileEntry,
@@ -65,13 +66,18 @@ export function hostContext(): ViewContext {
 
 function createContext(context: SerializableContext, port: MessagePort): ViewContext {
   let path = context.path;
+  let user = context.user;
   const pathListeners = new Set<(path: string) => void>();
+  const userListeners = new Set<(user: CurrentUser | null) => void>();
   const watchers = new Set<{ path: string; listener: (change: FileChange) => void }>();
 
   const call = openChannel(port, (push) => {
     if (push.type === "path") {
       path = push.path;
       for (const listener of pathListeners) listener(path);
+    } else if (push.type === "user") {
+      user = push.user;
+      for (const listener of userListeners) listener(user);
     } else {
       for (const change of push.changes) {
         for (const watcher of watchers) {
@@ -105,6 +111,13 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
 
   return {
     pluginId: context.pluginId,
+    get currentUser() {
+      return user;
+    },
+    onCurrentUserChange: (listener) => {
+      userListeners.add(listener);
+      return () => userListeners.delete(listener);
+    },
     get path() {
       return path;
     },

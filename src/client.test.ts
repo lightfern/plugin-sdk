@@ -50,6 +50,12 @@ async function connectWithHost(port: ReturnType<typeof createFakeHostPort>) {
         pluginId: "com.lightfern.csv",
         path: "data.csv",
         homePath: "csv-viewer",
+        user: {
+          id: "user-1",
+          name: "Ada Lovelace",
+          email: "ada@example.com",
+          profilePictureUrl: "https://example.com/ada.png",
+        },
       },
     },
   });
@@ -100,6 +106,14 @@ describe("connect", () => {
     expect(ctx.pluginId).toBe("com.lightfern.csv");
     expect(ctx.path).toBe("data.csv");
     expect(ctx.homePath).toBe("csv-viewer");
+    expect(ctx.currentUser?.name).toBe("Ada Lovelace");
+
+    const onUserChange = vi.fn();
+    const offUserChange = ctx.onCurrentUserChange(onUserChange);
+    port.push({ source: "lf-plugin-host", type: "user", user: null });
+    expect(ctx.currentUser).toBeNull();
+    expect(onUserChange).toHaveBeenCalledWith(null);
+    offUserChange();
 
     await expect(ctx.files.read("data.csv")).resolves.toBe("id,name\n1,Ada");
     await expect(ctx.files.read("logo.png", "binary")).resolves.toEqual(

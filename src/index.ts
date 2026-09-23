@@ -20,6 +20,7 @@ export {
 export { matchesPattern, validateMatchPattern } from "./match";
 export { validateNetworkPermission } from "./network";
 export type {
+  CurrentUser,
   FileChange,
   FileEncoding,
   FileEntry,
@@ -39,6 +40,7 @@ export type {
   RpcRequest,
   RpcResponse,
   SerializableContext,
+  UserChangedMessage,
   ViewFixRequestMessage,
   ViewKeyDownMessage,
   ViewMessage,
