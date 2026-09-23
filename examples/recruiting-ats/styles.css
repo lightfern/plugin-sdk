@@ -1,0 +1,36 @@
+/* Geist at 14px is already on `body`; the tokens carry the rest. */
+body {
+  margin: 0;
+  padding: var(--lf-gap-lg);
+}
+
+.board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--lf-gap);
+  align-items: start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lf-gap-sm);
+}
+
+.column h2 {
+  margin: 0 0 var(--lf-gap-xs);
+  color: var(--lf-content-secondary);
+}
+
+.card {
+  width: 100%;
+  text-align: left;
+  padding: var(--lf-gap-sm) var(--lf-gap);
+  border: none;
+  border-radius: var(--lf-radius);
+  background: var(--lf-surface-card);
+  color: var(--lf-content);
+  box-shadow: var(--lf-hairline);
+  cursor: pointer;
+}
