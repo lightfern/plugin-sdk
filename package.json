@@ -31,7 +31,12 @@
     "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.examples.json",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,md,yml,yaml}": "prettier --write",
+    ".prettierrc": "prettier --write"
   },
   "dependencies": {
     "zod": "^4.4.3"
@@ -45,8 +50,10 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "globals": "^17.4.0",
+    "husky": "^9.1.7",
     "jsdom": "^29.1.1",
-    "prettier": "^3.7.4",
+    "lint-staged": "^16.4.0",
+    "prettier": "3.9.8",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "typescript": "~6.0.3",

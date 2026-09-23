@@ -73,10 +73,7 @@ export interface ViewFixRequestMessage {
 
 // Everything the view posts up to the host window (not over the port).
 export type ViewMessage =
-  | ViewReadyMessage
-  | ViewKeyDownMessage
-  | ViewSelectionMessage
-  | ViewFixRequestMessage;
+  ViewReadyMessage | ViewKeyDownMessage | ViewSelectionMessage | ViewFixRequestMessage;
 
 // Selection commands the host posts to the view window (not over the port — they are
 // answered by the same host-authored script that forwards the selection up, which runs
@@ -128,17 +125,10 @@ export interface FilesChangedMessage {
 
 // Everything the host pushes to a view over the port after the handshake.
 export type HostPushMessage =
-  | PathChangedMessage
-  | FilesChangedMessage
-  | UserChangedMessage;
+  PathChangedMessage | FilesChangedMessage | UserChangedMessage;
 
 export type RpcMethod =
-  | "files.read"
-  | "files.write"
-  | "files.list"
-  | "files.move"
-  | "files.delete"
-  | "open";
+  "files.read" | "files.write" | "files.list" | "files.move" | "files.delete" | "open";
 
 // "utf-8" (the default) decodes to a string; "binary" returns the raw bytes untouched,
 // for content a text decode would corrupt (an image, a PDF).
