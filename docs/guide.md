@@ -175,11 +175,11 @@ empty `<div id="root">`. Your entry module connects to the host and mounts. That
 - **Bare** imports resolve through the host-injected import map. Nothing is installed, and nothing
   else is importable:
 
-  | Import                 | What it is                                                                                                                         |
-  | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                  |
-  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFileObjectUrl()`, and `useCurrentUser()`. Requires `react` in `dependencies`.        |
-  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`. |
+  | Import                 | What it is                                                                                                                                 |
+  | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                          |
+  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, and `useCurrentUser()`. Requires `react` in `dependencies`. |
+  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.         |
 
   Declare every bare package import in `dependencies`, including React peer dependencies. Lightfern
   serves only its local cached output to the frame; a CDN `<script>` and `import` from a URL remain
@@ -252,6 +252,18 @@ const path = usePath();
 const text = useFile(path); // null until the first read lands — never the file you just left
 ```
 
+`useFolder(path)` lists the folder's immediate files and subfolders as `FileEntry[]`, or `null`
+until the first listing lands. It re-lists when an immediate entry is created, deleted, or renamed;
+changes to file contents do not change the listing. Like `useFile`, it drops the previous folder's
+entries when `path` changes:
+
+```tsx
+import { useFolder } from "lightfern:host/react";
+
+const entries = useFolder("candidates");
+return entries?.map((entry) => <div key={entry.path}>{entry.name}</div>);
+```
+
 Write with `ctx.files.write`: your own write comes back as a disk change, so the view re-renders
 from disk.
 
@@ -279,8 +291,8 @@ await ctx.files.write("cover.png", new Uint8Array(await res.arrayBuffer()));
 
 Underneath are `ctx.path` (live), `ctx.onPathChange(next => …)` and
 `ctx.files.watch(path, listener)`. Reach for those when the bindings do not fit, e.g. a view that
-must do something other than re-read. A watcher is pinned to the path you pass, so re-register it
-when the path moves.
+must read each listed file's contents as in the reference plugin. A watcher is pinned to the path
+you pass, so re-register it when the path moves.
 
 `watch` filters by that path: a **file** path fires only for that file, a **folder** path (or `""`,
 the folder the plugin lives in) for anything in its subtree: a child added/removed/renamed, or a

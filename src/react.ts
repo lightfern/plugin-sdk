@@ -6,7 +6,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { hostContext } from "./client";
-import type { CurrentUser, FileEncoding } from "./protocol";
+import type { CurrentUser, FileEncoding, FileEntry } from "./protocol";
 
 /** The signed-in user, re-rendering when the desktop auth state changes. */
 export function useCurrentUser(): CurrentUser | null {
@@ -58,6 +58,37 @@ export function useFile(
   }, [ctx, path, encoding]);
 
   return loaded?.path === path ? loaded.value : null;
+}
+
+/** The folder's immediate entries, or `null` until the first listing lands. Re-lists when an entry is added or removed. */
+export function useFolder(path: string): FileEntry[] | null {
+  const ctx = hostContext();
+  const [loaded, setLoaded] = useState<{ path: string; entries: FileEntry[] } | null>(
+    null
+  );
+
+  useEffect(() => {
+    let live = true;
+    let request = 0;
+    const list = () => {
+      const current = ++request;
+      void ctx.files.list(path).then((entries) => {
+        if (live && current === request) setLoaded({ path, entries });
+      });
+    };
+    const offWatch = ctx.files.watch(path, (change) => {
+      if (change.type === "changed") return;
+      const child = path ? change.path.slice(path.length + 1) : change.path;
+      if (change.path === path || (child && !child.includes("/"))) list();
+    });
+    list();
+    return () => {
+      live = false;
+      offWatch();
+    };
+  }, [ctx, path]);
+
+  return loaded?.path === path ? loaded.entries : null;
 }
 
 /**

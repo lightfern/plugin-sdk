@@ -34,7 +34,7 @@ The host imports the same types to drive the other end of the bridge.
 | Import                             | Contents                                                                                                                              |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `@lightfern/plugin-sdk`            | `connect()`, `ViewContext`/`FilesApi` types, manifest types and zod schema, `matchesPattern`, wire types. Served as `lightfern:host`. |
-| `@lightfern/plugin-sdk/react`      | The React bindings `usePath`, `useFile`, `useFileObjectUrl`, `useCurrentUser`. Served as `lightfern:host/react`.                      |
+| `@lightfern/plugin-sdk/react`      | The React bindings `usePath`, `useFile`, `useFolder`, `useFileObjectUrl`, `useCurrentUser`. Served as `lightfern:host/react`.         |
 | `@lightfern/plugin-sdk/manifest`   | Manifest types and `MANIFEST_VERSION`.                                                                                                |
 | `@lightfern/plugin-sdk/match`      | The segment-aware glob matcher used for view `match` patterns.                                                                        |
 | `@lightfern/plugin-sdk/protocol`   | The message shapes that cross the sandbox boundary.                                                                                   |
