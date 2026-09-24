@@ -9,11 +9,11 @@ export type FilePermission = "files.read" | "files.write";
 
 export type PluginPermission = FilePermission;
 
-/** The manifest schema versions this host contract supports; grows to `1 | 2` on a bump. */
-export type ManifestVersion = 1;
+/** The manifest schema versions this host contract supports. */
+export type ManifestVersion = 1 | 2;
 
 /** The one integer governing the whole plugin contract. See {@link PluginManifest.manifestVersion}. */
-export const MANIFEST_VERSION: ManifestVersion = 1;
+export const MANIFEST_VERSION: ManifestVersion = 2;
 
 /** Bare import specifier → exact browser-package version. */
 export type PluginDependencies = Record<string, string>;
@@ -63,7 +63,7 @@ export interface PluginManifest {
   /**
    * The plugin contract this manifest is written against. One version covers the manifest
    * schema, the host API (`ctx`, RPC, pushes), the wire protocol, the `lightfern:host`
-   * imports, and the `--lf-*` theme tokens. Always `1` today.
+   * imports, and the `--lf-*` theme tokens. Always `2` for a new plugin.
    */
   manifestVersion: ManifestVersion;
   /** Stable, globally unique reverse-domain identifier. */

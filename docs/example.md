@@ -20,7 +20,7 @@ line and some `- [ ]` interview steps.
 
 ## `manifest.json`
 
-Declares `manifestVersion: 1`, exact React versions in `dependencies`, both file permissions, a home
+Declares `manifestVersion: 2`, exact React versions in `dependencies`, both file permissions, a home
 view and one file view whose `match` is `candidates/*.md`. Nothing else is needed: no
 `package.json`, no build config.
 

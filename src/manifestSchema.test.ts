@@ -60,8 +60,8 @@ describe("safeParseManifest", () => {
     expectErrorContaining(bare, "manifestVersion");
   });
 
-  it("rejects manifestVersion 2", () => {
-    expectErrorContaining({ ...clone(), manifestVersion: 2 }, "manifestVersion");
+  it("rejects manifestVersion 1", () => {
+    expectErrorContaining({ ...clone(), manifestVersion: 1 }, "manifestVersion");
   });
 
   it("rejects an id that is not URL-safe", () => {

@@ -1,7 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "paths": { "lightfern:host": ["./src/view.ts"] }
+    "paths": {
+      "lightfern:host": ["./src/index.ts"],
+      "lightfern:host/react": ["./src/react.ts"]
+    }
   },
   "include": ["examples/**/*.ts", "examples/**/*.tsx"]
 }

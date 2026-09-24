@@ -7,6 +7,17 @@ SDK implements.
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-24
+
+`manifestVersion: 2`. A plugin that doesn't use React no longer needs `react` in its dependencies.
+
+- **Breaking:** the React bindings (`usePath`, `useFile`, `useFileObjectUrl`, `useCurrentUser`) move
+  from `lightfern:host` to `lightfern:host/react`, and the package export `./view` becomes
+  `./react`. `lightfern:host` is now React-free, so a view that only imports `connect()` loads
+  without declaring `react`.
+
+## [1.2.0] - 2026-09-23
+
 - Expose the signed-in user's ID, name, email, and profile picture URL as `ctx.currentUser`, with
   `ctx.onCurrentUserChange` and `useCurrentUser()` for sign-in state changes.
 
@@ -29,5 +40,7 @@ Initial public release of the `manifestVersion: 1` plugin contract.
 - `theme.css`: the `--lf-*` design tokens the host links into every view.
 - Authoring guide under `docs/` and the Recruiting ATS reference plugin under `examples/`.
 
+[2.0.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.0.0
+[1.2.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v1.2.0
 [1.1.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v1.1.0
 [1.0.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v1.0.0

@@ -58,7 +58,7 @@ assistant to write them. Concretely:
 
 ```json
 {
-  "manifestVersion": 1,
+  "manifestVersion": 2,
   "id": "recruiting-ats",
   "name": "Recruiting ATS",
   "version": "1.0.0",
@@ -71,10 +71,10 @@ assistant to write them. Concretely:
 }
 ```
 
-- `manifestVersion`: required, always `1`. Names the plugin contract this manifest is written
-  against: the manifest schema, the `ctx`/RPC/event host API, the `lightfern:host` imports, and the
-  `--lf-*` theme tokens. Lightfern refuses a version it doesn't support and shows an error in the
-  plugin's view instead of running it. See [Versioning](versioning.md).
+- `manifestVersion`: required, `2` for a new plugin. Names the plugin contract this manifest is
+  written against: the manifest schema, the `ctx`/RPC/event host API, the `lightfern:host` imports,
+  and the `--lf-*` theme tokens. Lightfern refuses a version it doesn't support and shows an error
+  in the plugin's view instead of running it. See [Versioning](versioning.md).
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every plugin in the library** (two
   plugins sharing an `id` serve one bundle), a human-readable name, and a semver string (display
@@ -175,10 +175,11 @@ empty `<div id="root">`. Your entry module connects to the host and mounts. That
 - **Bare** imports resolve through the host-injected import map. Nothing is installed, and nothing
   else is importable:
 
-  | Import                | What it is                                                                                                                         |
-  | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-  | `lightfern:host`      | The plugin SDK: `connect()`, plus React bindings `usePath()`, `useFile()`, and `useFileObjectUrl()`.                               |
-  | A declared dependency | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`. |
+  | Import                 | What it is                                                                                                                         |
+  | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                  |
+  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFileObjectUrl()`, and `useCurrentUser()`. Requires `react` in `dependencies`.        |
+  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`. |
 
   Declare every bare package import in `dependencies`, including React peer dependencies. Lightfern
   serves only its local cached output to the frame; a CDN `<script>` and `import` from a URL remain
@@ -245,7 +246,7 @@ in a `useEffect([])` goes stale on both.
 that file and re-reads it on every disk change, dropping the old watch when the path moves:
 
 ```tsx
-import { useFile, usePath } from "lightfern:host";
+import { useFile, usePath } from "lightfern:host/react";
 
 const path = usePath();
 const text = useFile(path); // null until the first read lands — never the file you just left
@@ -259,7 +260,7 @@ from disk.
 when the path changes or the file is replaced, so a long-lived view doesn't leak URLs:
 
 ```tsx
-import { useFileObjectUrl } from "lightfern:host";
+import { useFileObjectUrl } from "lightfern:host/react";
 
 const src = useFileObjectUrl("cover.png"); // null until the first read lands
 return src && <img src={src} alt="" />;

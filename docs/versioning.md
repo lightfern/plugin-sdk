@@ -9,7 +9,7 @@ Releases of this repository are git tags, `vMAJOR.MINOR.PATCH`. The package is c
 A plugin's `manifest.json` declares the contract it is written against:
 
 ```json
-{ "manifestVersion": 1 }
+{ "manifestVersion": 2 }
 ```
 
 That one integer covers the manifest schema, the `ctx`/RPC/event host API, the `lightfern:host`
