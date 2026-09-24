@@ -213,24 +213,20 @@ filesystem, no reach beyond the folder the plugin lives in. Every path is relati
 rejected. Write data the plugin produces to the surrounding folder or a subfolder of it, alongside
 the files already kept there. Don't treat the plugin folder as a private data store.
 
-**Prefer YAML for structured data files** that people or the assistant will read and edit. Keep
-`manifest.json` as JSON. For YAML data, add an exact version of the browser-compatible
-[`yaml`](https://eemeli.org/yaml/) package to the manifest's `dependencies` (for example,
-`"yaml": "2.9.0"`), then use it with `ctx.files.read` and `ctx.files.write`:
+**Prefer JSON for structured data a plugin owns.** `JSON.parse` and `JSON.stringify` are built into
+the browser, and `JSON.stringify` writes compact files without an extra dependency:
 
 ```ts
-import { parseDocument } from "yaml";
-
-const path = "candidates/aida.yaml";
-const candidate = parseDocument(await ctx.files.read(path));
-candidate.set("stage", "Confirmed");
-await ctx.files.write(path, candidate.toString(), { overwrite: true });
+const path = "candidates/aida.json";
+const candidate = JSON.parse(await ctx.files.read(path));
+candidate.stage = "Confirmed";
+await ctx.files.write(path, JSON.stringify(candidate), { overwrite: true });
 ```
 
-Lightfern prepares the declared parser and serves it locally like other plugin dependencies. Quote
-values that must stay strings but resemble dates, numbers, booleans, or null. `parseDocument` keeps
-comments and key order when the plugin edits a file. Use another format when the files already have
-one or when the data is primarily tabular.
+When people will edit the raw files directly, use formatted JSON or YAML instead. A YAML plugin must
+declare an exact version of a browser-compatible parser such as [`yaml`](https://eemeli.org/yaml/)
+in its manifest's `dependencies`. Keep `manifest.json` as JSON, and preserve an existing file format
+when a plugin works with other people's files.
 
 `ctx.path` is the opened node's path relative to the folder the plugin lives in: the plugin's own
 folder for a home view, the opened file for a file view. `ctx.homePath` is the plugin's own folder
