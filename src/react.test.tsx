@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { HostPushMessage, RpcRequest, RpcResponse } from "./protocol";
+import type { FileEntry, HostPushMessage, RpcRequest, RpcResponse } from "./protocol";
 
 // `connect()` memoizes its handshake in module scope, so each test loads a fresh copy.
 beforeEach(() => {
@@ -12,15 +12,22 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// The host end of the transferred port: answers files.read out of `disk`, and `push`
+// The host end of the transferred port: answers reads and listings, and `push`
 // replays a host-initiated message (a new path, a disk change) back to the client.
-function fakeHost(disk: Record<string, string>) {
+function fakeHost(
+  disk: Record<string, string>,
+  folders: Record<string, FileEntry[]> = {}
+) {
   const port = {
     onmessage: null as ((event: MessageEvent) => void) | null,
     start() {},
     postMessage(request: RpcRequest) {
       const { path } = request.params as { path: string };
-      const response: RpcResponse = { id: request.id, ok: true, result: disk[path] };
+      const response: RpcResponse = {
+        id: request.id,
+        ok: true,
+        result: request.method === "files.list" ? folders[path] : disk[path],
+      };
       queueMicrotask(() => port.onmessage?.({ data: response } as MessageEvent));
     },
     push(message: HostPushMessage) {
@@ -129,6 +136,65 @@ describe("the React bindings", () => {
     });
 
     expect(await screen.findByText("second")).toBeDefined();
+  });
+
+  it("keeps a folder's immediate entries in sync without re-listing on content changes", async () => {
+    const folders: Record<string, FileEntry[]> = {
+      candidates: [{ path: "candidates/ada.md", name: "ada.md", kind: "file" }],
+      archive: [{ path: "archive/grace.md", name: "grace.md", kind: "file" }],
+    };
+    const port = fakeHost({}, folders);
+    const postMessage = vi.spyOn(port, "postMessage");
+    await connectTo(port, "deck");
+    const { useFolder } = await import("./react");
+
+    function View({ path }: { path: string }) {
+      const entries = useFolder(path);
+      return <span>{entries?.map((entry) => entry.name).join(", ") ?? "loading"}</span>;
+    }
+
+    const { rerender } = render(<View path="candidates" />);
+    expect(screen.getByText("loading")).toBeDefined();
+    expect(await screen.findByText("ada.md")).toBeDefined();
+
+    await act(async () => {
+      port.push({
+        source: "lf-plugin-host",
+        type: "files.change",
+        changes: [
+          { type: "changed", path: "candidates/ada.md" },
+          { type: "created", path: "candidates/subfolder/nested.md" },
+        ],
+      });
+    });
+    expect(postMessage).toHaveBeenCalledTimes(1);
+
+    folders.candidates = [
+      ...folders.candidates,
+      { path: "candidates/lin.md", name: "lin.md", kind: "file" },
+    ];
+    await act(async () => {
+      port.push({
+        source: "lf-plugin-host",
+        type: "files.change",
+        changes: [{ type: "created", path: "candidates/lin.md" }],
+      });
+    });
+    expect(await screen.findByText("ada.md, lin.md")).toBeDefined();
+
+    folders.candidates = folders.candidates.filter((entry) => entry.name !== "ada.md");
+    await act(async () => {
+      port.push({
+        source: "lf-plugin-host",
+        type: "files.change",
+        changes: [{ type: "deleted", path: "candidates/ada.md" }],
+      });
+    });
+    expect(await screen.findByText("lin.md")).toBeDefined();
+
+    rerender(<View path="archive" />);
+    expect(screen.getByText("loading")).toBeDefined();
+    expect(await screen.findByText("grace.md")).toBeDefined();
   });
 
   it("gives a binary file an object URL and revokes it when the view unmounts", async () => {
