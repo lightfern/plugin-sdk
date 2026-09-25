@@ -9,10 +9,11 @@ export type {
   PluginPermission,
   ViewContribution,
 } from "./manifest";
-export { MANIFEST_VERSION, manifestEntries } from "./manifest";
+export { MANIFEST_VERSION, manifestEntries, supportsManifestVersion } from "./manifest";
 export {
   formatManifestErrors,
   manifestSchema,
+  manifestVersionSchema,
   type ParsedManifest,
   parseManifest,
   safeParseManifest,

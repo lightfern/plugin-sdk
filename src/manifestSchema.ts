@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import type { PluginManifest } from "./manifest";
-import { MANIFEST_VERSION } from "./manifest";
+import type { ManifestVersion, PluginManifest } from "./manifest";
+import { MANIFEST_VERSION, supportsManifestVersion } from "./manifest";
 import { validateMatchPattern } from "./match";
 import { validateNetworkPermission } from "./network";
 
@@ -36,10 +36,25 @@ const homeViewSchema = z.object({
   title: z.string().min(1).optional(),
 });
 
+/** `"MAJOR.MINOR"`, or a legacy integer `N` normalized to `"N.0"`. */
+export const manifestVersionSchema = z.union([
+  z
+    .string()
+    .regex(/^\d+\.\d+$/, 'must be "MAJOR.MINOR"')
+    .transform((version) => version as ManifestVersion),
+  z
+    .number()
+    .int()
+    .transform((major): ManifestVersion => `${major}.0`),
+]);
+
 export const manifestSchema = z.object({
-  manifestVersion: z.literal(MANIFEST_VERSION, {
-    message: `must be ${MANIFEST_VERSION}`,
-  }),
+  manifestVersion: manifestVersionSchema.refine(
+    (version) => supportsManifestVersion(MANIFEST_VERSION, version),
+    {
+      message: `must be ${MANIFEST_VERSION.split(".")[0]}.x, no newer than ${MANIFEST_VERSION}`,
+    }
+  ),
   id: z
     .string()
     .regex(PLUGIN_ID, "must be lowercase alphanumeric with '.' or '-' separators"),

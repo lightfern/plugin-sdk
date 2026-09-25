@@ -2,14 +2,20 @@
 
 All notable changes to this package are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow the scheme in
-[docs/versioning.md](docs/versioning.md), where the major version equals the `manifestVersion` the
+[docs/versioning.md](docs/versioning.md), where the major and minor equal the `manifestVersion` the
 SDK implements.
 
 ## [Unreleased]
 
 ## [2.0.0] - 2026-09-24
 
-`manifestVersion: 2`. A plugin that doesn't use React no longer needs `react` in its dependencies.
+`manifestVersion: "2.0"`. A plugin that doesn't use React no longer needs `react` in its
+dependencies.
+
+- `manifestVersion` is now a string that includes the minor version, like `"2.0"`, so a plugin can
+  say it needs something from a newer release. Lightfern runs a plugin when they're on the same
+  major version and Lightfern's minor version is the same or newer. Plain numbers like `2` still
+  work and mean `"2.0"`. Adds `supportsManifestVersion` and `manifestVersionSchema`.
 
 - **Breaking:** the React bindings (`usePath`, `useFile`, `useFileObjectUrl`, `useCurrentUser`) move
   from `lightfern:host` to `lightfern:host/react`, and the package export `./view` becomes

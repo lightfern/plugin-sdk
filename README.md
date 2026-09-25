@@ -48,11 +48,12 @@ React so Node-side consumers can import it.
 
 ## Versioning
 
-Tags are semver and the major version equals the `manifestVersion` the SDK implements: `v1.x.y`
-means `manifestVersion: 1`, `v2.x.y` means `manifestVersion: 2`. Additive changes bump minor, fixes
-bump patch, and a contract break bumps both the major and `MANIFEST_VERSION` in the same commit.
-Details in [docs/versioning.md](docs/versioning.md). The package is consumed via git and is not
-published to npm.
+Tags follow semver, and a plugin's `manifestVersion` is the tag's major and minor version, so
+`v2.0.3` means `manifestVersion` `"2.0"`. Fixes bump the patch version, additive changes bump the
+minor, and breaking changes bump the major. Lightfern runs a plugin when they're on the same major
+version and Lightfern's minor version is the same or newer. Details in
+[docs/versioning.md](docs/versioning.md). The package is consumed via git and is not published to
+npm.
 
 ## Development
 

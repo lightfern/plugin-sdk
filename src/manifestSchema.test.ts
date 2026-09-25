@@ -26,6 +26,12 @@ describe("parseManifest", () => {
     expect(manifest.contributes.views).toHaveLength(1);
   });
 
+  it("reads a legacy integer manifestVersion as MAJOR.0", () => {
+    expect(parseManifest({ ...clone(), manifestVersion: 2 }).manifestVersion).toBe(
+      "2.0"
+    );
+  });
+
   it("defaults an omitted network_permissions to an empty array", () => {
     const { network_permissions: _omitted, ...bare } = clone();
     expect(parseManifest(bare).network_permissions).toEqual([]);
@@ -60,8 +66,16 @@ describe("safeParseManifest", () => {
     expectErrorContaining(bare, "manifestVersion");
   });
 
-  it("rejects manifestVersion 1", () => {
-    expectErrorContaining({ ...clone(), manifestVersion: 1 }, "manifestVersion");
+  it("rejects another major", () => {
+    expectErrorContaining({ ...clone(), manifestVersion: "1.2" }, "manifestVersion");
+  });
+
+  it("rejects a minor newer than the SDK's", () => {
+    expectErrorContaining({ ...clone(), manifestVersion: "2.1" }, "manifestVersion");
+  });
+
+  it("rejects a decimal number", () => {
+    expectErrorContaining({ ...clone(), manifestVersion: 2.1 }, "manifestVersion");
   });
 
   it("rejects an id that is not URL-safe", () => {
