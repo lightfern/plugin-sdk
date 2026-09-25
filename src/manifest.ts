@@ -9,11 +9,21 @@ export type FilePermission = "files.read" | "files.write";
 
 export type PluginPermission = FilePermission;
 
-/** The manifest schema versions this host contract supports. */
-export type ManifestVersion = 1 | 2;
+/** `"MAJOR.MINOR"`, matching the SDK release tag `vMAJOR.MINOR.x`. */
+export type ManifestVersion = `${number}.${number}`;
 
-/** The one integer governing the whole plugin contract. See {@link PluginManifest.manifestVersion}. */
-export const MANIFEST_VERSION: ManifestVersion = 2;
+/** The contract version this SDK implements. See {@link PluginManifest.manifestVersion}. */
+export const MANIFEST_VERSION: ManifestVersion = "2.0";
+
+/** Minors only add to the contract, so a host serves its own major at any minor up to its own. */
+export function supportsManifestVersion(
+  supported: ManifestVersion,
+  declared: ManifestVersion
+): boolean {
+  const [supportedMajor, supportedMinor] = supported.split(".").map(Number);
+  const [major, minor] = declared.split(".").map(Number);
+  return major === supportedMajor && minor! <= supportedMinor!;
+}
 
 /** Bare import specifier → exact browser-package version. */
 export type PluginDependencies = Record<string, string>;
@@ -63,7 +73,9 @@ export interface PluginManifest {
   /**
    * The plugin contract this manifest is written against. One version covers the manifest
    * schema, the host API (`ctx`, RPC, pushes), the wire protocol, the `lightfern:host`
-   * imports, and the `--lf-*` theme tokens. Always `2` for a new plugin.
+   * imports, and the `--lf-*` theme tokens. Declare the minor too (`"2.1"` when the plugin
+   * uses something added in 2.1) so an older host refuses it instead of running it broken.
+   * A legacy integer `2` parses as `"2.0"`. Always `"2.0"` for a new plugin.
    */
   manifestVersion: ManifestVersion;
   /** Stable, globally unique reverse-domain identifier. */

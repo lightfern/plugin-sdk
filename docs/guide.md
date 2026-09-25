@@ -58,7 +58,7 @@ assistant to write them. Concretely:
 
 ```json
 {
-  "manifestVersion": 2,
+  "manifestVersion": "2.0",
   "id": "recruiting-ats",
   "name": "Recruiting ATS",
   "version": "1.0.0",
@@ -71,10 +71,11 @@ assistant to write them. Concretely:
 }
 ```
 
-- `manifestVersion`: required, `2` for a new plugin. Names the plugin contract this manifest is
+- `manifestVersion`: required, `"2.0"` for a new plugin. Names the plugin contract this manifest is
   written against: the manifest schema, the `ctx`/RPC/event host API, the `lightfern:host` imports,
-  and the `--lf-*` theme tokens. Lightfern refuses a version it doesn't support and shows an error
-  in the plugin's view instead of running it. See [Versioning](versioning.md).
+  and the `--lf-*` theme tokens. Declare the lowest minor with everything the plugin uses. Lightfern
+  runs any minor on its major up to its own, refuses a newer minor or another major, and shows an
+  error in the plugin's view instead of running it. See [Versioning](versioning.md).
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every plugin in the library** (two
   plugins sharing an `id` serve one bundle), a human-readable name, and a semver string (display

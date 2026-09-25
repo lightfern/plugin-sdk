@@ -48,11 +48,12 @@ React so Node-side consumers can import it.
 
 ## Versioning
 
-Tags are semver and the major version equals the `manifestVersion` the SDK implements: `v1.x.y`
-means `manifestVersion: 1`, `v2.x.y` means `manifestVersion: 2`. Additive changes bump minor, fixes
-bump patch, and a contract break bumps both the major and `MANIFEST_VERSION` in the same commit.
-Details in [docs/versioning.md](docs/versioning.md). The package is consumed via git and is not
-published to npm.
+Tags are semver and `manifestVersion` is the tag's major and minor: `v2.0.y` implements
+`manifestVersion: "2.0"`. Additive changes bump the minor, fixes bump the patch, and a contract
+break bumps the major; `MANIFEST_VERSION` follows the minor and major bumps in the same commit. A
+host serves any plugin on its major whose minor is no newer than its own. Details in
+[docs/versioning.md](docs/versioning.md). The package is consumed via git and is not published to
+npm.
 
 ## Development
 
