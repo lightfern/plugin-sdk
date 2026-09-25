@@ -1,4 +1,5 @@
-import { connect, useFile, usePath } from "lightfern:host";
+import { connect } from "lightfern:host";
+import { useFile, usePath } from "lightfern:host/react";
 import { createRoot } from "react-dom/client";
 
 const ctx = await connect();

@@ -42,7 +42,7 @@ export default tseslint.config(
     rules,
   },
   {
-    // The reference plugin imports `lightfern:host`, which only resolves through the
+    // The reference plugin imports `lightfern:host` and `lightfern:host/react`, which only resolve through the
     // examples tsconfig's path mapping.
     files: ["examples/**/*.{ts,tsx}"],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

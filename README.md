@@ -31,17 +31,17 @@ The host imports the same types to drive the other end of the bridge.
 
 ## What the package exports
 
-| Import                             | Contents                                                                                                      |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `@lightfern/plugin-sdk`            | `connect()`, `ViewContext`/`FilesApi` types, manifest types and zod schema, `matchesPattern`, wire types.     |
-| `@lightfern/plugin-sdk/view`       | The root barrel plus the React bindings `usePath`, `useFile`, `useFileObjectUrl`. Served as `lightfern:host`. |
-| `@lightfern/plugin-sdk/manifest`   | Manifest types and `MANIFEST_VERSION`.                                                                        |
-| `@lightfern/plugin-sdk/match`      | The segment-aware glob matcher used for view `match` patterns.                                                |
-| `@lightfern/plugin-sdk/protocol`   | The message shapes that cross the sandbox boundary.                                                           |
-| `@lightfern/plugin-sdk/testing`    | `testManifest()` for tests.                                                                                   |
-| `@lightfern/plugin-sdk/theme.css`  | The default plugin theme: `--lf-*` tokens for light and dark, plus base element rules.                        |
-| `@lightfern/plugin-sdk/docs/*`     | The guide as raw markdown, for tools that serve it.                                                           |
-| `@lightfern/plugin-sdk/examples/*` | The reference plugin source.                                                                                  |
+| Import                             | Contents                                                                                                                              |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `@lightfern/plugin-sdk`            | `connect()`, `ViewContext`/`FilesApi` types, manifest types and zod schema, `matchesPattern`, wire types. Served as `lightfern:host`. |
+| `@lightfern/plugin-sdk/react`      | The React bindings `usePath`, `useFile`, `useFileObjectUrl`, `useCurrentUser`. Served as `lightfern:host/react`.                      |
+| `@lightfern/plugin-sdk/manifest`   | Manifest types and `MANIFEST_VERSION`.                                                                                                |
+| `@lightfern/plugin-sdk/match`      | The segment-aware glob matcher used for view `match` patterns.                                                                        |
+| `@lightfern/plugin-sdk/protocol`   | The message shapes that cross the sandbox boundary.                                                                                   |
+| `@lightfern/plugin-sdk/testing`    | `testManifest()` for tests.                                                                                                           |
+| `@lightfern/plugin-sdk/theme.css`  | The default plugin theme: `--lf-*` tokens for light and dark, plus base element rules.                                                |
+| `@lightfern/plugin-sdk/docs/*`     | The guide as raw markdown, for tools that serve it.                                                                                   |
+| `@lightfern/plugin-sdk/examples/*` | The reference plugin source.                                                                                                          |
 
 Every code export points at TypeScript source; there is no build step. The root barrel stays free of
 React so Node-side consumers can import it.
@@ -49,10 +49,10 @@ React so Node-side consumers can import it.
 ## Versioning
 
 Tags are semver and the major version equals the `manifestVersion` the SDK implements: `v1.x.y`
-means `manifestVersion: 1`. Additive changes bump minor, fixes bump patch, and a contract break
-bumps both the major and `MANIFEST_VERSION` in the same commit. Details in
-[docs/versioning.md](docs/versioning.md). The package is consumed via git and is not published to
-npm.
+means `manifestVersion: 1`, `v2.x.y` means `manifestVersion: 2`. Additive changes bump minor, fixes
+bump patch, and a contract break bumps both the major and `MANIFEST_VERSION` in the same commit.
+Details in [docs/versioning.md](docs/versioning.md). The package is consumed via git and is not
+published to npm.
 
 ## Development
 
