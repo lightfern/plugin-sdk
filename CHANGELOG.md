@@ -7,6 +7,8 @@ SDK implements.
 
 ## [Unreleased]
 
+- Add `useFolder(path)` to keep a folder's immediate entries in sync with disk changes.
+
 ## [2.0.0] - 2026-09-24
 
 `manifestVersion: "2.0"`. A plugin that doesn't use React no longer needs `react` in its

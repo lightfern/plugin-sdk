@@ -33,6 +33,8 @@ Clicking a card calls `ctx.open(path)`, which routes to the file view below.
 
 It stays in sync by watching the folder: `ctx.files.watch("candidates", …)` re-runs the load
 whenever a candidate is added, removed, renamed or edited, and the effect returns the unsubscribe.
+For a list that only needs entry names and kinds, `useFolder("candidates")` handles this
+automatically; this view watches directly because it also reads each file's `Stage:` line.
 
 ## `styles.css`
 
