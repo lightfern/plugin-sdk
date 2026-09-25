@@ -74,7 +74,7 @@ describe("safeParseManifest", () => {
     expectErrorContaining({ ...clone(), manifestVersion: "2.1" }, "manifestVersion");
   });
 
-  it("rejects a decimal number, which cannot tell 2.1 from 2.10", () => {
+  it("rejects a decimal number", () => {
     expectErrorContaining({ ...clone(), manifestVersion: 2.1 }, "manifestVersion");
   });
 
