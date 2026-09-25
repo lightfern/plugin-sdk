@@ -20,9 +20,9 @@ line and some `- [ ]` interview steps.
 
 ## `manifest.json`
 
-Declares `manifestVersion: "2.0"`, exact React versions in `dependencies`, both file permissions, a
-home view and one file view whose `match` is `candidates/*.md`. Nothing else is needed: no
-`package.json`, no build config.
+The manifest uses `manifestVersion` `"2.0"`, pins exact React versions in `dependencies`, and asks
+for both file permissions. It has a home view and one file view that opens any file matching
+`candidates/*.md`. That's all it needs: there's no `package.json` and no build config.
 
 ## `src/home.tsx`: the home view
 

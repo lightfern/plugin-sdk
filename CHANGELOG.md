@@ -12,9 +12,10 @@ SDK implements.
 `manifestVersion: "2.0"`. A plugin that doesn't use React no longer needs `react` in its
 dependencies.
 
-- `manifestVersion` is now a `"MAJOR.MINOR"` string, so a plugin can require the minor it depends
-  on. A host serves any minor on its major up to its own. A legacy integer `N` still reads as
-  `"N.0"`. Adds `supportsManifestVersion` and `manifestVersionSchema`.
+- `manifestVersion` is now a string that includes the minor version, like `"2.0"`, so a plugin can
+  say it needs something from a newer release. Lightfern runs a plugin when they're on the same
+  major version and Lightfern's minor version is the same or newer. Plain numbers like `2` still
+  work and mean `"2.0"`. Adds `supportsManifestVersion` and `manifestVersionSchema`.
 
 - **Breaking:** the React bindings (`usePath`, `useFile`, `useFileObjectUrl`, `useCurrentUser`) move
   from `lightfern:host` to `lightfern:host/react`, and the package export `./view` becomes

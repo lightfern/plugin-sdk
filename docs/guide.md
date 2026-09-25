@@ -71,11 +71,12 @@ assistant to write them. Concretely:
 }
 ```
 
-- `manifestVersion`: required, `"2.0"` for a new plugin. Names the plugin contract this manifest is
-  written against: the manifest schema, the `ctx`/RPC/event host API, the `lightfern:host` imports,
-  and the `--lf-*` theme tokens. Declare the lowest minor with everything the plugin uses. Lightfern
-  runs any minor on its major up to its own, refuses a newer minor or another major, and shows an
-  error in the plugin's view instead of running it. See [Versioning](versioning.md).
+- `manifestVersion`: required. Use `"2.0"` for a new plugin. This is the SDK version your plugin is
+  built against, and it covers the manifest format, the `ctx` API, the `lightfern:host` imports, and
+  the `--lf-*` theme tokens. If your plugin uses something added in a later release, say 2.1, put
+  `"2.1"` here. Lightfern runs your plugin as long as it's on the same major version and at least
+  your minor version. Otherwise it shows an error in the plugin's view. See
+  [Versioning](versioning.md).
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every plugin in the library** (two
   plugins sharing an `id` serve one bundle), a human-readable name, and a semver string (display

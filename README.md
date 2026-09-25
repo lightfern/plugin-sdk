@@ -48,10 +48,10 @@ React so Node-side consumers can import it.
 
 ## Versioning
 
-Tags are semver and `manifestVersion` is the tag's major and minor: `v2.0.y` implements
-`manifestVersion: "2.0"`. Additive changes bump the minor, fixes bump the patch, and a contract
-break bumps the major; `MANIFEST_VERSION` follows the minor and major bumps in the same commit. A
-host serves any plugin on its major whose minor is no newer than its own. Details in
+Tags follow semver, and a plugin's `manifestVersion` is the tag's major and minor version, so
+`v2.0.3` means `manifestVersion` `"2.0"`. Fixes bump the patch version, additive changes bump the
+minor, and breaking changes bump the major. Lightfern runs a plugin when they're on the same major
+version and Lightfern's minor version is the same or newer. Details in
 [docs/versioning.md](docs/versioning.md). The package is consumed via git and is not published to
 npm.
 

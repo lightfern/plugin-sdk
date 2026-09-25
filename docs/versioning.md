@@ -27,10 +27,10 @@ equals the tag's major and minor:
   adding a new `ctx` method.
 - **Major**: bump this for any and all breaking changes.
 
-A host serves a plugin whose major matches and whose minor is no newer than its own: a `"2.1"` host
-runs `"2.0"` and `"2.1"` plugins, and refuses `"2.2"` (it may lack what the plugin uses) and
-`"3.0"`. So a plugin should declare the lowest minor that has everything it uses. A legacy integer
-`2` reads as `"2.0"`.
+Lightfern runs a plugin when they're on the same major version and Lightfern's minor version is the
+same or newer. For example, Lightfern on 2.1 runs plugins built for 2.0 and 2.1, but not 2.2 or 3.0.
+So a plugin should declare the oldest version that has everything it uses. Older manifests with a
+plain number like `2` are treated as `"2.0"`.
 
 ## Cutting a release
 
