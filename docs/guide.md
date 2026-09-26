@@ -12,7 +12,7 @@ Companion documents:
 - [Styling](styling.md): the `--lf-*` design tokens and the CSS recipes that make a view look like
   part of the app.
 - [The sandbox](sandbox.md): what a view can and cannot do inside its iframe, including network
-  requests, keyboard shortcuts and text selection.
+  requests, screen wake lock, background workers, keyboard shortcuts and text selection.
 - [Reference plugin](example.md): a walkthrough of the Recruiting ATS example.
 - [Versioning](versioning.md): how `manifestVersion` and this repository's tags relate.
 
@@ -83,15 +83,17 @@ assistant to write them. Concretely:
   metadata only, for an in-folder plugin).
 - `dependencies`: optional browser packages, keyed by package name with an **exact** version.
   Lightfern downloads and caches their esm.sh browser modules before serving them from the local
-  plugin origin; a view never executes a remote script. Declare `react` and `react-dom` when using
-  React/TSX. Peer dependencies must be declared too.
+  plugin origin; dependencies are not loaded from remote script URLs. Declare `react` and
+  `react-dom` when using React/TSX. Peer dependencies must be declared too.
 - `permissions`: the file capabilities the plugin uses: `files.read`, `files.write`. Declare exactly
   what the views call; using an undeclared capability fails.
 - `network_permissions`: optional; allowed network origins, empty by default. An entry is an
   `https://` origin, optionally with a `*.` subdomain wildcard: `https://api.example.com`,
   `https://*.example.com` (matches subdomains only, not `example.com` itself). No paths, no
   `http://`, no `ws(s)://`. A declared origin can serve fetch/XHR data and non-code image, font, and
-  media assets; it never permits remote JavaScript or workers.
+  media assets. It does not permit remote JavaScript or worker URLs. A view can run code from a blob
+  worker, so never turn fetched content into worker code; see
+  [The sandbox](sandbox.md#background-workers).
 - `contributes.home`: the plugin's home view (see below). Optional, but it's the usual reason to
   build a plugin.
 - `contributes.views`: file views (see **File views**). Optional; omit it for a home-only app.
