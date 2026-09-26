@@ -7,6 +7,9 @@ SDK implements.
 
 ## [Unreleased]
 
+- The guide now tells plugins to save their data files as compact JSON, while keeping
+  `manifest.json` indented.
+
 ## [2.0.0] - 2026-09-24
 
 `manifestVersion: "2.0"`. A plugin that doesn't use React no longer needs `react` in its
