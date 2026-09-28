@@ -7,6 +7,8 @@ SDK implements.
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-09-28
+
 - The guide now tells plugins to save their data files as compact JSON, while keeping
   `manifest.json` indented.
 - Document screen wake lock, fullscreen, inline styles and blob workers in the sandbox guide.
@@ -50,6 +52,7 @@ Initial public release of the `manifestVersion: 1` plugin contract.
 - `theme.css`: the `--lf-*` design tokens the host links into every view.
 - Authoring guide under `docs/` and the Recruiting ATS reference plugin under `examples/`.
 
+[2.0.1]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.0.1
 [2.0.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.0.0
 [1.2.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v1.2.0
 [1.1.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v1.1.0
