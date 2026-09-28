@@ -7,6 +7,10 @@ SDK implements.
 
 ## [Unreleased]
 
+- The guide now tells plugins to save their data files as compact JSON, while keeping
+  `manifest.json` indented.
+- Document screen wake lock, fullscreen, inline styles and blob workers in the sandbox guide.
+
 ## [2.0.0] - 2026-09-24
 
 `manifestVersion: "2.0"`. A plugin that doesn't use React no longer needs `react` in its
