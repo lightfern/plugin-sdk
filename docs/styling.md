@@ -6,9 +6,7 @@ plugin frame, so they render unstyled. Write real CSS.
 
 ## Choosing a look
 
-Decide this before writing any CSS: should the view look like Lightfern, or like the thing it is
-about? Ask whether the plugin is a tool for working with the user's files, or whether the view is
-itself what the user came to look at.
+Before writing any CSS, decide whether the view should look like Lightfern or like its subject.
 
 **Match the app when the plugin is a tool:** a tracker, a dashboard, a CRM or applicant tracker, a
 file browser, a form, a settings screen, a viewer for notes or tables. These sit beside the rest of
@@ -24,8 +22,8 @@ tools belong here.
 - **Documents meant to leave the app.** An invoice, résumé, slide deck, poster, invitation, or
   newsletter. They get printed, exported or shared, so style them as the finished page, usually a
   light page that stays light in dark mode.
-- **Someone else's brand.** A mockup of a client's site, a brand kit, a report, a presentation, or a
-  portal in a company's colours and type.
+- **Someone else's brand.** A client's site, brand kit, report, presentation, or portal should match
+  the company's colours and type.
 - **Media-first views.** A photo gallery, a lightbox, a video or music player, a mood board. The
   media carries the view, so keep the chrome minimal.
 - **Personal and playful spaces.** A kid's chore chart, a journal, a habit tracker someone asked to
