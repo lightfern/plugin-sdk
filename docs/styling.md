@@ -1,8 +1,8 @@
 # Styling a plugin view
 
 Styling is a plain `styles.css` at the plugin root, linked into the view document by convention.
-Target its class names from your JSX. Do **not** use Tailwind classes: there is no Tailwind in the
-plugin frame, so they render unstyled. Write real CSS.
+Target its class names from your JSX. Do **not** use Tailwind or the app's own classes: neither
+exists in the plugin frame, so they render unstyled. Write real CSS.
 
 ## Choosing a look
 
@@ -42,10 +42,12 @@ the tokens.
 
 ## Matching the app
 
-Lightfern serves its own design tokens into the frame, so a view can be built from the same colours,
-shapes, spacing and type as the window around it. Every value below is a CSS variable. Use them
-instead of writing a colour, a radius or a shadow of your own. The stylesheet that defines them is
-[`src/theme.css`](../src/theme.css).
+Lightfern serves its design tokens into the frame as the CSS variables below, defined in
+[`src/theme.css`](../src/theme.css). Build from them, never from a hex colour, an `rgb()`, a `px`
+radius or a hand-rolled `box-shadow`. Each token already resolves for the active scheme, so the view
+follows dark mode for free, and a literal is what breaks when the scheme switches. For a genuine
+structural difference in the dark (a heavier shadow, say), use
+`@media (prefers-color-scheme: dark)`.
 
 | Variable                                                                | Use                                                                   |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------- |
@@ -123,25 +125,12 @@ A native `<select>` draws its own chevron over your `padding-right`; set `appear
 the chevron yourself, and reserve room for it. An icon-only button wants a square `width`/`height`
 matching the control height, `padding: 0`, and `display: grid; place-items: center`.
 
-## Dark mode, type, and what to avoid
+## Type
 
-**Dark mode needs nothing from you.** Each `--lf-*` token already resolves to the right value for
-the active scheme, so a plugin styled in `var(--lf-…)` follows dark mode for free. If you genuinely
-need one structural difference in the dark (a heavier shadow, say), match the app on
-`@media (prefers-color-scheme: dark)`; don't branch on colour literals.
-
-**Type.** Geist is loaded and already applied to `body` at 14px. Never `@font-face` or `@import` a
-font to get the app's face. Plain `font-weight: 600` works (Geist is a variable font over 100..900).
-For another family, `@import` it from Google Fonts (see
+Geist is loaded and already applied to `body` at 14px. Never `@font-face` or `@import` a font to get
+the app's face. Plain `font-weight: 600` works (Geist is a variable font over 100..900). For another
+family, `@import` it from Google Fonts (see
 [Giving a view its own look](#giving-a-view-its-own-look)).
-
-**Don't** write a hex colour, an `rgb()`, a `px` radius or a hand-rolled `box-shadow` in a view that
-matches the app. A literal is exactly what breaks when the user switches scheme, and it is the one
-thing that makes a plugin look bolted on.
-
-**What is not in the frame**: Tailwind, the app's components and their classes, and its
-`user-select: none` chrome default. A view's content is selectable, which is right for content. The
-document gives you `#root`, the `--lf-*` tokens, and Geist; layout is yours.
 
 ## Giving a view its own look
 
