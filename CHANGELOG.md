@@ -7,6 +7,8 @@ SDK implements.
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-09-29
+
 - The styling guide now says when a view should have its own look instead of matching the app
   (games, documents meant to leave the app, brands, media, formats with a fixed look), and what a
   themed view must get right: no `--lf-*` tokens, a restyled `body`, every state themed, and fonts
@@ -65,6 +67,7 @@ Initial public release of the `manifestVersion: 1` plugin contract.
 - `theme.css`: the `--lf-*` design tokens the host links into every view.
 - Authoring guide under `docs/` and the Recruiting ATS reference plugin under `examples/`.
 
+[2.1.1]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.1.1
 [2.1.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.1.0
 [2.0.1]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.0.1
 [2.0.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.0.0
