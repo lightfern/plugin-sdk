@@ -35,13 +35,14 @@ Charts are a partial case. Lightfern has one accent plus success and danger, whi
 a chart with five series or a heatmap. Keep the app's look for the view and give just the chart its
 own palette, one that holds up in both schemes.
 
-If the user asked for a look ("style it like Vercel", "make it feel like a spreadsheet"), that wins.
-If they didn't, judge from the subject rather than asking: a "D&D initiative tracker" wants a
-fantasy look although nobody said so, and an "applicant tracker" wants Lightfern's.
+If the user asked for a look ("make it look like a newspaper", "make it feel like a spreadsheet"),
+that wins. If they didn't, judge from the subject rather than asking: a "D&D initiative tracker"
+obviously wants a fantasy look, and an "applicant tracker" wants Lightfern's. When in doubt, match
+the app.
 
-Whichever you pick, commit to it. A themed view is themed throughout; a Lightfern toolbar across the
-top of a parchment map looks like two plugins stacked. The recipes below for cards, controls and
-edges still apply to a themed view, with its own colours in place of the tokens.
+Whichever you pick, commit to it. A themed view is themed and consistent throughout. The recipes
+below for cards, controls and edges still apply to a themed view, with its own colours in place of
+the tokens.
 
 ## Matching the app
 
