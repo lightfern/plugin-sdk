@@ -7,6 +7,13 @@ SDK implements.
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-29
+
+`manifestVersion: "2.1"`.
+
+- `permissions` is optional and defaults to `[]`, the same as `network_permissions`. A plugin that
+  leaves it out should declare `"2.1"`.
+
 ## [2.0.1] - 2026-09-28
 
 - The guide now tells plugins to save their data files as compact JSON, while keeping
@@ -52,6 +59,7 @@ Initial public release of the `manifestVersion: 1` plugin contract.
 - `theme.css`: the `--lf-*` design tokens the host links into every view.
 - Authoring guide under `docs/` and the Recruiting ATS reference plugin under `examples/`.
 
+[2.1.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.1.0
 [2.0.1]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.0.1
 [2.0.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.0.0
 [1.2.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v1.2.0

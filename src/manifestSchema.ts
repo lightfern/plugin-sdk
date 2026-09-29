@@ -83,7 +83,7 @@ export const manifestSchema = z.object({
         }
       }
     }),
-  permissions: z.array(permissionSchema),
+  permissions: z.array(permissionSchema).default([]),
   network_permissions: z
     .array(
       z.string().superRefine((value, ctx) => {

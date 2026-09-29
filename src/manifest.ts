@@ -13,7 +13,7 @@ export type PluginPermission = FilePermission;
 export type ManifestVersion = `${number}.${number}`;
 
 /** The contract version this SDK implements. See {@link PluginManifest.manifestVersion}. */
-export const MANIFEST_VERSION: ManifestVersion = "2.0";
+export const MANIFEST_VERSION: ManifestVersion = "2.1";
 
 /** A host on `supported` can run a plugin on the same major and the same or an older minor. */
 export function supportsManifestVersion(
@@ -73,9 +73,9 @@ export interface PluginManifest {
   /**
    * The plugin contract this manifest is written against. One version covers the manifest
    * schema, the host API (`ctx`, RPC, pushes), the wire protocol, the `lightfern:host`
-   * imports, and the `--lf-*` theme tokens. If the plugin uses something added in 2.1,
-   * declare `"2.1"` so an older Lightfern shows an error instead of running it broken. A plain
-   * number like `2` means `"2.0"`. Use `"2.0"` for a new plugin.
+   * imports, and the `--lf-*` theme tokens. If the plugin uses something added in 2.2,
+   * declare `"2.2"` so an older Lightfern shows an error instead of running it broken. A plain
+   * number like `2` means `"2.0"`. Use `"2.1"` for a new plugin.
    */
   manifestVersion: ManifestVersion;
   /** Stable, globally unique reverse-domain identifier. */
@@ -88,7 +88,8 @@ export interface PluginManifest {
    * are exact so a plugin has a stable executable dependency graph.
    */
   dependencies?: PluginDependencies;
-  permissions: PluginPermission[];
+  /** File capabilities the views use. May be omitted since 2.1; the schema defaults it to `[]`. */
+  permissions?: PluginPermission[];
   /**
    * Allowed network origins. May be omitted; the schema defaults it to `[]`. An entry is
    * an `https://` origin, optionally with a `*.` subdomain wildcard (see
