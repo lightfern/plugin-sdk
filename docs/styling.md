@@ -17,21 +17,19 @@ tools belong here.
 
 **Give it its own look when the look is part of the content.** The usual cases:
 
-- **Games and fiction.** A D&D battle map, an initiative or party tracker, a character sheet, a
-  chess board, a card game. These belong to their setting (parchment and ink, a felt table, a
-  pixel-art HUD), and quiet productivity cards drain them of it.
-- **Things people know by sight.** A screenplay, sheet music, a wall calendar, a receipt, a boarding
-  pass, a terminal, a spreadsheet grid, a piano keyboard. Follow the convention the reader already
-  knows.
+- **Games and fiction.** A D&D battle map, a character sheet, a chess board, a card game. These
+  belong to their setting (parchment and ink, a felt table, a pixel-art HUD).
+- **Formats with a fixed look.** A screenplay, sheet music, a terminal, a receipt. Their type and
+  layout are the format, so follow it.
 - **Documents meant to leave the app.** An invoice, a résumé, a slide deck, a poster, an invitation,
   a newsletter. They get printed, exported or shared, so style them as the finished page, usually a
   light page that stays light in dark mode.
-- **Someone else's brand.** A mockup of a client's site, a brand kit, a report or portal in a
-  company's colours and type.
+- **Someone else's brand.** A mockup of a client's site, a brand kit, a report, presentation, or
+  portal in a company's colours and type.
 - **Media-first views.** A photo gallery, a lightbox, a video or music player, a mood board. The
   media carries the view, so keep the chrome minimal (often dark) and out of the way.
 - **Personal and playful spaces.** A kid's chore chart, a journal, a habit tracker someone asked to
-  be fun. The tone is the point.
+  be fun.
 
 Charts are a partial case. Lightfern has one accent plus success and danger, which is not enough for
 a chart with five series or a heatmap. Keep the app's look for the view and give just the chart its
@@ -39,8 +37,7 @@ own palette, one that holds up in both schemes.
 
 If the user asked for a look ("style it like Vercel", "make it feel like a spreadsheet"), that wins.
 If they didn't, judge from the subject rather than asking: a "D&D initiative tracker" wants a
-fantasy look although nobody said so, and an "applicant tracker" wants Lightfern's. When it could
-honestly go either way, match the app.
+fantasy look although nobody said so, and an "applicant tracker" wants Lightfern's.
 
 Whichever you pick, commit to it. A themed view is themed throughout; a Lightfern toolbar across the
 top of a parchment map looks like two plugins stacked. The recipes below for cards, controls and
