@@ -7,6 +7,10 @@ SDK implements.
 
 ## [Unreleased]
 
+- The styling guide now says when a view should have its own look instead of matching the app
+  (games, documents meant to leave the app, brands, media, recognisable objects), and how to build
+  one: your own palette, holding one colour scheme, fonts and images from the plugin folder.
+
 ## [2.1.0] - 2026-09-29
 
 `manifestVersion: "2.1"`.

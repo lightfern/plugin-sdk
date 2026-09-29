@@ -9,8 +9,8 @@ follows.
 
 Companion documents:
 
-- [Styling](styling.md): the `--lf-*` design tokens and the CSS recipes that make a view look like
-  part of the app.
+- [Styling](styling.md): when a view should look like part of the app and when it should have its
+  own look, the `--lf-*` design tokens, and CSS recipes for both.
 - [The sandbox](sandbox.md): what a view can and cannot do inside its iframe, including network
   requests, screen wake lock, background workers, keyboard shortcuts and text selection.
 - [Reference plugin](example.md): a walkthrough of the Recruiting ATS example.
@@ -317,12 +317,17 @@ useEffect(() => {
 
 ### Styling
 
-Styling is a plain `styles.css` at the plugin root, linked into the view document by convention.
-Lightfern serves its own design tokens into the frame as `--lf-*` CSS variables, and Geist is
-already applied to `body`, so a view built from those tokens reads as part of the app and follows
-dark mode for free. Do **not** use Tailwind classes: there is no Tailwind in the plugin frame, so
-they render unstyled. Write real CSS. The token table and the recipes for cards, controls, hover
-washes and elevation are in [Styling](styling.md).
+Styling is a plain `styles.css` at the plugin root, linked into the view document by convention. Do
+**not** use Tailwind classes: there is no Tailwind in the plugin frame, so they render unstyled.
+Write real CSS.
+
+Decide first whether the view should look like Lightfern or like its subject. A tool for working
+with files (a tracker, a dashboard, a form) should match the app: Lightfern serves its design tokens
+into the frame as `--lf-*` CSS variables, and a view built from them reads as part of the app and
+follows dark mode for free. A view whose look is part of its content (a D&D map, a game board, an
+invoice or slide deck, a client's brand, a photo gallery) should get its own. [Styling](styling.md)
+covers how to choose, the token table, the recipes for cards, controls, hover washes and elevation,
+and how to build a look of your own.
 
 **TypeScript and JSX just work.** Lightfern bundles the import graph on save. You never run a
 compiler.
