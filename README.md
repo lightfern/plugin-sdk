@@ -23,7 +23,8 @@ The host imports the same types to drive the other end of the bridge.
 
 - [Building a Lightfern plugin](docs/guide.md): the complete contract, from the manifest to the
   `ctx.files` API and keeping a view in sync with disk.
-- [Styling](docs/styling.md): the `--lf-*` design tokens and CSS recipes.
+- [Styling](docs/styling.md): when to match the app or give a view its own look, the `--lf-*` design
+  tokens, and CSS recipes.
 - [The sandbox](docs/sandbox.md): what the iframe allows, CORS, keyboard shortcuts, text selection.
 - [Reference plugin](docs/example.md) and its source in
   [`examples/recruiting-ats/`](examples/recruiting-ats/).

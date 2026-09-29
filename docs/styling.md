@@ -1,15 +1,53 @@
 # Styling a plugin view
 
 Styling is a plain `styles.css` at the plugin root, linked into the view document by convention.
-Target its class names from your JSX. Do **not** use Tailwind classes: there is no Tailwind in the
-plugin frame, so they render unstyled. Write real CSS.
+Target its class names from your JSX. Do **not** use Tailwind or the app's own classes: neither
+exists in the plugin frame, so they render unstyled. Write real CSS.
 
-**Match the app.** Lightfern serves its own design tokens into the frame, so a view can be built
-from the same colours, shapes, spacing and type as the window around it. That is the default: unless
-you want a particular look ("style it like Vercel", "make it feel like a spreadsheet"), style a
-plugin so it reads as part of Lightfern. Every value below is a CSS variable. Use them instead of
-writing a colour, a radius or a shadow of your own. The stylesheet that defines them is
-[`src/theme.css`](../src/theme.css).
+## Choosing a look
+
+Before writing any CSS, decide whether the view should look like Lightfern or like its subject.
+
+**Match the app when the plugin is a tool:** a tracker, a dashboard, a CRM or applicant tracker, a
+file browser, a form, a settings screen, a viewer for notes or tables. These sit beside the rest of
+the library and should read as part of it, so build them from the `--lf-*` tokens below. Most work
+tools belong here.
+
+**Give it its own look when the look is part of the content.** The usual cases:
+
+- **Games and fiction.** A D&D battle map, a character sheet, a chess board, a retro game. These
+  belong to their setting (parchment and ink, a felt table, a pixel-art HUD).
+- **Formats with a fixed look.** A screenplay, sheet music, a terminal, a receipt. Their type and
+  layout are the format, so follow it.
+- **Documents meant to leave the app.** An invoice, résumé, slide deck, poster, invitation, or
+  newsletter. They get printed, exported or shared, so style them as the finished page, usually a
+  light page that stays light in dark mode.
+- **Someone else's brand.** A client's site, brand kit, report, presentation, or portal should match
+  the company's colours and type.
+- **Media-first views.** A photo gallery, a lightbox, a video or music player, a mood board. The
+  media carries the view, so keep the chrome minimal.
+- **Personal and playful spaces.** A kid's chore chart, a journal, a habit tracker someone asked to
+  be fun.
+
+Charts are a partial case. Lightfern has one accent plus success and danger, which is not enough for
+a chart with five series or a heatmap. Keep the app's look for the view and give just the chart its
+own palette, one that holds up in both schemes.
+
+If the user asked for a look ("make it look like a newspaper"), that wins. Otherwise decide without
+asking, and when in doubt, match the app.
+
+Whichever you pick, commit to it. A themed view is themed and consistent throughout. The recipes
+below for cards, controls and edges still apply to a themed view, with its own colours in place of
+the tokens.
+
+## Matching the app
+
+Lightfern serves its design tokens into the frame as the CSS variables below, defined in
+[`src/theme.css`](../src/theme.css). Build from them, never from a hex colour, an `rgb()`, a `px`
+radius or a hand-rolled `box-shadow`. Each token already resolves for the active scheme, so the view
+follows dark mode for free, and a literal is what breaks when the scheme switches. For a genuine
+structural difference in the dark (a heavier shadow, say), use
+`@media (prefers-color-scheme: dark)`.
 
 | Variable                                                                | Use                                                                   |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------- |
@@ -87,21 +125,22 @@ A native `<select>` draws its own chevron over your `padding-right`; set `appear
 the chevron yourself, and reserve room for it. An icon-only button wants a square `width`/`height`
 matching the control height, `padding: 0`, and `display: grid; place-items: center`.
 
-## Dark mode, type, and what to avoid
+## Type
 
-**Dark mode needs nothing from you.** Each `--lf-*` token already resolves to the right value for
-the active scheme, so a plugin styled in `var(--lf-…)` follows dark mode for free. If you genuinely
-need one structural difference in the dark (a heavier shadow, say), match the app on
-`@media (prefers-color-scheme: dark)`; don't branch on colour literals.
+Geist is loaded and already applied to `body` at 14px. Never `@font-face` or `@import` a font to get
+the app's face. Plain `font-weight: 600` works (Geist is a variable font over 100..900). For another
+family, `@import` it from Google Fonts (see
+[Giving a view its own look](#giving-a-view-its-own-look)).
 
-**Type.** Geist is loaded and already applied to `body` at 14px. Never `@font-face` or `@import` a
-font to get the app's face. Plain `font-weight: 600` works (Geist is a variable font over 100..900).
-If you want another family, a `<link>` to `https://fonts.googleapis.com` is allowed.
+## Giving a view its own look
 
-**Don't** write a hex colour, an `rgb()`, a `px` radius or a hand-rolled `box-shadow`. A literal is
-exactly what breaks when the user switches scheme, and it is the one thing that makes a plugin look
-bolted on.
+Leave the `--lf-*` tokens out of a themed view: they flip with dark mode, so `--lf-content` on a
+parchment ground goes pale in the dark. Give your palette a dark variant, or hold one scheme with
+`color-scheme: light` on `:root` (most themed looks should hold). Restyle `body` as well, since the
+host theme puts it on `--lf-surface`.
 
-**What is not in the frame**: Tailwind, the app's components and their classes, and its
-`user-select: none` chrome default. A view's content is selectable, which is right for content. The
-document gives you `#root`, the `--lf-*` tokens, and Geist; layout is yours.
+Theme every state: hover, selected, empty and error, and native inputs and selects, which otherwise
+keep the system look. Keep body text at 4.5:1 contrast however atmospheric the palette.
+
+Load a font by `@import`ing it from Google Fonts at the top of `styles.css`, or from a file in the
+plugin folder. Other font CDNs won't load.

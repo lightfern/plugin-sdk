@@ -7,6 +7,12 @@ SDK implements.
 
 ## [Unreleased]
 
+- The styling guide now says when a view should have its own look instead of matching the app
+  (games, documents meant to leave the app, brands, media, formats with a fixed look), and what a
+  themed view must get right: no `--lf-*` tokens, a restyled `body`, every state themed, and fonts
+  from Google Fonts or the plugin folder.
+- The styling guide states its token rules once instead of three times.
+
 ## [2.1.0] - 2026-09-29
 
 `manifestVersion: "2.1"`.
