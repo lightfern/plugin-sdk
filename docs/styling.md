@@ -145,29 +145,13 @@ document gives you `#root`, the `--lf-*` tokens, and Geist; layout is yours.
 
 ## Giving a view its own look
 
-The host theme still loads first, so `body` starts on `--lf-surface` in Geist at 14px. Your
-`styles.css` loads after it: restyle `body` (background, colour, font) and the ground is yours.
+Leave the `--lf-*` tokens out of a themed view: they flip with dark mode, so `--lf-content` on a
+parchment ground goes pale in the dark. Give your palette a dark variant, or hold one scheme with
+`color-scheme: light` on `:root` (most themed looks should hold). Restyle `body` as well, since the
+host theme puts it on `--lf-surface`.
 
-**Name the palette once.** Define your colours, fonts and radii as custom properties on `:root`
-under your own prefix (`--map-parchment`, `--map-ink`) and build every rule from those. It keeps a
-theme to one place, like the tokens do. To re-colour a view that is otherwise app-shaped, a client's
-brand say, you can instead redefine a few `--lf-*` tokens on `:root`. An override there wins in both
-schemes, so put the dark value in your own `@media (prefers-color-scheme: dark)` block.
+Theme every state: hover, selected, empty and error, and native inputs and selects, which otherwise
+keep the system look. Keep body text at 4.5:1 contrast however atmospheric the palette.
 
-**Decide on dark mode.** Either give your palette both schemes under
-`@media (prefers-color-scheme: dark)`, or hold one scheme with `color-scheme: light` (or `dark`) on
-`:root` so native controls and scrollbars agree. Most themed looks should hold: a parchment map, a
-printed page or a felt table is worse inverted. A view that holds one scheme can't lean on `--lf-*`
-tokens, since those still flip underneath it.
-
-**Type.** `@import` a family from Google Fonts at the top of `styles.css`
-(`@import url("https://fonts.googleapis.com/css2?family=IM+Fell+English&display=swap");`), or put a
-`.woff2` in the plugin folder and `@font-face` it with a relative URL.
-
-**Images and textures.** CSS gradients, inline SVG, or image files in the plugin folder, referenced
-by relative URL (`background: url("assets/parchment.webp")`). A remote image needs its origin in
-`network_permissions`.
-
-**Keep it usable.** Body text needs a 4.5:1 contrast ratio against its ground, however atmospheric
-the palette. The host draws `:focus-visible` in `--lf-ring`; restyle it if it disappears on your
-ground.
+Load a font by `@import`ing it from Google Fonts at the top of `styles.css`, or from a file in the
+plugin folder. Other font CDNs won't load.
