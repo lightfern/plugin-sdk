@@ -17,17 +17,17 @@ tools belong here.
 
 **Give it its own look when the look is part of the content.** The usual cases:
 
-- **Games and fiction.** A D&D battle map, a character sheet, a chess board, a card game. These
+- **Games and fiction.** A D&D battle map, a character sheet, a chess board, a retro game. These
   belong to their setting (parchment and ink, a felt table, a pixel-art HUD).
 - **Formats with a fixed look.** A screenplay, sheet music, a terminal, a receipt. Their type and
   layout are the format, so follow it.
-- **Documents meant to leave the app.** An invoice, a résumé, a slide deck, a poster, an invitation,
-  a newsletter. They get printed, exported or shared, so style them as the finished page, usually a
+- **Documents meant to leave the app.** An invoice, résumé, slide deck, poster, invitation, or
+  newsletter. They get printed, exported or shared, so style them as the finished page, usually a
   light page that stays light in dark mode.
-- **Someone else's brand.** A mockup of a client's site, a brand kit, a report, presentation, or
+- **Someone else's brand.** A mockup of a client's site, a brand kit, a report, a presentation, or a
   portal in a company's colours and type.
 - **Media-first views.** A photo gallery, a lightbox, a video or music player, a mood board. The
-  media carries the view, so keep the chrome minimal (often dark) and out of the way.
+  media carries the view, so keep the chrome minimal.
 - **Personal and playful spaces.** A kid's chore chart, a journal, a habit tracker someone asked to
   be fun.
 
@@ -35,10 +35,8 @@ Charts are a partial case. Lightfern has one accent plus success and danger, whi
 a chart with five series or a heatmap. Keep the app's look for the view and give just the chart its
 own palette, one that holds up in both schemes.
 
-If the user asked for a look ("make it look like a newspaper", "make it feel like a spreadsheet"),
-that wins. If they didn't, judge from the subject rather than asking: a "D&D initiative tracker"
-obviously wants a fantasy look, and an "applicant tracker" wants Lightfern's. When in doubt, match
-the app.
+If the user asked for a look ("make it look like a newspaper"), that wins. Otherwise decide without
+asking, and when in doubt, match the app.
 
 Whichever you pick, commit to it. A themed view is themed and consistent throughout. The recipes
 below for cards, controls and edges still apply to a themed view, with its own colours in place of
