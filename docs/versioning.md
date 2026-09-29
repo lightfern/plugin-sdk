@@ -9,7 +9,7 @@ Releases of this repository are git tags, `vMAJOR.MINOR.PATCH`. The package is c
 A plugin's `manifest.json` declares the contract it is written against:
 
 ```json
-{ "manifestVersion": "2.0" }
+{ "manifestVersion": "2.1" }
 ```
 
 That one version covers the manifest schema, the `ctx`/RPC/event host API, the `lightfern:host`
@@ -21,6 +21,7 @@ equals the tag's major and minor:
 | -------- | ------------------------ |
 | `v1.2.y` | `manifestVersion: "1.2"` |
 | `v2.0.y` | `manifestVersion: "2.0"` |
+| `v2.1.y` | `manifestVersion: "2.1"` |
 
 - **Patch**: bump this for fixes and documentation changes. `MANIFEST_VERSION` stays the same.
 - **Minor**: bump this for additive, non-breaking changes from the previous release. For example,

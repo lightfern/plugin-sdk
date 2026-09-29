@@ -58,7 +58,7 @@ assistant to write them. Concretely:
 
 ```json
 {
-  "manifestVersion": "2.0",
+  "manifestVersion": "2.1",
   "id": "recruiting-ats",
   "name": "Recruiting ATS",
   "version": "1.0.0",
@@ -71,10 +71,10 @@ assistant to write them. Concretely:
 }
 ```
 
-- `manifestVersion`: required. Use `"2.0"` for a new plugin. This is the SDK version your plugin is
+- `manifestVersion`: required. Use `"2.1"` for a new plugin. This is the SDK version your plugin is
   built against, and it covers the manifest format, the `ctx` API, the `lightfern:host` imports, and
-  the `--lf-*` theme tokens. If your plugin uses something added in a later release, say 2.1, put
-  `"2.1"` here. Lightfern runs your plugin as long as it's on the same major version and at least
+  the `--lf-*` theme tokens. If your plugin uses something added in a later release, say 2.2, put
+  `"2.2"` here. Lightfern runs your plugin as long as it's on the same major version and at least
   your minor version. Otherwise it shows an error in the plugin's view. See
   [Versioning](versioning.md).
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
@@ -85,8 +85,8 @@ assistant to write them. Concretely:
   Lightfern downloads and caches their esm.sh browser modules before serving them from the local
   plugin origin; dependencies are not loaded from remote script URLs. Declare `react` and
   `react-dom` when using React/TSX. Peer dependencies must be declared too.
-- `permissions`: the file capabilities the plugin uses: `files.read`, `files.write`. Declare exactly
-  what the views call; using an undeclared capability fails.
+- `permissions`: optional; the file capabilities the plugin uses, empty by default: `files.read`,
+  `files.write`. Declare exactly what the views call; using an undeclared capability fails.
 - `network_permissions`: optional; allowed network origins, empty by default. An entry is an
   `https://` origin, optionally with a `*.` subdomain wildcard: `https://api.example.com`,
   `https://*.example.com` (matches subdomains only, not `example.com` itself). No paths, no

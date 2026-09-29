@@ -20,7 +20,7 @@ line and some `- [ ]` interview steps.
 
 ## `manifest.json`
 
-The manifest uses `manifestVersion` `"2.0"`, pins exact React versions in `dependencies`, and asks
+The manifest uses `manifestVersion` `"2.1"`, pins exact React versions in `dependencies`, and asks
 for both file permissions. It has a home view and one file view that opens any file matching
 `candidates/*.md`. That's all it needs: there's no `package.json` and no build config.
 

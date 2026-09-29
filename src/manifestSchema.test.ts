@@ -37,6 +37,11 @@ describe("parseManifest", () => {
     expect(parseManifest(bare).network_permissions).toEqual([]);
   });
 
+  it("defaults an omitted permissions to an empty array", () => {
+    const { permissions: _omitted, ...bare } = clone();
+    expect(parseManifest(bare).permissions).toEqual([]);
+  });
+
   it("accepts exact and wildcard https origins in network_permissions", () => {
     const manifest = clone();
     manifest.network_permissions = [
@@ -71,7 +76,7 @@ describe("safeParseManifest", () => {
   });
 
   it("rejects a minor newer than the SDK's", () => {
-    expectErrorContaining({ ...clone(), manifestVersion: "2.1" }, "manifestVersion");
+    expectErrorContaining({ ...clone(), manifestVersion: "2.2" }, "manifestVersion");
   });
 
   it("rejects a decimal number", () => {
