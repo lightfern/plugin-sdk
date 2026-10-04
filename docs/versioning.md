@@ -22,6 +22,7 @@ equals the tag's major and minor:
 | `v1.2.y` | `manifestVersion: "1.2"` |
 | `v2.0.y` | `manifestVersion: "2.0"` |
 | `v2.1.y` | `manifestVersion: "2.1"` |
+| `v2.2.y` | `manifestVersion: "2.2"` |
 
 - **Patch**: bump this for fixes and documentation changes. `MANIFEST_VERSION` stays the same.
 - **Minor**: bump this for additive, non-breaking changes from the previous release. For example,

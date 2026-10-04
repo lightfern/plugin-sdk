@@ -7,6 +7,8 @@ SDK implements.
 
 ## [Unreleased]
 
+- Add `useFolder(path)` to keep a folder's immediate entries in sync with disk changes.
+
 ## [2.1.1] - 2026-09-29
 
 - The styling guide now says when a view should have its own look instead of matching the app
