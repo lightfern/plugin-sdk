@@ -71,12 +71,12 @@ assistant to write them. Concretely:
 }
 ```
 
-- `manifestVersion`: required. Use `"2.1"` for a new plugin. This is the SDK version your plugin is
-  built against, and it covers the manifest format, the `ctx` API, the `lightfern:host` imports, and
-  the `--lf-*` theme tokens. If your plugin uses something added in a later release, say 2.2, put
-  `"2.2"` here. Lightfern runs your plugin as long as it's on the same major version and at least
-  your minor version. Otherwise it shows an error in the plugin's view. See
-  [Versioning](versioning.md).
+- `manifestVersion`: required. Use `"2.1"` for a new plugin, even if older plugins in the library
+  declare `1`, `2` or `"2.0"`. This is the SDK version your plugin is built against, and it covers
+  the manifest format, the `ctx` API, the `lightfern:host` imports, and the `--lf-*` theme tokens.
+  If your plugin uses something added in a later release, say 2.2, put `"2.2"` here. Lightfern runs
+  your plugin as long as it's on the same major version and at least your minor version. Otherwise
+  it shows an error in the plugin's view. See [Versioning](versioning.md).
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every plugin in the library** (two
   plugins sharing an `id` serve one bundle), a human-readable name, and a semver string (display
@@ -84,7 +84,9 @@ assistant to write them. Concretely:
 - `dependencies`: optional browser packages, keyed by package name with an **exact** version.
   Lightfern downloads and caches their esm.sh browser modules before serving them from the local
   plugin origin; dependencies are not loaded from remote script URLs. Declare `react` and
-  `react-dom` when using React/TSX. Peer dependencies must be declared too.
+  `react-dom` when using React/TSX. Each declared package loads once per view, and its subpaths
+  share that copy. A package's required peer dependencies must be declared too; if one is missing,
+  the build error names it.
 - `permissions`: optional; the file capabilities the plugin uses, empty by default: `files.read`,
   `files.write`. Declare exactly what the views call; using an undeclared capability fails.
 - `network_permissions`: optional; allowed network origins, empty by default. An entry is an
@@ -185,10 +187,22 @@ empty `<div id="root">`. Your entry module connects to the host and mounts. That
   | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, and `useCurrentUser()`. Requires `react` in `dependencies`. |
   | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.         |
 
-  Declare every bare package import in `dependencies`, including React peer dependencies. Lightfern
-  serves only its local cached output to the frame; a CDN `<script>` and `import` from a URL remain
-  unavailable. A package which does not produce a self-contained browser module fails to prepare
-  with a build error rather than causing a remote script fetch.
+  Declare every bare package import in `dependencies`, including the peer dependencies of the
+  packages you use. A subpath of a declared package uses the same instance as the package, so
+  three.js add-ons work with the plugin's own `three`:
+
+  ```json
+  "dependencies": { "three": "0.170.0" }
+  ```
+
+  ```ts
+  import * as THREE from "three";
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+  ```
+
+  Lightfern serves only its local cached output to the frame; a CDN `<script>` and `import` from a
+  URL remain unavailable. A package which does not produce a self-contained browser module fails to
+  prepare with a build error rather than causing a remote script fetch.
 
 **All data access goes through `ctx.files`.** There is no `fetch` to undeclared origins, no direct
 filesystem, no reach beyond the folder the plugin lives in. Every path is relative to that folder
