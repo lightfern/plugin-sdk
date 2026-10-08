@@ -2,12 +2,22 @@
 
 All notable changes to this package are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow the scheme in
-[docs/versioning.md](docs/versioning.md), where the major and minor equal the `manifestVersion` the
-SDK implements.
+[the README](README.md#versioning), where the major and minor equal the `manifestVersion` the SDK
+implements.
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-10-08
+
+`manifestVersion: "2.2"`.
+
 - Add `useFolder(path)` to keep a folder's immediate entries in sync with disk changes.
+- Export `package.json`, so a host can read the SDK version.
+- `docs/versioning.md` is folded into the README's Versioning section.
+- The guide says a declared package's subpaths share its instance, with three.js add-ons as the
+  example.
+- The guide says to declare the latest major, with the earliest minor that has everything the plugin
+  uses, instead of naming a fixed version.
 
 ## [2.1.1] - 2026-09-29
 
@@ -68,11 +78,3 @@ Initial public release of the `manifestVersion: 1` plugin contract.
 - Segment-aware glob matcher for view `match` patterns and the network-permission validator.
 - `theme.css`: the `--lf-*` design tokens the host links into every view.
 - Authoring guide under `docs/` and the Recruiting ATS reference plugin under `examples/`.
-
-[2.1.1]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.1.1
-[2.1.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.1.0
-[2.0.1]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.0.1
-[2.0.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v2.0.0
-[1.2.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v1.2.0
-[1.1.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v1.1.0
-[1.0.0]: https://github.com/lightfern/plugin-sdk/releases/tag/v1.0.0

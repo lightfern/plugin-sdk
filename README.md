@@ -28,7 +28,6 @@ The host imports the same types to drive the other end of the bridge.
 - [The sandbox](docs/sandbox.md): what the iframe allows, CORS, keyboard shortcuts, text selection.
 - [Reference plugin](docs/example.md) and its source in
   [`examples/recruiting-ats/`](examples/recruiting-ats/).
-- [Versioning](docs/versioning.md): how tags relate to `manifestVersion`.
 
 ## What the package exports
 
@@ -49,12 +48,17 @@ React so Node-side consumers can import it.
 
 ## Versioning
 
-Tags follow semver, and a plugin's `manifestVersion` is the tag's major and minor version, so
-`v2.0.3` means `manifestVersion` `"2.0"`. Fixes bump the patch version, additive changes bump the
-minor, and breaking changes bump the major. Lightfern runs a plugin when they're on the same major
-version and Lightfern's minor version is the same or newer. Details in
-[docs/versioning.md](docs/versioning.md). The package is consumed via git and is not published to
-npm.
+Tags follow semver, and a plugin's `manifestVersion` is the tag's major and minor, so `v2.0.3`
+implements `manifestVersion` `"2.0"`. Lightfern runs a plugin when they're on the same major version
+and Lightfern's minor version is the same or newer.
+
+- **Patch**: fixes and documentation changes.
+- **Minor**: additive, non-breaking changes, like a new `ctx` method. Also bump `MANIFEST_VERSION`.
+- **Major**: any breaking change. Also bump `MANIFEST_VERSION`.
+
+Release in the same PR as the change: bump `version` in `package.json` and move the `CHANGELOG.md`
+entries under a dated heading for it. Merging tags `vX.Y.Z` and publishes a GitHub release. The
+package is consumed via git and is not published to npm.
 
 ## Development
 

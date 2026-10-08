@@ -24,7 +24,8 @@
     "./protocol": "./src/protocol.ts",
     "./theme.css": "./src/theme.css",
     "./docs/*": "./docs/*",
-    "./examples/*": "./examples/*"
+    "./examples/*": "./examples/*",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "test": "vitest",
