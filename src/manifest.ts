@@ -73,9 +73,9 @@ export interface PluginManifest {
   /**
    * The plugin contract this manifest is written against. One version covers the manifest
    * schema, the host API (`ctx`, RPC, pushes), the wire protocol, the `lightfern:host`
-   * imports, and the `--lf-*` theme tokens. If the plugin uses something added in 2.2,
-   * declare `"2.2"` so an older Lightfern shows an error instead of running it broken. A plain
-   * number like `2` means `"2.0"`. Use `"2.1"` for a new plugin.
+   * imports, and the `--lf-*` theme tokens. Declare the latest major, with the earliest minor
+   * that has everything the plugin uses, so an older Lightfern shows an error instead of running
+   * it broken. A plain number like `2` means `"2.0"`.
    */
   manifestVersion: ManifestVersion;
   /** Stable, globally unique reverse-domain identifier. */
