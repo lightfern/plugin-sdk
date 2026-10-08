@@ -84,8 +84,7 @@ assistant to write them. Concretely:
   Lightfern downloads and caches their esm.sh browser modules before serving them from the local
   plugin origin; dependencies are not loaded from remote script URLs. Declare `react` and
   `react-dom` when using React/TSX. Each declared package loads once per view, and its subpaths
-  share that copy. A package's required peer dependencies must be declared too; if one is missing,
-  the build error names it.
+  share that copy. A package's required peer dependencies must be declared too.
 - `permissions`: optional; the file capabilities the plugin uses, empty by default: `files.read`,
   `files.write`. Declare exactly what the views call; using an undeclared capability fails.
 - `network_permissions`: optional; allowed network origins, empty by default. An entry is an
