@@ -14,7 +14,6 @@ SDK implements.
 - Add `useFolder(path)` to keep a folder's immediate entries in sync with disk changes.
 - The guide says a declared package's subpaths share its instance, with three.js add-ons as the
   example, and that a missing required peer dependency fails the build with its name.
-- The guide's compact JSON advice shows the `JSON.stringify(data)` write it means.
 - The guide says to use `"2.1"` for a new plugin even when older plugins in the library declare `1`,
   `2` or `"2.0"`.
 

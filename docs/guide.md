@@ -234,14 +234,8 @@ the files already kept there. Don't treat the plugin folder as a private data st
 
 **Save data files as compact JSON.** When your view writes its data to a `.json` file, serialize it
 with `JSON.stringify(data)` without the `space` argument. Indented JSON wastes disk space and costs
-many more tokens to read:
-
-```ts
-await ctx.files.write(path, JSON.stringify(data), { overwrite: true });
-```
-
-This applies only to the data a view writes at runtime. Keep `manifest.json` indented, since people
-read and edit it by hand.
+many more tokens to read. This applies only to the data a view writes at runtime. Keep
+`manifest.json` indented, since people read and edit it by hand.
 
 `ctx.path` is the opened node's path relative to the folder the plugin lives in: the plugin's own
 folder for a home view, the opened file for a file view. `ctx.homePath` is the plugin's own folder
