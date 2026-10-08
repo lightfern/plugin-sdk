@@ -31,8 +31,8 @@ equals the tag's major and minor:
 
 Lightfern runs a plugin when they're on the same major version and Lightfern's minor version is the
 same or newer. For example, Lightfern on 2.1 runs plugins built for 2.0 and 2.1, but not 2.2 or 3.0.
-So a plugin should declare the oldest version that has everything it uses. Older manifests with a
-plain number like `2` are treated as `"2.0"`.
+So a plugin should declare the latest major, with the earliest minor that has everything it uses.
+Older manifests with a plain number like `2` are treated as `"2.0"`.
 
 ## Cutting a release
 

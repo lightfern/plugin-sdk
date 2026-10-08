@@ -71,10 +71,9 @@ assistant to write them. Concretely:
 }
 ```
 
-- `manifestVersion`: required. Use `"2.1"` for a new plugin, even if older plugins in the library
-  declare `1`, `2` or `"2.0"`. This is the SDK version your plugin is built against, and it covers
+- `manifestVersion`: required. This is the SDK version your plugin is built against, and it covers
   the manifest format, the `ctx` API, the `lightfern:host` imports, and the `--lf-*` theme tokens.
-  If your plugin uses something added in a later release, say 2.2, put `"2.2"` here. Lightfern runs
+  Use the latest major, with the earliest minor that has everything your plugin uses. Lightfern runs
   your plugin as long as it's on the same major version and at least your minor version. Otherwise
   it shows an error in the plugin's view. See [Versioning](versioning.md).
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
