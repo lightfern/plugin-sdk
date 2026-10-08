@@ -73,9 +73,7 @@ assistant to write them. Concretely:
 
 - `manifestVersion`: required. This is the SDK version your plugin is built against, and it covers
   the manifest format, the `ctx` API, the `lightfern:host` imports, and the `--lf-*` theme tokens.
-  Use the latest major, with the earliest minor that has everything your plugin uses. Lightfern runs
-  your plugin as long as it's on the same major version and at least your minor version. Otherwise
-  it shows an error in the plugin's view. See [Versioning](versioning.md).
+  Use the latest major, with the earliest minor that has everything your plugin uses.
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every plugin in the library** (two
   plugins sharing an `id` serve one bundle), a human-readable name, and a semver string (display
