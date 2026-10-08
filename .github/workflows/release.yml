@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Release the package.json version if it isn't tagged yet
         env:
@@ -27,4 +29,5 @@ jobs:
             echo "::error::CHANGELOG.md has no entry for $VERSION"
             exit 1
           fi
+          echo "**Full diff**: https://github.com/$GITHUB_REPOSITORY/compare/$(git describe --tags --abbrev=0)...v$VERSION" >> notes.md
           gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes-file notes.md
