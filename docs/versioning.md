@@ -36,12 +36,8 @@ plain number like `2` are treated as `"2.0"`.
 
 ## Cutting a release
 
-1. Update [`CHANGELOG.md`](../CHANGELOG.md), the `version` field in `package.json`, and, for a minor
-   or major, `MANIFEST_VERSION`.
-2. Merge to `main`.
-3. Tag the merge commit and push the tag:
-
-```sh
-git tag -a v2.0.0 -m "v2.0.0: manifestVersion 2.0 contract"
-git push origin v2.0.0
-```
+Release in the same pull request as the change: bump the `version` field in `package.json`, move the
+`CHANGELOG.md` entries under a dated heading for that version, and, for a minor or major, bump
+`MANIFEST_VERSION`. When it merges, the release workflow tags the merge commit `vX.Y.Z` and
+publishes a GitHub release with that version's changelog entries. A merge that leaves the version
+alone is not released.
