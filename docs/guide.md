@@ -14,7 +14,6 @@ Companion documents:
 - [The sandbox](sandbox.md): what a view can and cannot do inside its iframe, including network
   requests, screen wake lock, background workers, keyboard shortcuts and text selection.
 - [Reference plugin](example.md): a walkthrough of the Recruiting ATS example.
-- [Versioning](versioning.md): how `manifestVersion` and this repository's tags relate.
 
 ## What a plugin is
 

@@ -2,8 +2,8 @@
 
 All notable changes to this package are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow the scheme in
-[docs/versioning.md](docs/versioning.md), where the major and minor equal the `manifestVersion` the
-SDK implements.
+[the README](README.md#versioning), where the major and minor equal the `manifestVersion` the SDK
+implements.
 
 ## [Unreleased]
 
@@ -13,6 +13,7 @@ SDK implements.
 
 - Add `useFolder(path)` to keep a folder's immediate entries in sync with disk changes.
 - Export `package.json`, so a host can read the SDK version.
+- `docs/versioning.md` is folded into the README's Versioning section.
 - The guide says a declared package's subpaths share its instance, with three.js add-ons as the
   example.
 - The guide says to declare the latest major, with the earliest minor that has everything the plugin
