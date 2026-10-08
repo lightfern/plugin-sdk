@@ -12,6 +12,7 @@ SDK implements.
 `manifestVersion: "2.2"`.
 
 - Add `useFolder(path)` to keep a folder's immediate entries in sync with disk changes.
+- Export `package.json`, so a host can read the SDK version.
 - The guide says a declared package's subpaths share its instance, with three.js add-ons as the
   example.
 - The guide says to declare the latest major, with the earliest minor that has everything the plugin
