@@ -232,10 +232,21 @@ filesystem, no reach beyond the folder the plugin lives in. Every path is relati
 rejected. Write data the plugin produces to the surrounding folder or a subfolder of it, alongside
 the files already kept there. Don't treat the plugin folder as a private data store.
 
-**Save data files as compact JSON.** When your view writes its data to a `.json` file, serialize it
-with `JSON.stringify(data)` without the `space` argument. Indented JSON wastes disk space and costs
-many more tokens to read. This applies only to the data a view writes at runtime. Keep
-`manifest.json` indented, since people read and edit it by hand.
+**Save data the plugin owns as compact JSON.** `JSON.parse` and `JSON.stringify` are built into the
+browser, so JSON needs no dependency. Serialize with `JSON.stringify(data)` without the `space`
+argument. Indented JSON wastes disk space and costs many more tokens to read:
+
+```ts
+const path = "candidates/aida.json";
+const candidate = JSON.parse(await ctx.files.read(path));
+candidate.stage = "Confirmed";
+await ctx.files.write(path, JSON.stringify(candidate), { overwrite: true });
+```
+
+When people will edit the raw files by hand, use indented JSON or YAML instead. A YAML plugin must
+declare an exact version of a browser parser such as [`yaml`](https://eemeli.org/yaml/) in its
+`dependencies`. Keep `manifest.json` as indented JSON, and keep the existing format when a plugin
+works with files people already keep.
 
 `ctx.path` is the opened node's path relative to the folder the plugin lives in: the plugin's own
 folder for a home view, the opened file for a file view. `ctx.homePath` is the plugin's own folder
