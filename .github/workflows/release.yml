@@ -30,4 +30,8 @@ jobs:
             exit 1
           fi
           echo "**Full diff**: https://github.com/$GITHUB_REPOSITORY/compare/$(git describe --tags --abbrev=0)...v$VERSION" >> notes.md
-          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes-file notes.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "v$VERSION"
+          git push origin "v$VERSION"
+          gh release create "v$VERSION" --verify-tag --title "v$VERSION" --notes-file notes.md
