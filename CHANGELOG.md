@@ -7,6 +7,16 @@ implements.
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-10-16
+
+`manifestVersion: "2.3"`.
+
+- Add `ctx.multiplayer.joinRoom(name)`: a room shared by everyone who holds the app and joins the
+  same name, where each person sets a presence value and sees everyone else's, with their identity
+  set by Lightfern's server. Needs the new `multiplayer` permission.
+- Add `ctx.fileId`, the opened node's server file ID, so a room can be per file.
+- Add the `useRoom(name)` and `useFileId()` React hooks.
+
 ## [2.2.0] - 2026-10-08
 
 `manifestVersion: "2.2"`.

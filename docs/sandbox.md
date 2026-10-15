@@ -74,7 +74,8 @@ Instead, on load the view posts a ready message to its parent and the host repli
 transferred `MessagePort`; every later call (`ctx.files.*`, `ctx.open`) is an RPC over that port,
 and holding the port is what proves the channel. Each RPC is permission-checked on the host side
 against the manifest, so the capability list in `permissions` is exactly what a view can reach.
-`connect()` performs this handshake for you; the message shapes are in
+Multiplayer rooms go through the port too: Lightfern holds the connection, so a view never opens a
+socket of its own. `connect()` performs this handshake for you; the message shapes are in
 [`src/protocol.ts`](../src/protocol.ts) for anyone building tooling on either side.
 
 ## Keyboard shortcuts

@@ -6,7 +6,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { hostContext } from "./client";
-import type { CurrentUser, FileEncoding, FileEntry } from "./protocol";
+import type { Room } from "./context";
+import type { CurrentUser, FileEncoding, FileEntry, Peer } from "./protocol";
 
 /** The signed-in user, re-rendering when the desktop auth state changes. */
 export function useCurrentUser(): CurrentUser | null {
@@ -18,6 +19,52 @@ export function useCurrentUser(): CurrentUser | null {
 export function usePath(): string {
   const ctx = hostContext();
   return useSyncExternalStore(ctx.onPathChange, () => ctx.path);
+}
+
+/** The opened node's server file ID, or `null` until it has synced. */
+export function useFileId(): string | null {
+  const ctx = hostContext();
+  return useSyncExternalStore(ctx.onPathChange, () => ctx.fileId);
+}
+
+/**
+ * Join the room `name` while the view is mounted, and leave it on unmount or when `name`
+ * changes. `peers` re-renders as people join, leave or change presence; until the join
+ * lands it is empty and `setPresence` does nothing.
+ */
+export function useRoom<Presence = unknown>(
+  name: string
+): {
+  peers: readonly Peer<Presence>[];
+  setPresence: (presence: Presence | null) => void;
+} {
+  const ctx = hostContext();
+  const [joined, setJoined] = useState<{
+    name: string;
+    room: Room<Presence>;
+    peers: readonly Peer<Presence>[];
+  } | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    let room: Room<Presence> | undefined;
+    void ctx.multiplayer.joinRoom<Presence>(name).then((next) => {
+      room = next;
+      if (!live) return next.leave();
+      setJoined({ name, room: next, peers: next.peers });
+      next.onPeersChange((peers) => setJoined({ name, room: next, peers }));
+    });
+    return () => {
+      live = false;
+      room?.leave();
+    };
+  }, [ctx, name]);
+
+  const current = joined?.name === name ? joined : null;
+  return {
+    peers: current?.peers ?? [],
+    setPresence: (presence) => current?.room.setPresence(presence),
+  };
 }
 
 /**

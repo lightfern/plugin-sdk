@@ -17,6 +17,8 @@
 export interface SerializableContext {
   pluginId: string;
   path: string;
+  /** The opened node's server file ID, or null until it has synced. */
+  fileId: string | null;
   homePath: string;
   user: CurrentUser | null;
 }
@@ -96,6 +98,31 @@ export interface PathChangedMessage {
   source: "lf-plugin-host";
   type: "path";
   path: string;
+  fileId: string | null;
+}
+
+// Everyone else in a room the view joined, sent whenever someone joins, leaves or changes
+// their presence.
+export interface PeersChangedMessage {
+  source: "lf-plugin-host";
+  type: "multiplayer.peers";
+  room: string;
+  peers: Peer[];
+}
+
+/** Who a peer is, set by the server from their sign-in, never by their plugin or client. */
+export interface PeerUser {
+  id: string;
+  name: string | null;
+  profilePictureUrl: string | null;
+}
+
+export interface Peer<Presence = unknown> {
+  /** One per connection: the same person on two devices is two peers. */
+  peerId: string;
+  user: PeerUser;
+  /** `null` until they set one. */
+  presence: Presence | null;
 }
 
 export interface UserChangedMessage {
@@ -125,10 +152,18 @@ export interface FilesChangedMessage {
 
 // Everything the host pushes to a view over the port after the handshake.
 export type HostPushMessage =
-  PathChangedMessage | FilesChangedMessage | UserChangedMessage;
+  PathChangedMessage | FilesChangedMessage | UserChangedMessage | PeersChangedMessage;
 
 export type RpcMethod =
-  "files.read" | "files.write" | "files.list" | "files.move" | "files.delete" | "open";
+  | "files.read"
+  | "files.write"
+  | "files.list"
+  | "files.move"
+  | "files.delete"
+  | "open"
+  | "multiplayer.join"
+  | "multiplayer.leave"
+  | "multiplayer.setPresence";
 
 // "utf-8" (the default) decodes to a string; "binary" returns the raw bytes untouched,
 // for content a text decode would corrupt (an image, a PDF).
@@ -169,6 +204,25 @@ export interface OpenParams {
   newTab?: boolean;
 }
 
+export interface MultiplayerJoinParams {
+  name: string;
+}
+
+/** `room` names this join in later calls and pushes; `peers` is everyone else already there. */
+export interface MultiplayerJoinResult {
+  room: string;
+  peers: Peer[];
+}
+
+export interface MultiplayerLeaveParams {
+  room: string;
+}
+
+export interface MultiplayerSetPresenceParams {
+  room: string;
+  presence: unknown;
+}
+
 export interface FileEntry {
   /** Path relative to the activation root. */
   path: string;
@@ -185,7 +239,10 @@ export interface RpcRequest {
     | FilesListParams
     | FilesMoveParams
     | FilesDeleteParams
-    | OpenParams;
+    | OpenParams
+    | MultiplayerJoinParams
+    | MultiplayerLeaveParams
+    | MultiplayerSetPresenceParams;
 }
 
 export interface RpcError {

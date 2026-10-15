@@ -1,4 +1,5 @@
-import type { FilesApi, ViewContext } from "./context";
+import type { FilesApi, Room, ViewContext } from "./context";
+import { MAX_PRESENCE_BYTES } from "./context";
 import type {
   CurrentUser,
   FileChange,
@@ -6,6 +7,8 @@ import type {
   FileEntry,
   HostInitMessage,
   HostPushMessage,
+  MultiplayerJoinResult,
+  Peer,
   RpcMethod,
   RpcRequest,
   RpcResponse,
@@ -66,15 +69,20 @@ export function hostContext(): ViewContext {
 
 function createContext(context: SerializableContext, port: MessagePort): ViewContext {
   let path = context.path;
+  let fileId = context.fileId;
   let user = context.user;
   const pathListeners = new Set<(path: string) => void>();
   const userListeners = new Set<(user: CurrentUser | null) => void>();
   const watchers = new Set<{ path: string; listener: (change: FileChange) => void }>();
+  const rooms = new Map<string, (peers: Peer[]) => void>();
 
   const call = openChannel(port, (push) => {
     if (push.type === "path") {
       path = push.path;
+      fileId = push.fileId;
       for (const listener of pathListeners) listener(path);
+    } else if (push.type === "multiplayer.peers") {
+      rooms.get(push.room)?.(push.peers);
     } else if (push.type === "user") {
       user = push.user;
       for (const listener of userListeners) listener(user);
@@ -109,6 +117,38 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
     },
   };
 
+  async function joinRoom<Presence>(name: string): Promise<Room<Presence>> {
+    const joined = (await call("multiplayer.join", { name })) as MultiplayerJoinResult;
+    let peers = joined.peers as Peer<Presence>[];
+    const listeners = new Set<(peers: readonly Peer<Presence>[]) => void>();
+    rooms.set(joined.room, (next) => {
+      peers = next as Peer<Presence>[];
+      for (const listener of listeners) listener(peers);
+    });
+    return {
+      get peers() {
+        return peers;
+      },
+      setPresence: (presence) => {
+        const bytes = new TextEncoder().encode(JSON.stringify(presence)).length;
+        if (bytes > MAX_PRESENCE_BYTES) {
+          throw new PluginRpcError(`Presence is ${bytes} bytes; the limit is 8 KiB`);
+        }
+        void call("multiplayer.setPresence", { room: joined.room, presence });
+      },
+      onPeersChange: (listener) => {
+        listeners.add(listener);
+        return () => {
+          listeners.delete(listener);
+        };
+      },
+      leave: () => {
+        if (!rooms.delete(joined.room)) return;
+        void call("multiplayer.leave", { room: joined.room });
+      },
+    };
+  }
+
   return {
     pluginId: context.pluginId,
     get currentUser() {
@@ -122,7 +162,11 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
       return path;
     },
     homePath: context.homePath,
+    get fileId() {
+      return fileId;
+    },
     files,
+    multiplayer: { joinRoom },
     open: async (openPath, newTab) => {
       await call("open", { path: openPath, newTab });
     },

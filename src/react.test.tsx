@@ -19,14 +19,21 @@ function fakeHost(
   folders: Record<string, FileEntry[]> = {}
 ) {
   const port = {
+    sent: [] as RpcRequest[],
     onmessage: null as ((event: MessageEvent) => void) | null,
     start() {},
     postMessage(request: RpcRequest) {
-      const { path } = request.params as { path: string };
+      port.sent.push(request);
+      const { path, name } = request.params as { path: string; name: string };
       const response: RpcResponse = {
         id: request.id,
         ok: true,
-        result: request.method === "files.list" ? folders[path] : disk[path],
+        result:
+          request.method === "multiplayer.join"
+            ? { room: name, peers: [] }
+            : request.method === "files.list"
+              ? folders[path]
+              : disk[path],
       };
       queueMicrotask(() => port.onmessage?.({ data: response } as MessageEvent));
     },
@@ -49,7 +56,7 @@ async function connectTo(port: ReturnType<typeof fakeHost>, path: string) {
     data: {
       source: "lf-plugin-host",
       type: "init",
-      context: { pluginId: "deck", path, homePath: "deck", user: null },
+      context: { pluginId: "deck", path, fileId: null, homePath: "deck", user: null },
     },
   });
   Object.defineProperty(init, "ports", { value: [port] });
@@ -109,6 +116,7 @@ describe("the React bindings", () => {
         source: "lf-plugin-host",
         type: "path",
         path: "Golden Gate Bridge.md",
+        fileId: null,
       });
     });
 
@@ -233,5 +241,61 @@ describe("the React bindings", () => {
     act(() => unmount());
     expect(created).toEqual(["blob:mock/0"]);
     expect(revoked).toEqual(["blob:mock/0"]);
+  });
+
+  it("re-renders the file ID once the file syncs", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "notes.md");
+    const { useFileId } = await import("./react");
+
+    const View = () => <span>{useFileId() ?? "unsynced"}</span>;
+    render(<View />);
+    expect(screen.getByText("unsynced")).toBeDefined();
+
+    await act(async () => {
+      port.push({
+        source: "lf-plugin-host",
+        type: "path",
+        path: "notes.md",
+        fileId: "f-1",
+      });
+    });
+    expect(screen.getByText("f-1")).toBeDefined();
+  });
+
+  it("joins a room while mounted, re-renders its peers, and leaves on unmount", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "board");
+    const { useRoom } = await import("./react");
+
+    function View() {
+      const { peers } = useRoom("board");
+      return <span>{peers.map((peer) => peer.user.name).join(", ") || "alone"}</span>;
+    }
+
+    const { unmount } = render(<View />);
+    expect(await screen.findByText("alone")).toBeDefined();
+
+    await act(async () => {
+      port.push({
+        source: "lf-plugin-host",
+        type: "multiplayer.peers",
+        room: "board",
+        peers: [
+          {
+            peerId: "1",
+            user: { id: "user-1", name: "Ada Lovelace", profilePictureUrl: null },
+            presence: null,
+          },
+        ],
+      });
+    });
+    expect(screen.getByText("Ada Lovelace")).toBeDefined();
+
+    unmount();
+    expect(port.sent[port.sent.length - 1]).toMatchObject({
+      method: "multiplayer.leave",
+      params: { room: "board" },
+    });
   });
 });

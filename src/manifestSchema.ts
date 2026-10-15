@@ -16,7 +16,7 @@ const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 // (for example, `react-dom` permits `react-dom/client`).
 const PACKAGE_NAME = /^(?:@[-a-z0-9~][-.a-z0-9~]*\/)?[-a-z0-9~][-.a-z0-9~]*$/i;
 
-const permissionSchema = z.enum(["files.read", "files.write"]);
+const permissionSchema = z.enum(["files.read", "files.write", "multiplayer"]);
 
 const viewSchema = z
   .object({

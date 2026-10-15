@@ -82,8 +82,9 @@ assistant to write them. Concretely:
   plugin origin; dependencies are not loaded from remote script URLs. Declare `react` and
   `react-dom` when using React/TSX. Each declared package loads once per view, and its subpaths
   share that copy. A package's required peer dependencies must be declared too.
-- `permissions`: optional; the file capabilities the plugin uses, empty by default: `files.read`,
-  `files.write`. Declare exactly what the views call; using an undeclared capability fails.
+- `permissions`: optional; the capabilities the plugin uses, empty by default: `files.read`,
+  `files.write`, `multiplayer`. Declare exactly what the views call; using an undeclared capability
+  fails.
 - `network_permissions`: optional; allowed network origins, empty by default. An entry is an
   `https://` origin, optionally with a `*.` subdomain wildcard: `https://api.example.com`,
   `https://*.example.com` (matches subdomains only, not `example.com` itself). No paths, no
@@ -176,11 +177,11 @@ empty `<div id="root">`. Your entry module connects to the host and mounts. That
 - **Bare** imports resolve through the host-injected import map. Nothing is installed, and nothing
   else is importable:
 
-  | Import                 | What it is                                                                                                                                 |
-  | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                          |
-  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, and `useCurrentUser()`. Requires `react` in `dependencies`. |
-  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.         |
+  | Import                 | What it is                                                                                                                                                             |
+  | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                                                      |
+  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, `useCurrentUser()`, `useFileId()`, and `useRoom()`. Requires `react` in `dependencies`. |
+  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.                                     |
 
   Declare every bare package import in `dependencies`, including the peer dependencies of the
   packages you use. A subpath of a declared package uses the same instance as the package, so
@@ -250,6 +251,10 @@ routing to a file's view, opening a plugin's `home` view for its own folder, or 
 ordinary folder in the tree. The path may not reach beyond the folder the plugin lives in;
 `newTab: true` opens beside the current tab. Needs no permission. A file view returns to its home
 with `ctx.open(ctx.homePath)`.
+
+`ctx.fileId` is the opened node's server file ID: the same for everyone who holds the file, and kept
+through renames and moves. It is `null` until the file has synced and while signed out;
+`onPathChange` (or `useFileId()`) tells you when it arrives.
 
 The full `ViewContext` and `FilesApi` types, with their documentation comments, live in
 [`src/context.ts`](../src/context.ts).
@@ -334,6 +339,29 @@ useEffect(() => {
     else void refreshIndex(); // created / deleted → the set of files moved
   });
 }, []);
+```
+
+### Multiplayer
+
+With the `multiplayer` permission, a view can show who else is using the app.
+`ctx.multiplayer.joinRoom(name)` joins a room shared by everyone who holds this app and joins the
+same name; a copy of the app has rooms of its own. Pass `ctx.fileId` as the name for a room per
+file.
+
+In a room, each person sets one presence value with `room.setPresence(value)`: any JSON up to 8 KiB,
+the latest value winning, sent at most 60 times a second. `room.peers` is everyone else, each with
+`user` (`id`, `name`, `profilePictureUrl`) set by Lightfern's server from their sign-in, so a peer
+can't pose as someone else. Presence is never saved; keep anything that should last in files. While
+signed out or offline the room just has nobody else in it, so a view needs no separate offline path.
+
+```tsx
+import { useRoom } from "lightfern:host/react";
+
+function Viewers() {
+  const { peers, setPresence } = useRoom<{ card: string }>("board");
+  // …call setPresence({ card }) as the user selects a card
+  return peers.map((peer) => <span key={peer.peerId}>{peer.user.name}</span>);
+}
 ```
 
 ### Styling
