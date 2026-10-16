@@ -85,7 +85,9 @@ People who join the same room name in the same app see each other's presence. Th
 the app is shared with. Someone with the app open on 2 devices, or in 2 views, appears as 2 peers
 with the same `user.id`. Group by `user.id` to show each person once.
 
-A copy of the app has its own rooms.
+Rooms belong to one copy of the app. Someone with a separate copy, even with the same plugin code,
+joins different rooms. For example, if you copy an app folder, or install a plugin yourself instead
+of opening the one shared with you, nobody from the original app sees you.
 
 Name a room after what it's about. Use one name, like `"board"`, for the whole app. Use a file's
 path to give each file its own room, because paths are the same for everyone who has the app. If
