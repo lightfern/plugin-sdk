@@ -14,7 +14,7 @@ implements.
 - Add `ctx.multiplayer.joinRoom(name)`: a room shared by everyone who holds the app and joins the
   same name, where each person sets a presence value and sees everyone else's, with their identity
   set by Lightfern's server. Needs the new `multiplayer` permission.
-- Add the `useRoom(name)` React hook.
+- Add the `useConnected(name)`, `usePeers(name)` and `useSetPresence(name)` React hooks.
 - Add the [Multiplayer](docs/multiplayer.md) guide.
 
 ## [2.2.0] - 2026-10-08

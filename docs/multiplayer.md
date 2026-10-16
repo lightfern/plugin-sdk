@@ -20,18 +20,27 @@ card, a vote or a comment, to a file.
 
 ## Example
 
+Each hook takes the room name and re-renders only for its own part of the room, so a component that
+only sets presence never re-renders, and a status badge doesn't re-render when cursors move.
+
 ```tsx
 import { useEffect } from "react";
-import { useRoom } from "lightfern:host/react";
+import { useConnected, usePeers, useSetPresence } from "lightfern:host/react";
 
 type Presence = { card: string | null };
 
-function Board({ openCard }: { openCard: string | null }) {
-  const { peers, setPresence } = useRoom<Presence>("board");
-  useEffect(() => setPresence({ card: openCard }), [openCard, setPresence]);
+function Status() {
+  return useConnected("board") ? null : <span>Offline</span>;
+}
 
-  const viewersOf = (card: string) => peers.filter((peer) => peer.presence?.card === card);
-  // Render each card with an avatar for everyone in viewersOf(card.id).
+function Card({ id, open }: { id: string; open: boolean }) {
+  const setPresence = useSetPresence<Presence>("board");
+  useEffect(() => {
+    if (open) setPresence({ card: id });
+  }, [id, open, setPresence]);
+
+  const viewers = usePeers<Presence>("board").filter((peer) => peer.presence?.card === id);
+  // Render the card with an avatar for each viewer.
 }
 ```
 
@@ -69,11 +78,9 @@ interface Peer<Presence> {
 }
 
 // From "lightfern:host/react"
-function useRoom<Presence = unknown>(name: string): {
-  peers: readonly Peer<Presence>[];
-  connected: boolean;
-  setPresence: (presence: Presence | null) => void;
-};
+function useConnected(name: string): boolean;
+function usePeers<Presence = unknown>(name: string): readonly Peer<Presence>[];
+function useSetPresence<Presence = unknown>(name: string): (presence: Presence | null) => void;
 ```
 
 ### `joinRoom(name)`
@@ -125,13 +132,17 @@ function useRoom<Presence = unknown>(name: string): {
 - Takes this view out of the room straight away.
 - Happens automatically for every room when the view closes.
 
-### `useRoom(name)`
+### React hooks
 
-- Joins when the component mounts, and leaves when it unmounts or `name` changes.
-- Returns `peers`, which is empty until the room is joined.
-- Returns `connected`, which is `false` until the room is joined and connected.
-- Returns `setPresence`, which is the same function on every render.
-- Sends presence you set before the room is joined once it is.
+- Every hook in a view that uses the same name shares one room. The room is joined when the first of
+  them mounts and left when the last one unmounts.
+- A component can use as many room names as it needs, like `"board"` and a file's path.
+- `useConnected(name)` re-renders only when the connection changes. It is `false` until the room is
+  joined and connected.
+- `usePeers(name)` re-renders only when a peer joins, leaves or changes. It is empty until the room
+  is joined. Wrap each peer's component in `React.memo` so only the peer who changed re-renders.
+- `useSetPresence(name)` never re-renders. It returns the same function on every render, and
+  presence you set before the room is joined is sent once it is.
 
 ## Writing good presence
 

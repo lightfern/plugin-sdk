@@ -179,11 +179,11 @@ empty `<div id="root">`. Your entry module connects to the host and mounts. That
 - **Bare** imports resolve through the host-injected import map. Nothing is installed, and nothing
   else is importable:
 
-  | Import                 | What it is                                                                                                                                              |
-  | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                                       |
-  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, `useCurrentUser()`, and `useRoom()`. Requires `react` in `dependencies`. |
-  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.                      |
+  | Import                 | What it is                                                                                                                                                                                    |
+  | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                                                                             |
+  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, `useCurrentUser()`, `useConnected()`, `usePeers()` and `useSetPresence()`. Requires `react` in `dependencies`. |
+  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.                                                            |
 
   Declare every bare package import in `dependencies`, including the peer dependencies of the
   packages you use. A subpath of a declared package uses the same instance as the package, so

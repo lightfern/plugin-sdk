@@ -242,14 +242,69 @@ describe("the React bindings", () => {
     expect(revoked).toEqual(["blob:mock/0"]);
   });
 
+  const roomPush = (connected: boolean, names: string[]) => ({
+    source: "lf-plugin-host" as const,
+    type: "multiplayer.room" as const,
+    room: "board",
+    peers: names.map((name) => ({
+      peerId: name,
+      user: { id: name, name, profilePictureUrl: null },
+      presence: null,
+    })),
+    connected,
+  });
+
+  it("re-renders only the hooks whose part of the room changed", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "board");
+    const { useConnected, usePeers } = await import("./react");
+    const renders = { status: 0, peers: 0 };
+
+    function Status() {
+      renders.status += 1;
+      return <span>{useConnected("board") ? "online" : "offline"}</span>;
+    }
+    function Peers() {
+      renders.peers += 1;
+      return (
+        <span>
+          {usePeers("board")
+            .map((peer) => peer.user.name)
+            .join(", ") || "alone"}
+        </span>
+      );
+    }
+
+    render(
+      <>
+        <Status />
+        <Peers />
+      </>
+    );
+    // Pushes only reach a room once its join has landed.
+    await waitFor(() =>
+      expect(port.sent.map((r) => r.method)).toContain("multiplayer.join")
+    );
+    await act(async () => {});
+    await act(async () => port.push(roomPush(true, [])));
+    expect(screen.getByText("online")).toBeDefined();
+    const before = { ...renders };
+
+    await act(async () => port.push(roomPush(true, ["Ada"])));
+
+    expect(screen.getByText("Ada")).toBeDefined();
+    expect(renders.status).toBe(before.status);
+    expect(renders.peers).toBe(before.peers + 1);
+  });
+
   it("sends presence set on mount once the room is joined", async () => {
     const port = fakeHost({});
     await connectTo(port, "board");
-    const { useRoom } = await import("./react");
+    const { useSetPresence } = await import("./react");
     const { useEffect } = await import("react");
 
     function View() {
-      const { setPresence } = useRoom<{ card: string }>("board");
+      const setPresence = useSetPresence<{ card: string }>("board");
       useEffect(() => setPresence({ card: "a" }), [setPresence]);
       return null;
     }
@@ -265,41 +320,42 @@ describe("the React bindings", () => {
     );
   });
 
-  it("joins a room while mounted, re-renders its peers and connection, and leaves on unmount", async () => {
+  it("joins each room once per view, and leaves it when its last hook unmounts", async () => {
     const port = fakeHost({});
     await connectTo(port, "board");
-    const { useRoom } = await import("./react");
+    const { useConnected, usePeers } = await import("./react");
+    const methods = () => port.sent.map((request) => request.method);
 
-    function View() {
-      const { peers, connected } = useRoom("board");
-      const names = peers.map((peer) => peer.user.name).join(", ");
-      return <span>{connected ? names : "offline"}</span>;
+    function Board() {
+      useConnected("board");
+      usePeers("board");
+      return null;
     }
+    function Cards() {
+      usePeers("cards");
+      return null;
+    }
+    const View = ({ cards }: { cards: boolean }) => (
+      <>
+        <Board />
+        {cards && <Cards />}
+      </>
+    );
 
-    const { unmount } = render(<View />);
-    expect(await screen.findByText("offline")).toBeDefined();
+    const { rerender, unmount } = render(<View cards />);
+    await waitFor(() =>
+      expect(methods().filter((method) => method === "multiplayer.join")).toHaveLength(
+        2
+      )
+    );
 
-    await act(async () => {
-      port.push({
-        source: "lf-plugin-host",
-        type: "multiplayer.room",
-        room: "board",
-        peers: [
-          {
-            peerId: "1",
-            user: { id: "user-1", name: "Ada Lovelace", profilePictureUrl: null },
-            presence: null,
-          },
-        ],
-        connected: true,
-      });
-    });
-    expect(screen.getByText("Ada Lovelace")).toBeDefined();
-
+    rerender(<View cards={false} />);
+    await waitFor(() => expect(methods()).toContain("multiplayer.leave"));
     unmount();
-    expect(port.sent[port.sent.length - 1]).toMatchObject({
-      method: "multiplayer.leave",
-      params: { room: "board" },
-    });
+    await waitFor(() =>
+      expect(methods().filter((method) => method === "multiplayer.leave")).toHaveLength(
+        2
+      )
+    );
   });
 });
