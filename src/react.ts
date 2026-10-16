@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { checkPresenceSize, hostContext } from "./client";
+import { hostContext } from "./client";
 import type { Room } from "./context";
 import type { CurrentUser, FileEncoding, FileEntry, Peer } from "./protocol";
 
@@ -61,7 +61,6 @@ export function useRoom<Presence = unknown>(
   }, [ctx, name]);
 
   const setPresence = useCallback((value: Presence | null) => {
-    checkPresenceSize(value);
     presence.current = { value };
     room.current?.setPresence(value);
   }, []);

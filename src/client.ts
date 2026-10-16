@@ -139,7 +139,10 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
         return peers;
       },
       setPresence: (presence) => {
-        checkPresenceSize(presence);
+        const bytes = new TextEncoder().encode(JSON.stringify(presence)).length;
+        if (bytes > MAX_PRESENCE_BYTES) {
+          throw new PluginRpcError(`Presence is ${bytes} bytes; the limit is 8 KiB`);
+        }
         void call("multiplayer.setPresence", { room: joined.room, presence });
       },
       onPeersChange: (listener) => {
@@ -220,12 +223,4 @@ function openChannel(port: MessagePort, onPush: (push: HostPushMessage) => void)
       pending.set(id, { resolve, reject });
       port.postMessage({ id, method, params } satisfies RpcRequest);
     });
-}
-
-/** Throws for presence over 8 KiB of JSON, the limit Lightfern sends. */
-export function checkPresenceSize(presence: unknown): void {
-  const bytes = new TextEncoder().encode(JSON.stringify(presence)).length;
-  if (bytes > MAX_PRESENCE_BYTES) {
-    throw new PluginRpcError(`Presence is ${bytes} bytes; the limit is 8 KiB`);
-  }
 }
