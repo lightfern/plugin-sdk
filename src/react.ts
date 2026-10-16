@@ -3,9 +3,9 @@
 // navigation has to wire the callback into state itself. These do it once: the path
 // becomes state, and a file's text becomes state keyed on the path it was read from.
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { hostContext } from "./client";
+import { checkPresenceSize, hostContext } from "./client";
 import type { Room } from "./context";
 import type { CurrentUser, FileEncoding, FileEntry, Peer } from "./protocol";
 
@@ -23,8 +23,9 @@ export function usePath(): string {
 
 /**
  * Join the room `name` while the view is mounted, and leave it on unmount or when `name`
- * changes. `peers` re-renders as people join, leave or change presence; until the join
- * lands it is empty and `setPresence` does nothing.
+ * changes. `peers` re-renders as people join, leave or change presence, and is empty until
+ * the room is joined. Presence set before then is sent once it is. `setPresence` is stable
+ * across renders.
  */
 export function useRoom<Presence = unknown>(
   name: string
@@ -35,30 +36,37 @@ export function useRoom<Presence = unknown>(
   const ctx = hostContext();
   const [joined, setJoined] = useState<{
     name: string;
-    room: Room<Presence>;
     peers: readonly Peer<Presence>[];
   } | null>(null);
+  const room = useRef<Room<Presence> | null>(null);
+  // Presence set before the join lands is sent once it does.
+  const presence = useRef<{ value: Presence | null } | null>(null);
 
   useEffect(() => {
     let live = true;
-    let room: Room<Presence> | undefined;
+    let joinedRoom: Room<Presence> | undefined;
     void ctx.multiplayer.joinRoom<Presence>(name).then((next) => {
-      room = next;
+      joinedRoom = next;
       if (!live) return next.leave();
-      setJoined({ name, room: next, peers: next.peers });
-      next.onPeersChange((peers) => setJoined({ name, room: next, peers }));
+      room.current = next;
+      if (presence.current) next.setPresence(presence.current.value);
+      setJoined({ name, peers: next.peers });
+      next.onPeersChange((peers) => setJoined({ name, peers }));
     });
     return () => {
       live = false;
-      room?.leave();
+      if (room.current === joinedRoom) room.current = null;
+      joinedRoom?.leave();
     };
   }, [ctx, name]);
 
-  const current = joined?.name === name ? joined : null;
-  return {
-    peers: current?.peers ?? [],
-    setPresence: (presence) => current?.room.setPresence(presence),
-  };
+  const setPresence = useCallback((value: Presence | null) => {
+    checkPresenceSize(value);
+    presence.current = { value };
+    room.current?.setPresence(value);
+  }, []);
+
+  return { peers: joined?.name === name ? joined.peers : [], setPresence };
 }
 
 /**

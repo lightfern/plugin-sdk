@@ -116,6 +116,9 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
   };
 
   async function joinRoom<Presence>(name: string): Promise<Room<Presence>> {
+    if (!name || name.length > 256) {
+      throw new PluginRpcError("A room name must be 1 to 256 characters");
+    }
     const joined = (await call("multiplayer.join", { name })) as MultiplayerJoinResult;
     let peers = joined.peers as Peer<Presence>[];
     const listeners = new Set<(peers: readonly Peer<Presence>[]) => void>();
@@ -136,10 +139,7 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
         return peers;
       },
       setPresence: (presence) => {
-        const bytes = new TextEncoder().encode(JSON.stringify(presence)).length;
-        if (bytes > MAX_PRESENCE_BYTES) {
-          throw new PluginRpcError(`Presence is ${bytes} bytes; the limit is 8 KiB`);
-        }
+        checkPresenceSize(presence);
         void call("multiplayer.setPresence", { room: joined.room, presence });
       },
       onPeersChange: (listener) => {
@@ -220,4 +220,12 @@ function openChannel(port: MessagePort, onPush: (push: HostPushMessage) => void)
       pending.set(id, { resolve, reject });
       port.postMessage({ id, method, params } satisfies RpcRequest);
     });
+}
+
+/** Throws for presence over 8 KiB of JSON, the limit Lightfern sends. */
+export function checkPresenceSize(presence: unknown): void {
+  const bytes = new TextEncoder().encode(JSON.stringify(presence)).length;
+  if (bytes > MAX_PRESENCE_BYTES) {
+    throw new PluginRpcError(`Presence is ${bytes} bytes; the limit is 8 KiB`);
+  }
 }

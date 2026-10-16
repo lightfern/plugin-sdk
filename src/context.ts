@@ -93,10 +93,11 @@ export interface Room<Presence = unknown> {
 
 export interface MultiplayerApi {
   /**
-   * Join the room `name` of this app: everyone who holds the app's folder and joins the same
-   * name is in it, and a copy of the app has rooms of its own. Pass a file's path for a room
-   * per file. While signed out or offline, or before the app has synced, you get a room with
-   * nobody else in it that fills up once Lightfern can connect. Requires `multiplayer`.
+   * Join the room `name` of this app: everyone with access to the app who joins the same name
+   * is in it, and a copy of the app has rooms of its own. Pass a file's path for a room per
+   * file. While signed out or offline, or before the app has synced, you get a room with
+   * nobody else in it that fills up once Lightfern can connect. Rejects without the
+   * `multiplayer` permission, or for a name that is empty or over 256 characters.
    */
   joinRoom<Presence = unknown>(name: string): Promise<Room<Presence>>;
 }

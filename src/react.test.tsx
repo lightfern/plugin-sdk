@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FileEntry, HostPushMessage, RpcRequest, RpcResponse } from "./protocol";
@@ -240,6 +240,29 @@ describe("the React bindings", () => {
     act(() => unmount());
     expect(created).toEqual(["blob:mock/0"]);
     expect(revoked).toEqual(["blob:mock/0"]);
+  });
+
+  it("sends presence set on mount once the room is joined", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "board");
+    const { useRoom } = await import("./react");
+    const { useEffect } = await import("react");
+
+    function View() {
+      const { setPresence } = useRoom<{ card: string }>("board");
+      useEffect(() => setPresence({ card: "a" }), [setPresence]);
+      return null;
+    }
+
+    render(<View />);
+    await waitFor(() =>
+      expect(port.sent).toContainEqual(
+        expect.objectContaining({
+          method: "multiplayer.setPresence",
+          params: { room: "board", presence: { card: "a" } },
+        })
+      )
+    );
   });
 
   it("joins a room while mounted, re-renders its peers, and leaves on unmount", async () => {

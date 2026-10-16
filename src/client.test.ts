@@ -237,6 +237,14 @@ describe("connect", () => {
     ]);
   });
 
+  it("refuses a room name that is empty or over 256 characters", async () => {
+    const port = createFakeHostPort(noopRespond);
+    const ctx = await connectWithHost(port);
+
+    await expect(ctx.multiplayer.joinRoom("")).rejects.toThrow("1 to 256");
+    await expect(ctx.multiplayer.joinRoom("x".repeat(257))).rejects.toThrow("1 to 256");
+  });
+
   it("joins a room, follows its peers, sends presence and leaves", async () => {
     const ada = {
       peerId: "1",
