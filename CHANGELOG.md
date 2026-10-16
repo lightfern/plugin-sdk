@@ -7,6 +7,11 @@ implements.
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-10-16
+
+- `ctx.fileId` is now documented as the file's ID from the start, which can change once when a new
+  file first syncs. It is `null` only where there is no library, like the public share viewer.
+
 ## [2.3.0] - 2026-10-16
 
 `manifestVersion: "2.3"`.

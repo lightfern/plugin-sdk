@@ -254,9 +254,10 @@ ordinary folder in the tree. The path may not reach beyond the folder the plugin
 `newTab: true` opens beside the current tab. Needs no permission. A file view returns to its home
 with `ctx.open(ctx.homePath)`.
 
-`ctx.fileId` is the opened node's server file ID: the same for everyone who holds the file, and kept
-through renames and moves. It is `null` until the file has synced and while signed out;
-`onPathChange` (or `useFileId()`) tells you when it arrives.
+`ctx.fileId` is the opened node's file ID: the same for everyone with access to the file, and kept
+through renames and moves. A new file's ID can change once, when it first syncs; `onPathChange` (or
+`useFileId()`) tells you when it does. It is `null` only where there is no library, like the public
+share viewer.
 
 The full `ViewContext` and `FilesApi` types, with their documentation comments, live in
 [`src/context.ts`](../src/context.ts).

@@ -160,7 +160,8 @@ Keep presence to IDs, positions and short labels. Never put file contents in it.
 - Use a file's ID to give each file its own room. `ctx.fileId` (or `useFileId()`) is the opened
   file's ID. It is the same for everyone with access to the file, and stays the same when the file
   is renamed or moved.
-- A file's ID is `null` until the file has synced. Wait for it before joining the file's room.
+- A new file's ID can change once, when it first syncs. `useFileId()` re-renders when it does, so a
+  room named by it follows.
 - Rooms belong to one copy of the app. If someone copies the app's folder, or installs the same
   plugin themselves, they are in different rooms from the original, even with the same name.
 
