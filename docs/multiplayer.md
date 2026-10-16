@@ -1,21 +1,15 @@
 # Multiplayer
 
-When someone shares an app, everyone who holds it works on the same files, and sync merges their
-edits. That covers what people make together. It doesn't cover what they're doing right now: which
-card someone has open, where their pointer is, what they're halfway through dragging. Files arrive
-in seconds and keep everything; this needs to arrive in a fraction of a second and disappear when
-the person leaves.
+The `multiplayer` permission gives your app a realtime presence API. People using the same app can
+see what each other is doing as it happens.
 
-Multiplayer is that second channel. Everyone using the same app can join a room, and each person in
-it publishes a small piece of live state, their **presence**, which everyone else sees as it
-changes, labelled with who they are. It needs the `multiplayer` permission in the manifest.
+Each person sets a small JSON value, called their presence. Everyone else in the room gets it within
+a fraction of a second, with who sent it. Presence is not saved. It disappears when the person
+leaves.
 
-## When to use it
-
-Use presence for what people are doing right now: who has which card or page open, a cursor, a drag
-or drawing in progress, a presenter's current slide, or the moves in a light game for a few friends
-(nothing referees it, so players can cheat). Anything that should still be there after everyone
-leaves, like votes, scores or comments, goes in files.
+Use presence for what people are doing now. For example, who has a card open, a cursor, a drag in
+progress, a presenter's current slide or the moves in a simple game. Nothing checks the moves, so
+players can cheat. Save anything that should last, like votes, scores or comments, in files.
 
 ## The API
 
@@ -37,7 +31,6 @@ interface Peer<Presence> {
   /** One connection: the same person on two devices is two peers with the same `user.id`. */
   peerId: string;
   user: PeerUser;
-  /** `null` until they set one. */
   presence: Presence | null;
 }
 
@@ -48,8 +41,8 @@ interface PeerUser {
 }
 ```
 
-`joinRoom` rejects only when the manifest lacks the `multiplayer` permission. `peers` can start
-empty while the connection opens, so render it once and again on every `onPeersChange`.
+`joinRoom` only fails if the manifest does not have the `multiplayer` permission. `peers` can be
+empty while the room connects. Render it once, then again on every `onPeersChange`.
 
 ```ts
 import type { Peer } from "lightfern:host";
@@ -70,7 +63,7 @@ stop();
 room.leave();
 ```
 
-In React, `useRoom(name)` joins while the component is mounted and leaves when it unmounts:
+In React, `useRoom(name)` joins the room when the component mounts and leaves when it unmounts:
 
 ```tsx
 import { useRoom } from "lightfern:host/react";
@@ -82,47 +75,49 @@ const { peers, setPresence } = useRoom<Presence>("board");
 
 ## Rooms
 
-**Who's in a room.** Everyone who holds the app's folder and joins the same name: the owner, the
-people it's shared with (readers included), and each of their devices. A copy of the app is a
-different app with rooms of its own.
+People who join the same room name in the same app see each other's presence. This includes everyone
+the app is shared with. Someone with the app open on 2 devices, or in 2 views, appears as 2 peers
+with the same `user.id`. Group by `user.id` to show each person once.
 
-**Naming rooms.** Name a room after what it's about. One name for the whole app (`"board"`) puts
-everyone together. A file's path gives each file its own room, because paths relative to the app are
-the same for everyone who holds it. Renaming the file moves anyone who reopens it into a new room.
+A copy of the app has its own rooms.
 
-**Your own devices.** If you have the app open on two machines, each shows up in the other's `peers`
-with your `user.id`. Group by `user.id` to show each person once.
+Name a room after what it's about. Use one name, like `"board"`, for the whole app. Use a file's
+path to give each file its own room, because paths are the same for everyone who has the app. If
+someone renames the file, people who reopen it join a new room.
 
-**Offline and signed out.** The room just has nobody else in it, and fills up once Lightfern can
-connect. The view needs no separate offline path.
+When someone is offline or signed out, their room has nobody else in it. It fills up when Lightfern
+connects. You do not need to handle this separately.
 
 ## Presence is state, not messages
 
-Each person has one presence value, and setting it replaces the last one. It's sent at most 60 times
-a second, so values in between may never reach anyone. Describe where things are, not what happened:
-`{ dragging: "card-3", x: 120, y: 48 }` works, `{ event: "dropped" }` can be lost. An event that
-matters, like a drop or a move in a game, goes in a file.
+Each person has one presence value. Setting it replaces the old one. Lightfern sends it at most 60
+times a second, so some values in between are never sent.
 
-- A presence value is any JSON up to 8 KiB. Keep it to IDs, coordinates and short labels, never file
-  contents.
-- It's `null` until the person sets one, and it's gone as soon as they leave or close the view.
-- Someone who joins late sees everyone's current presence and nothing from before.
+Describe where things are, not what happened. `{ dragging: "card-3", x: 120, y: 48 }` works.
+`{ event: "dropped" }` can get lost. Save events that matter, like a drop or a game move, in a file.
 
-## Who someone is, and what to trust
+- Presence can be any JSON up to 8 KiB. Keep it to IDs, coordinates and short labels.
+- Presence is `null` until the person sets it, and disappears when they leave or close the view.
+- Someone who joins late sees everyone's current presence, but nothing from before.
 
-`peer.user` (`id`, `name`, `profilePictureUrl`) comes from Lightfern's server and the person's
-sign-in, so nobody can appear as someone else. The presence value is whatever that person's copy of
-the plugin sent. Treat it as input: check its shape before you use it, and never render it as HTML.
-Showing a `profilePictureUrl` needs its origin in `network_permissions`.
+## Trust
 
-## Presence and files together
+`peer.user` comes from Lightfern's server. Nobody can pretend to be someone else.
 
-Most features use both: presence while something is in progress, a file for the result. When Bob
-drags a card, his presence carries the card and where it is, so Alice sees it move. When he drops
-it, his view writes the board file. Alice's view gets that write through `ctx.files.watch` once it
-syncs, which takes seconds, so keep showing the card where Bob's presence last put it until the file
-catches up.
+`peer.presence` is whatever the other person's plugin sent. Check its shape before you use it. Never
+render it as HTML.
 
-Two people can write the same file at once. Lightfern merges JSON and CSV by structure, so keep each
-item under its own key or in its own row: two people moving different cards both land, and when two
-people change the same value, the last to sync wins.
+To show a `profilePictureUrl`, add its origin to `network_permissions`.
+
+## Using presence with files
+
+Most features use both. Use presence while something is happening, and a file for the result.
+
+For example, Bob drags a card. His presence holds the card and its position, so Alice sees it move.
+When Bob drops it, his view saves the board file. Alice's view gets the change through
+`ctx.files.watch` after it syncs, which takes a few seconds. Keep showing the card where Bob's
+presence last put it until the file arrives.
+
+Two people can save the same file at the same time. Lightfern merges JSON and CSV by structure. Keep
+each item under its own key or in its own row. If 2 people move different cards, both changes are
+kept. If they change the same value, the last one to sync wins.
