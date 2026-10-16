@@ -292,4 +292,40 @@ describe("connect", () => {
     });
     expect(room.peers).toEqual([]);
   });
+
+  it("keeps an unchanged peer's object, and skips a push that changes nobody", async () => {
+    const peer = (id: string, card: string) => ({
+      peerId: id,
+      user: { id, name: id, profilePictureUrl: null },
+      presence: { card },
+    });
+    const port = createFakeHostPort((request) => ({
+      id: request.id,
+      ok: true,
+      result:
+        request.method === "multiplayer.join"
+          ? { room: "r-1", peers: [peer("ada", "a"), peer("bob", "b")] }
+          : undefined,
+    }));
+    const ctx = await connectWithHost(port);
+    const room = await ctx.multiplayer.joinRoom("board");
+    const [ada, bob] = room.peers;
+    const seen = vi.fn();
+    room.onPeersChange(seen);
+    const push = (peers: ReturnType<typeof peer>[]) =>
+      port.push({
+        source: "lf-plugin-host",
+        type: "multiplayer.peers",
+        room: "r-1",
+        peers,
+      });
+
+    push([peer("ada", "a"), peer("bob", "c")]);
+    expect(room.peers[0]).toBe(ada);
+    expect(room.peers[1]).not.toBe(bob);
+    expect(room.peers[1].presence).toEqual({ card: "c" });
+
+    push([peer("ada", "a"), peer("bob", "c")]);
+    expect(seen).toHaveBeenCalledTimes(1);
+  });
 });

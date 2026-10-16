@@ -73,14 +73,20 @@ export interface FilesApi {
 export const MAX_PRESENCE_BYTES = 8 * 1024;
 
 export interface Room<Presence = unknown> {
-  /** Everyone else in the room, including your own other devices. */
+  /**
+   * Everyone else in the room, including your own other devices. Never includes this view.
+   * A peer whose user and presence haven't changed keeps the same object, so compare with `===`.
+   */
   readonly peers: readonly Peer<Presence>[];
   /**
    * Set your presence, any JSON value up to 8 KiB, for everyone else in the room. The latest
    * value wins; Lightfern sends at most 60 a second. Throws on a value over the limit.
    */
   setPresence(presence: Presence | null): void;
-  /** Called with the new `peers` whenever someone joins, leaves or changes presence. Returns an unsubscribe. */
+  /**
+   * Called with the new `peers` when someone joins, leaves or changes presence, at most once a
+   * frame. Returns an unsubscribe.
+   */
   onPeersChange(listener: (peers: readonly Peer<Presence>[]) => void): () => void;
   leave(): void;
 }

@@ -120,7 +120,15 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
     let peers = joined.peers as Peer<Presence>[];
     const listeners = new Set<(peers: readonly Peer<Presence>[]) => void>();
     rooms.set(joined.room, (next) => {
-      peers = next as Peer<Presence>[];
+      // An unchanged peer keeps its object, so a view can skip it with `===`.
+      const before = new Map(peers.map((peer) => [peer.peerId, peer]));
+      const kept = (next as Peer<Presence>[]).map((peer) => {
+        const old = before.get(peer.peerId);
+        return old && JSON.stringify(old) === JSON.stringify(peer) ? old : peer;
+      });
+      if (kept.length === peers.length && kept.every((peer, i) => peer === peers[i]))
+        return;
+      peers = kept;
       for (const listener of listeners) listener(peers);
     });
     return {

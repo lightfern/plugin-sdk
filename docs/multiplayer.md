@@ -17,11 +17,17 @@ players can cheat. Save anything that should last, like votes, scores or comment
 ctx.multiplayer.joinRoom<Presence = unknown>(name: string): Promise<Room<Presence>>;
 
 interface Room<Presence> {
-  /** Everyone else in the room, including your own other devices. Never includes this view. */
+  /**
+   * Everyone else in the room, including your own other devices. Never includes this view.
+   * A peer whose user and presence haven't changed keeps the same object, so compare with `===`.
+   */
   readonly peers: readonly Peer<Presence>[];
   /** Replace your presence for everyone else. Throws if the JSON is over 8 KiB. */
   setPresence(presence: Presence | null): void;
-  /** Called with the new `peers` whenever someone joins, leaves or changes presence. Returns an unsubscribe. */
+  /**
+   * Called with the new `peers` when someone joins, leaves or changes presence, at most once a
+   * frame. Returns an unsubscribe.
+   */
   onPeersChange(listener: (peers: readonly Peer<Presence>[]) => void): () => void;
   /** Leave the room. Closing the view leaves every room it joined. */
   leave(): void;
