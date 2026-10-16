@@ -98,8 +98,6 @@ export interface PathChangedMessage {
   path: string;
 }
 
-// Everyone else in a room the view joined, sent whenever someone joins, leaves or changes
-// their presence.
 export interface PeersChangedMessage {
   source: "lf-plugin-host";
   type: "multiplayer.peers";
@@ -107,7 +105,6 @@ export interface PeersChangedMessage {
   peers: Peer[];
 }
 
-/** Who a peer is, set by the server from their sign-in, never by their plugin or client. */
 export interface PeerUser {
   id: string;
   name: string | null;
@@ -115,10 +112,8 @@ export interface PeerUser {
 }
 
 export interface Peer<Presence = unknown> {
-  /** One per connection: the same person on two devices is two peers. */
   peerId: string;
   user: PeerUser;
-  /** `null` until they set one. */
   presence: Presence | null;
 }
 
@@ -205,7 +200,6 @@ export interface MultiplayerJoinParams {
   name: string;
 }
 
-/** `room` names this join in later calls and pushes; `peers` is everyone else already there. */
 export interface MultiplayerJoinResult {
   room: string;
   peers: Peer[];

@@ -69,36 +69,16 @@ export interface FilesApi {
   watch(path: string, listener: (change: FileChange) => void): () => void;
 }
 
-/** Presence over 8 KiB of JSON is refused. */
 export const MAX_PRESENCE_BYTES = 8 * 1024;
 
 export interface Room<Presence = unknown> {
-  /**
-   * Everyone else in the room, including your own other devices. Never includes this view.
-   * A peer whose user and presence haven't changed keeps the same object, so compare with `===`.
-   */
   readonly peers: readonly Peer<Presence>[];
-  /**
-   * Set your presence, any JSON value up to 8 KiB, for everyone else in the room. The latest
-   * value wins; Lightfern sends at most 60 a second. Throws on a value over the limit.
-   */
   setPresence(presence: Presence | null): void;
-  /**
-   * Called with the new `peers` when someone joins, leaves or changes presence, at most once a
-   * frame. Returns an unsubscribe.
-   */
   onPeersChange(listener: (peers: readonly Peer<Presence>[]) => void): () => void;
   leave(): void;
 }
 
 export interface MultiplayerApi {
-  /**
-   * Join the room `name` of this app: everyone with access to the app who joins the same name
-   * is in it, and a copy of the app has rooms of its own. Pass a file's path for a room per
-   * file. While signed out or offline, or before the app has synced, you get a room with
-   * nobody else in it that fills up once Lightfern can connect. Rejects without the
-   * `multiplayer` permission, or for a name that is empty or over 256 characters.
-   */
   joinRoom<Presence = unknown>(name: string): Promise<Room<Presence>>;
 }
 
