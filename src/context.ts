@@ -3,7 +3,13 @@
 // an absolute filesystem path, and every operation is brokered and permission-checked
 // on the other side of the RPC channel.
 
-import type { CurrentUser, FileChange, FileEncoding, FileEntry } from "./protocol";
+import type {
+  CurrentUser,
+  FileChange,
+  FileEncoding,
+  FileEntry,
+  Peer,
+} from "./protocol";
 
 export interface FileWriteOptions {
   /**
@@ -63,6 +69,21 @@ export interface FilesApi {
   watch(path: string, listener: (change: FileChange) => void): () => void;
 }
 
+export const MAX_PRESENCE_BYTES = 8 * 1024;
+
+export interface Room<Presence = unknown> {
+  readonly peers: readonly Peer<Presence>[];
+  readonly connected: boolean;
+  setPresence(presence: Presence | null): void;
+  onPeersChange(listener: (peers: readonly Peer<Presence>[]) => void): () => void;
+  onConnectedChange(listener: (connected: boolean) => void): () => void;
+  leave(): void;
+}
+
+export interface MultiplayerApi {
+  joinRoom<Presence = unknown>(name: string): Promise<Room<Presence>>;
+}
+
 export interface ViewContext {
   readonly pluginId: string;
   /** The signed-in Lightfern user, or `null` while signed out. Updates with the host's auth state. */
@@ -83,7 +104,14 @@ export interface ViewContext {
    * from any file view without the plugin having to know its own folder name.
    */
   readonly homePath: string;
+  /**
+   * The opened node's server file ID: the same for everyone who holds it, and kept through
+   * renames and moves. `null` until the node has synced, and while signed out. Live like
+   * `path`; `onPathChange` fires when it changes.
+   */
+  readonly fileId: string | null;
   readonly files: FilesApi;
+  readonly multiplayer: MultiplayerApi;
   /**
    * Open a node in the workspace by its path relative to the activation root — the host
    * routes to a file's view (or reveals a folder in the tree) exactly as a click in the
@@ -97,7 +125,8 @@ export interface ViewContext {
    * same entry module in the same activation folder. The view stays mounted and the
    * iframe does not reload, so state and in-flight animations survive. Only a different
    * entry module or activation folder replaces the view, and that arrives as a fresh
-   * `connect()` rather than here. Returns an unsubscribe.
+   * `connect()` rather than here. Also called, with the same path, when `fileId` arrives
+   * once the node first syncs. Returns an unsubscribe.
    */
   onPathChange(listener: (path: string) => void): () => void;
 }

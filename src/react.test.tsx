@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FileEntry, HostPushMessage, RpcRequest, RpcResponse } from "./protocol";
@@ -19,14 +19,21 @@ function fakeHost(
   folders: Record<string, FileEntry[]> = {}
 ) {
   const port = {
+    sent: [] as RpcRequest[],
     onmessage: null as ((event: MessageEvent) => void) | null,
     start() {},
     postMessage(request: RpcRequest) {
-      const { path } = request.params as { path: string };
+      port.sent.push(request);
+      const { path, name } = request.params as { path: string; name: string };
       const response: RpcResponse = {
         id: request.id,
         ok: true,
-        result: request.method === "files.list" ? folders[path] : disk[path],
+        result:
+          request.method === "multiplayer.join"
+            ? { room: name, peers: [], connected: false }
+            : request.method === "files.list"
+              ? folders[path]
+              : disk[path],
       };
       queueMicrotask(() => port.onmessage?.({ data: response } as MessageEvent));
     },
@@ -49,7 +56,7 @@ async function connectTo(port: ReturnType<typeof fakeHost>, path: string) {
     data: {
       source: "lf-plugin-host",
       type: "init",
-      context: { pluginId: "deck", path, homePath: "deck", user: null },
+      context: { pluginId: "deck", path, fileId: null, homePath: "deck", user: null },
     },
   });
   Object.defineProperty(init, "ports", { value: [port] });
@@ -109,6 +116,7 @@ describe("the React bindings", () => {
         source: "lf-plugin-host",
         type: "path",
         path: "Golden Gate Bridge.md",
+        fileId: null,
       });
     });
 
@@ -233,5 +241,142 @@ describe("the React bindings", () => {
     act(() => unmount());
     expect(created).toEqual(["blob:mock/0"]);
     expect(revoked).toEqual(["blob:mock/0"]);
+  });
+
+  it("re-renders the file ID once the file syncs", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "notes.md");
+    const { useFileId } = await import("./react");
+
+    const View = () => <span>{useFileId() ?? "unsynced"}</span>;
+    render(<View />);
+    expect(screen.getByText("unsynced")).toBeDefined();
+
+    await act(async () => {
+      port.push({
+        source: "lf-plugin-host",
+        type: "path",
+        path: "notes.md",
+        fileId: "f-1",
+      });
+    });
+    expect(screen.getByText("f-1")).toBeDefined();
+  });
+
+  const roomPush = (connected: boolean, names: string[]) => ({
+    source: "lf-plugin-host" as const,
+    type: "multiplayer.room" as const,
+    room: "board",
+    peers: names.map((name) => ({
+      peerId: name,
+      user: { id: name, name, profilePictureUrl: null },
+      presence: null,
+    })),
+    connected,
+  });
+
+  it("re-renders only the hooks whose part of the room changed", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "board");
+    const { useConnected, usePeers } = await import("./react");
+    const renders = { status: 0, peers: 0 };
+
+    function Status() {
+      renders.status += 1;
+      return <span>{useConnected("board") ? "online" : "offline"}</span>;
+    }
+    function Peers() {
+      renders.peers += 1;
+      return (
+        <span>
+          {usePeers("board")
+            .map((peer) => peer.user.name)
+            .join(", ") || "alone"}
+        </span>
+      );
+    }
+
+    render(
+      <>
+        <Status />
+        <Peers />
+      </>
+    );
+    // Pushes only reach a room once its join has landed.
+    await waitFor(() =>
+      expect(port.sent.map((r) => r.method)).toContain("multiplayer.join")
+    );
+    await act(async () => {});
+    await act(async () => port.push(roomPush(true, [])));
+    expect(screen.getByText("online")).toBeDefined();
+    const before = { ...renders };
+
+    await act(async () => port.push(roomPush(true, ["Ada"])));
+
+    expect(screen.getByText("Ada")).toBeDefined();
+    expect(renders.status).toBe(before.status);
+    expect(renders.peers).toBe(before.peers + 1);
+  });
+
+  it("sends presence set on mount once the room is joined", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "board");
+    const { useSetPresence } = await import("./react");
+    const { useEffect } = await import("react");
+
+    function View() {
+      const setPresence = useSetPresence<{ card: string }>("board");
+      useEffect(() => setPresence({ card: "a" }), [setPresence]);
+      return null;
+    }
+
+    render(<View />);
+    await waitFor(() =>
+      expect(port.sent).toContainEqual(
+        expect.objectContaining({
+          method: "multiplayer.setPresence",
+          params: { room: "board", presence: { card: "a" } },
+        })
+      )
+    );
+  });
+
+  it("joins each room once per view, and leaves it when its last hook unmounts", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "board");
+    const { useConnected, usePeers } = await import("./react");
+    const methods = () => port.sent.map((request) => request.method);
+
+    function Board() {
+      useConnected("board");
+      usePeers("board");
+      return null;
+    }
+    function Cards() {
+      usePeers("cards");
+      return null;
+    }
+    const View = ({ cards }: { cards: boolean }) => (
+      <>
+        <Board />
+        {cards && <Cards />}
+      </>
+    );
+
+    const { rerender, unmount } = render(<View cards />);
+    await waitFor(() =>
+      expect(methods().filter((method) => method === "multiplayer.join")).toHaveLength(
+        2
+      )
+    );
+
+    rerender(<View cards={false} />);
+    await waitFor(() => expect(methods()).toContain("multiplayer.leave"));
+    unmount();
+    await waitFor(() =>
+      expect(methods().filter((method) => method === "multiplayer.leave")).toHaveLength(
+        2
+      )
+    );
   });
 });

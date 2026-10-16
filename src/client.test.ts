@@ -49,6 +49,7 @@ async function connectWithHost(port: ReturnType<typeof createFakeHostPort>) {
       context: {
         pluginId: "com.lightfern.csv",
         path: "data.csv",
+        fileId: null,
         homePath: "csv-viewer",
         user: {
           id: "user-1",
@@ -177,13 +178,33 @@ describe("connect", () => {
     const seen: string[] = [];
     const off = ctx.onPathChange((next) => seen.push(next));
 
-    port.push({ source: "lf-plugin-host", type: "path", path: "notes.csv" });
+    port.push({
+      source: "lf-plugin-host",
+      type: "path",
+      path: "notes.csv",
+      fileId: null,
+    });
     expect(ctx.path).toBe("notes.csv");
     expect(seen).toEqual(["notes.csv"]);
 
+    // The file ID arrives once the file syncs, on the same path.
+    port.push({
+      source: "lf-plugin-host",
+      type: "path",
+      path: "notes.csv",
+      fileId: "f-1",
+    });
+    expect(ctx.fileId).toBe("f-1");
+    expect(seen).toEqual(["notes.csv", "notes.csv"]);
+
     off();
-    port.push({ source: "lf-plugin-host", type: "path", path: "done.csv" });
-    expect(seen).toEqual(["notes.csv"]);
+    port.push({
+      source: "lf-plugin-host",
+      type: "path",
+      path: "done.csv",
+      fileId: null,
+    });
+    expect(seen).toEqual(["notes.csv", "notes.csv"]);
     // The live value keeps tracking even without a listener.
     expect(ctx.path).toBe("done.csv");
   });
@@ -235,5 +256,117 @@ describe("connect", () => {
       { type: "changed", path: "tasks/a.md" },
       { type: "created", path: "tasks/b.md" },
     ]);
+  });
+
+  it("refuses a room name that is empty or over 256 characters", async () => {
+    const port = createFakeHostPort(noopRespond);
+    const ctx = await connectWithHost(port);
+
+    await expect(ctx.multiplayer.joinRoom("")).rejects.toThrow("1 to 256");
+    await expect(ctx.multiplayer.joinRoom("x".repeat(257))).rejects.toThrow("1 to 256");
+  });
+
+  it("joins a room, follows its peers, sends presence and leaves", async () => {
+    const ada = {
+      peerId: "1",
+      user: { id: "user-1", name: "Ada Lovelace", profilePictureUrl: null },
+      presence: { card: "a" },
+    };
+    const sent: RpcRequest[] = [];
+    const port = createFakeHostPort((request) => {
+      sent.push(request);
+      const result =
+        request.method === "multiplayer.join"
+          ? { room: "r-1", peers: [ada], connected: false }
+          : undefined;
+      return { id: request.id, ok: true, result };
+    });
+    const ctx = await connectWithHost(port);
+
+    const room = await ctx.multiplayer.joinRoom("board");
+    expect(sent[0].params).toEqual({ name: "board" });
+    expect(room.peers).toEqual([ada]);
+    expect(room.connected).toBe(false);
+
+    const seen = vi.fn();
+    const connected = vi.fn();
+    room.onPeersChange(seen);
+    room.onConnectedChange(connected);
+    port.push({
+      source: "lf-plugin-host",
+      type: "multiplayer.room",
+      room: "r-1",
+      peers: [],
+      connected: true,
+    });
+    expect(room.peers).toEqual([]);
+    expect(seen).toHaveBeenCalledWith([]);
+    expect(room.connected).toBe(true);
+    expect(connected).toHaveBeenCalledWith(true);
+
+    room.setPresence({ card: "b" });
+    // The fake host sees each request a microtask after it's posted.
+    await Promise.resolve();
+    expect(sent[sent.length - 1].params).toEqual({
+      room: "r-1",
+      presence: { card: "b" },
+    });
+    expect(() => room.setPresence("x".repeat(9000))).toThrow("8 KiB");
+
+    room.leave();
+    room.leave();
+    await Promise.resolve();
+    expect(
+      sent.filter((request) => request.method === "multiplayer.leave")
+    ).toHaveLength(1);
+    port.push({
+      source: "lf-plugin-host",
+      type: "multiplayer.room",
+      room: "r-1",
+      peers: [ada],
+      connected: true,
+    });
+    expect(room.peers).toEqual([]);
+  });
+
+  it("keeps an unchanged peer's object, and skips a push that changes nobody", async () => {
+    const peer = (id: string, card: string) => ({
+      peerId: id,
+      user: { id, name: id, profilePictureUrl: null },
+      presence: { card },
+    });
+    const port = createFakeHostPort((request) => ({
+      id: request.id,
+      ok: true,
+      result:
+        request.method === "multiplayer.join"
+          ? {
+              room: "r-1",
+              peers: [peer("ada", "a"), peer("bob", "b")],
+              connected: true,
+            }
+          : undefined,
+    }));
+    const ctx = await connectWithHost(port);
+    const room = await ctx.multiplayer.joinRoom("board");
+    const [ada, bob] = room.peers;
+    const seen = vi.fn();
+    room.onPeersChange(seen);
+    const push = (peers: ReturnType<typeof peer>[]) =>
+      port.push({
+        source: "lf-plugin-host",
+        type: "multiplayer.room",
+        room: "r-1",
+        peers,
+        connected: true,
+      });
+
+    push([peer("ada", "a"), peer("bob", "c")]);
+    expect(room.peers[0]).toBe(ada);
+    expect(room.peers[1]).not.toBe(bob);
+    expect(room.peers[1].presence).toEqual({ card: "c" });
+
+    push([peer("ada", "a"), peer("bob", "c")]);
+    expect(seen).toHaveBeenCalledTimes(1);
   });
 });

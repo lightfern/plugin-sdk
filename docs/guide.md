@@ -13,6 +13,8 @@ Companion documents:
   own look, the `--lf-*` design tokens, and CSS recipes for both.
 - [The sandbox](sandbox.md): what a view can and cannot do inside its iframe, including network
   requests, screen wake lock, background workers, keyboard shortcuts and text selection.
+- [Multiplayer](multiplayer.md): live presence between everyone using a shared app, and how it works
+  alongside the files they share.
 - [Reference plugin](example.md): a walkthrough of the Recruiting ATS example.
 
 ## What a plugin is
@@ -82,8 +84,9 @@ assistant to write them. Concretely:
   plugin origin; dependencies are not loaded from remote script URLs. Declare `react` and
   `react-dom` when using React/TSX. Each declared package loads once per view, and its subpaths
   share that copy. A package's required peer dependencies must be declared too.
-- `permissions`: optional; the file capabilities the plugin uses, empty by default: `files.read`,
-  `files.write`. Declare exactly what the views call; using an undeclared capability fails.
+- `permissions`: optional; the capabilities the plugin uses, empty by default: `files.read`,
+  `files.write`, `multiplayer` (see [Multiplayer](multiplayer.md)). Declare exactly what the views
+  call; using an undeclared capability fails.
 - `network_permissions`: optional; allowed network origins, empty by default. An entry is an
   `https://` origin, optionally with a `*.` subdomain wildcard: `https://api.example.com`,
   `https://*.example.com` (matches subdomains only, not `example.com` itself). No paths, no
@@ -176,11 +179,11 @@ empty `<div id="root">`. Your entry module connects to the host and mounts. That
 - **Bare** imports resolve through the host-injected import map. Nothing is installed, and nothing
   else is importable:
 
-  | Import                 | What it is                                                                                                                                 |
-  | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                          |
-  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, and `useCurrentUser()`. Requires `react` in `dependencies`. |
-  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.         |
+  | Import                 | What it is                                                                                                                                                                                                   |
+  | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                                                                                            |
+  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, `useCurrentUser()`, `useFileId()`, `useConnected()`, `usePeers()` and `useSetPresence()`. Requires `react` in `dependencies`. |
+  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.                                                                           |
 
   Declare every bare package import in `dependencies`, including the peer dependencies of the
   packages you use. A subpath of a declared package uses the same instance as the package, so
@@ -250,6 +253,10 @@ routing to a file's view, opening a plugin's `home` view for its own folder, or 
 ordinary folder in the tree. The path may not reach beyond the folder the plugin lives in;
 `newTab: true` opens beside the current tab. Needs no permission. A file view returns to its home
 with `ctx.open(ctx.homePath)`.
+
+`ctx.fileId` is the opened node's server file ID: the same for everyone who holds the file, and kept
+through renames and moves. It is `null` until the file has synced and while signed out;
+`onPathChange` (or `useFileId()`) tells you when it arrives.
 
 The full `ViewContext` and `FilesApi` types, with their documentation comments, live in
 [`src/context.ts`](../src/context.ts).

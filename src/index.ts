@@ -1,5 +1,12 @@
 export { connect, PluginRpcError } from "./client";
-export type { FilesApi, FileWriteOptions, ViewContext } from "./context";
+export {
+  type FilesApi,
+  type FileWriteOptions,
+  MAX_PRESENCE_BYTES,
+  type MultiplayerApi,
+  type Room,
+  type ViewContext,
+} from "./context";
 export type {
   FilePermission,
   ManifestVersion,
@@ -34,8 +41,15 @@ export type {
   HostInitMessage,
   HostPushMessage,
   HostSelectionMessage,
+  MultiplayerJoinParams,
+  MultiplayerJoinResult,
+  MultiplayerLeaveParams,
+  MultiplayerSetPresenceParams,
   OpenParams,
   PathChangedMessage,
+  Peer,
+  PeerUser,
+  RoomChangedMessage,
   RpcError,
   RpcMethod,
   RpcRequest,

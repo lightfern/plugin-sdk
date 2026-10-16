@@ -7,13 +7,13 @@
 
 export type FilePermission = "files.read" | "files.write";
 
-export type PluginPermission = FilePermission;
+export type PluginPermission = FilePermission | "multiplayer";
 
 /** `"MAJOR.MINOR"`, matching the SDK release tag `vMAJOR.MINOR.x`. */
 export type ManifestVersion = `${number}.${number}`;
 
 /** The contract version this SDK implements. See {@link PluginManifest.manifestVersion}. */
-export const MANIFEST_VERSION: ManifestVersion = "2.2";
+export const MANIFEST_VERSION: ManifestVersion = "2.3";
 
 /** A host on `supported` can run a plugin on the same major and the same or an older minor. */
 export function supportsManifestVersion(
@@ -88,7 +88,7 @@ export interface PluginManifest {
    * are exact so a plugin has a stable executable dependency graph.
    */
   dependencies?: PluginDependencies;
-  /** File capabilities the views use. May be omitted since 2.1; the schema defaults it to `[]`. */
+  /** Capabilities the views use. May be omitted since 2.1; the schema defaults it to `[]`. */
   permissions?: PluginPermission[];
   /**
    * Allowed network origins. May be omitted; the schema defaults it to `[]`. An entry is

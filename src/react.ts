@@ -3,10 +3,11 @@
 // navigation has to wire the callback into state itself. These do it once: the path
 // becomes state, and a file's text becomes state keyed on the path it was read from.
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 import { hostContext } from "./client";
-import type { CurrentUser, FileEncoding, FileEntry } from "./protocol";
+import type { Room } from "./context";
+import type { CurrentUser, FileEncoding, FileEntry, Peer } from "./protocol";
 
 /** The signed-in user, re-rendering when the desktop auth state changes. */
 export function useCurrentUser(): CurrentUser | null {
@@ -18,6 +19,120 @@ export function useCurrentUser(): CurrentUser | null {
 export function usePath(): string {
   const ctx = hostContext();
   return useSyncExternalStore(ctx.onPathChange, () => ctx.path);
+}
+
+/** The opened node's server file ID, or `null` until it has synced. */
+export function useFileId(): string | null {
+  const ctx = hostContext();
+  return useSyncExternalStore(ctx.onPathChange, () => ctx.fileId);
+}
+
+// One store per room name in this view, shared by every hook using that name. The room is
+// joined when the first hook mounts and left once the last one unmounts.
+interface RoomStore {
+  room: Room | null;
+  presence: { value: unknown } | null;
+  users: number;
+  listeners: Set<() => void>;
+  leaving?: ReturnType<typeof setTimeout>;
+}
+
+const stores = new Map<string, RoomStore>();
+const NO_PEERS: readonly Peer[] = [];
+
+function storeFor(name: string): RoomStore {
+  const existing = stores.get(name);
+  if (existing) return existing;
+  const store: RoomStore = {
+    room: null,
+    presence: null,
+    users: 0,
+    listeners: new Set(),
+  };
+  stores.set(name, store);
+  void hostContext()
+    .multiplayer.joinRoom(name)
+    .then((room) => {
+      if (stores.get(name) !== store) return room.leave();
+      store.room = room;
+      if (store.presence) room.setPresence(store.presence.value);
+      const notify = () => store.listeners.forEach((listener) => listener());
+      room.onPeersChange(notify);
+      room.onConnectedChange(notify);
+      notify();
+    });
+  return store;
+}
+
+function acquire(name: string): RoomStore {
+  const store = storeFor(name);
+  clearTimeout(store.leaving);
+  store.users += 1;
+  return store;
+}
+
+function release(name: string, store: RoomStore): void {
+  store.users -= 1;
+  if (store.users > 0) return;
+  // Left a moment later, so StrictMode's unmount and remount doesn't leave and rejoin.
+  store.leaving = setTimeout(() => {
+    if (store.users > 0) return;
+    stores.delete(name);
+    store.room?.leave();
+  });
+}
+
+function useRoomValue<T>(name: string, read: (room: Room) => T, empty: T): T {
+  const subscribe = useCallback(
+    (listener: () => void) => {
+      const store = acquire(name);
+      store.listeners.add(listener);
+      return () => {
+        store.listeners.delete(listener);
+        release(name, store);
+      };
+    },
+    [name]
+  );
+  return useSyncExternalStore(subscribe, () => {
+    const room = stores.get(name)?.room;
+    return room ? read(room) : empty;
+  });
+}
+
+/** Whether this view is connected to the room `name`, re-rendering only when that changes. */
+export function useConnected(name: string): boolean {
+  return useRoomValue(name, (room) => room.connected, false);
+}
+
+/** Everyone else in the room `name`, re-rendering only when a peer joins, leaves or changes. */
+export function usePeers<Presence = unknown>(name: string): readonly Peer<Presence>[] {
+  return useRoomValue(
+    name,
+    (room) => room.peers,
+    NO_PEERS
+  ) as readonly Peer<Presence>[];
+}
+
+/**
+ * A stable setter for your presence in the room `name`. It never re-renders, and presence set
+ * before the room is joined is sent once it is.
+ */
+export function useSetPresence<Presence = unknown>(
+  name: string
+): (presence: Presence | null) => void {
+  useEffect(() => {
+    const store = acquire(name);
+    return () => release(name, store);
+  }, [name]);
+  return useCallback(
+    (value: Presence | null) => {
+      const store = storeFor(name);
+      store.presence = { value };
+      store.room?.setPresence(value);
+    },
+    [name]
+  );
 }
 
 /**

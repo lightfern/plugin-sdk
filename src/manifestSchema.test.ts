@@ -76,7 +76,7 @@ describe("safeParseManifest", () => {
   });
 
   it("rejects a minor newer than the SDK's", () => {
-    expectErrorContaining({ ...clone(), manifestVersion: "2.3" }, "manifestVersion");
+    expectErrorContaining({ ...clone(), manifestVersion: "2.4" }, "manifestVersion");
   });
 
   it("rejects a decimal number", () => {
@@ -89,6 +89,12 @@ describe("safeParseManifest", () => {
 
   it("rejects a non-semver version", () => {
     expectErrorContaining({ ...clone(), version: "v1" }, "semantic version");
+  });
+
+  it("accepts the multiplayer permission", () => {
+    expect(
+      parseManifest({ ...clone(), permissions: ["multiplayer"] }).permissions
+    ).toEqual(["multiplayer"]);
   });
 
   it("rejects an unknown permission", () => {

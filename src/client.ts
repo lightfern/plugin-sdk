@@ -1,4 +1,5 @@
-import type { FilesApi, ViewContext } from "./context";
+import type { FilesApi, Room, ViewContext } from "./context";
+import { MAX_PRESENCE_BYTES } from "./context";
 import type {
   CurrentUser,
   FileChange,
@@ -6,6 +7,9 @@ import type {
   FileEntry,
   HostInitMessage,
   HostPushMessage,
+  MultiplayerJoinResult,
+  Peer,
+  RoomChangedMessage,
   RpcMethod,
   RpcRequest,
   RpcResponse,
@@ -66,15 +70,20 @@ export function hostContext(): ViewContext {
 
 function createContext(context: SerializableContext, port: MessagePort): ViewContext {
   let path = context.path;
+  let fileId = context.fileId;
   let user = context.user;
   const pathListeners = new Set<(path: string) => void>();
   const userListeners = new Set<(user: CurrentUser | null) => void>();
   const watchers = new Set<{ path: string; listener: (change: FileChange) => void }>();
+  const rooms = new Map<string, (push: RoomChangedMessage) => void>();
 
   const call = openChannel(port, (push) => {
     if (push.type === "path") {
       path = push.path;
+      fileId = push.fileId;
       for (const listener of pathListeners) listener(path);
+    } else if (push.type === "multiplayer.room") {
+      rooms.get(push.room)?.(push);
     } else if (push.type === "user") {
       user = push.user;
       for (const listener of userListeners) listener(user);
@@ -109,6 +118,64 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
     },
   };
 
+  async function joinRoom<Presence>(name: string): Promise<Room<Presence>> {
+    if (!name || name.length > 256) {
+      throw new PluginRpcError("A room name must be 1 to 256 characters");
+    }
+    const joined = (await call("multiplayer.join", { name })) as MultiplayerJoinResult;
+    let peers = joined.peers as Peer<Presence>[];
+    let connected = joined.connected;
+    const listeners = new Set<(peers: readonly Peer<Presence>[]) => void>();
+    const connectedListeners = new Set<(connected: boolean) => void>();
+    rooms.set(joined.room, (push) => {
+      if (push.connected !== connected) {
+        connected = push.connected;
+        for (const listener of connectedListeners) listener(connected);
+      }
+      // An unchanged peer keeps its object, so a view can skip it with `===`.
+      const before = new Map(peers.map((peer) => [peer.peerId, peer]));
+      const kept = (push.peers as Peer<Presence>[]).map((peer) => {
+        const old = before.get(peer.peerId);
+        return old && JSON.stringify(old) === JSON.stringify(peer) ? old : peer;
+      });
+      if (kept.length === peers.length && kept.every((peer, i) => peer === peers[i]))
+        return;
+      peers = kept;
+      for (const listener of listeners) listener(peers);
+    });
+    return {
+      get peers() {
+        return peers;
+      },
+      get connected() {
+        return connected;
+      },
+      setPresence: (presence) => {
+        const bytes = new TextEncoder().encode(JSON.stringify(presence)).length;
+        if (bytes > MAX_PRESENCE_BYTES) {
+          throw new PluginRpcError(`Presence is ${bytes} bytes; the limit is 8 KiB`);
+        }
+        void call("multiplayer.setPresence", { room: joined.room, presence });
+      },
+      onPeersChange: (listener) => {
+        listeners.add(listener);
+        return () => {
+          listeners.delete(listener);
+        };
+      },
+      onConnectedChange: (listener) => {
+        connectedListeners.add(listener);
+        return () => {
+          connectedListeners.delete(listener);
+        };
+      },
+      leave: () => {
+        if (!rooms.delete(joined.room)) return;
+        void call("multiplayer.leave", { room: joined.room });
+      },
+    };
+  }
+
   return {
     pluginId: context.pluginId,
     get currentUser() {
@@ -122,7 +189,11 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
       return path;
     },
     homePath: context.homePath,
+    get fileId() {
+      return fileId;
+    },
     files,
+    multiplayer: { joinRoom },
     open: async (openPath, newTab) => {
       await call("open", { path: openPath, newTab });
     },
