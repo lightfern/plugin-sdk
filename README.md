@@ -26,6 +26,7 @@ The host imports the same types to drive the other end of the bridge.
 - [Styling](docs/styling.md): when to match the app or give a view its own look, the `--lf-*` design
   tokens, and CSS recipes.
 - [The sandbox](docs/sandbox.md): what the iframe allows, CORS, keyboard shortcuts, text selection.
+- [Multiplayer](docs/multiplayer.md): live presence between everyone using a shared app.
 - [Reference plugin](docs/example.md) and its source in
   [`examples/recruiting-ats/`](examples/recruiting-ats/).
 

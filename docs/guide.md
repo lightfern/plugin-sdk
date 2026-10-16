@@ -13,6 +13,8 @@ Companion documents:
   own look, the `--lf-*` design tokens, and CSS recipes for both.
 - [The sandbox](sandbox.md): what a view can and cannot do inside its iframe, including network
   requests, screen wake lock, background workers, keyboard shortcuts and text selection.
+- [Multiplayer](multiplayer.md): live presence between everyone using a shared app, and how it works
+  alongside the files they share.
 - [Reference plugin](example.md): a walkthrough of the Recruiting ATS example.
 
 ## What a plugin is
@@ -83,8 +85,8 @@ assistant to write them. Concretely:
   `react-dom` when using React/TSX. Each declared package loads once per view, and its subpaths
   share that copy. A package's required peer dependencies must be declared too.
 - `permissions`: optional; the capabilities the plugin uses, empty by default: `files.read`,
-  `files.write`, `multiplayer`. Declare exactly what the views call; using an undeclared capability
-  fails.
+  `files.write`, `multiplayer` (see [Multiplayer](multiplayer.md)). Declare exactly what the views
+  call; using an undeclared capability fails.
 - `network_permissions`: optional; allowed network origins, empty by default. An entry is an
   `https://` origin, optionally with a `*.` subdomain wildcard: `https://api.example.com`,
   `https://*.example.com` (matches subdomains only, not `example.com` itself). No paths, no
@@ -335,29 +337,6 @@ useEffect(() => {
     else void refreshIndex(); // created / deleted → the set of files moved
   });
 }, []);
-```
-
-### Multiplayer
-
-With the `multiplayer` permission, a view can show who else is using the app.
-`ctx.multiplayer.joinRoom(name)` joins a room shared by everyone who holds this app and joins the
-same name; a copy of the app has rooms of its own. Pass a file's path as the name for a room per
-file, since paths are the same for everyone who holds the app.
-
-In a room, each person sets one presence value with `room.setPresence(value)`: any JSON up to 8 KiB,
-the latest value winning, sent at most 60 times a second. `room.peers` is everyone else, each with
-`user` (`id`, `name`, `profilePictureUrl`) set by Lightfern's server from their sign-in, so a peer
-can't pose as someone else. Presence is never saved; keep anything that should last in files. While
-signed out or offline the room just has nobody else in it, so a view needs no separate offline path.
-
-```tsx
-import { useRoom } from "lightfern:host/react";
-
-function Viewers() {
-  const { peers, setPresence } = useRoom<{ card: string }>("board");
-  // …call setPresence({ card }) as the user selects a card
-  return peers.map((peer) => <span key={peer.peerId}>{peer.user.name}</span>);
-}
 ```
 
 ### Styling

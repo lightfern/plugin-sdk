@@ -15,6 +15,7 @@ implements.
   same name, where each person sets a presence value and sees everyone else's, with their identity
   set by Lightfern's server. Needs the new `multiplayer` permission.
 - Add the `useRoom(name)` React hook.
+- Add the [Multiplayer](docs/multiplayer.md) guide.
 
 ## [2.2.0] - 2026-10-08
 
