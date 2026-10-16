@@ -12,28 +12,10 @@ changes, labelled with who they are. It needs the `multiplayer` permission in th
 
 ## When to use it
 
-Use presence for what a person is doing now. Use files for the work itself.
-
-- **Seeing who's where.** Avatars on the cards, rows or pages people have open, and a list of who's
-  in the app. Two people on the same deal in a CRM, or the same candidate in a tracker, see each
-  other before they both start editing it.
-- **Avoiding collisions.** "Alice is editing this candidate" shows before Alice saves, so Bob waits
-  instead of writing over her. Presence carries what someone is editing, and the view warns or holds
-  off. It's a courtesy, not a lock: if both save, the files still merge.
-- **Work in progress, before it's saved.** A card someone is dragging moves on everyone's screen as
-  they drag it. A stroke on a shared whiteboard or battle map appears as it's drawn. A measurement
-  or selection shows while it's being made. When the person lets go, the view writes the result to a
-  file.
-- **Following someone.** A presenter's current slide, the region of the map a game master has
-  revealed, the step a teacher is on. Everyone else's view follows the leader's presence.
-- **Pointers and cursors** on a canvas, map or diagram, updated up to 60 times a second.
-- **Light realtime games.** A card game, chess, or a small arcade game for a few friends. Each
-  player's presence is their state, and the view builds the game from everyone's. It isn't a game
-  server: nothing referees, so a player can cheat, and fast reaction games won't feel right.
-
-Don't use presence for anything that must still be there when everyone has left: votes, scores, a
-game you want to resume, comments, decisions. Those go in files, which also reach people who aren't
-in the app at the time.
+Use presence for what people are doing right now: who has which card or page open, a cursor, a drag
+or drawing in progress, a presenter's current slide, or the moves in a light game for a few friends
+(nothing referees it, so players can cheat). Anything that should still be there after everyone
+leaves, like votes, scores or comments, goes in files.
 
 ## The API
 
