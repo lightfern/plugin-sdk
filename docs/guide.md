@@ -177,11 +177,11 @@ empty `<div id="root">`. Your entry module connects to the host and mounts. That
 - **Bare** imports resolve through the host-injected import map. Nothing is installed, and nothing
   else is importable:
 
-  | Import                 | What it is                                                                                                                                                             |
-  | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                                                      |
-  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, `useCurrentUser()`, `useFileId()`, and `useRoom()`. Requires `react` in `dependencies`. |
-  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.                                     |
+  | Import                 | What it is                                                                                                                                              |
+  | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                                       |
+  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, `useCurrentUser()`, and `useRoom()`. Requires `react` in `dependencies`. |
+  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.                      |
 
   Declare every bare package import in `dependencies`, including the peer dependencies of the
   packages you use. A subpath of a declared package uses the same instance as the package, so
@@ -251,10 +251,6 @@ routing to a file's view, opening a plugin's `home` view for its own folder, or 
 ordinary folder in the tree. The path may not reach beyond the folder the plugin lives in;
 `newTab: true` opens beside the current tab. Needs no permission. A file view returns to its home
 with `ctx.open(ctx.homePath)`.
-
-`ctx.fileId` is the opened node's server file ID: the same for everyone who holds the file, and kept
-through renames and moves. It is `null` until the file has synced and while signed out;
-`onPathChange` (or `useFileId()`) tells you when it arrives.
 
 The full `ViewContext` and `FilesApi` types, with their documentation comments, live in
 [`src/context.ts`](../src/context.ts).
@@ -345,8 +341,8 @@ useEffect(() => {
 
 With the `multiplayer` permission, a view can show who else is using the app.
 `ctx.multiplayer.joinRoom(name)` joins a room shared by everyone who holds this app and joins the
-same name; a copy of the app has rooms of its own. Pass `ctx.fileId` as the name for a room per
-file.
+same name; a copy of the app has rooms of its own. Pass a file's path as the name for a room per
+file, since paths are the same for everyone who holds the app.
 
 In a room, each person sets one presence value with `room.setPresence(value)`: any JSON up to 8 KiB,
 the latest value winning, sent at most 60 times a second. `room.peers` is everyone else, each with

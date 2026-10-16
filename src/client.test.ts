@@ -49,7 +49,6 @@ async function connectWithHost(port: ReturnType<typeof createFakeHostPort>) {
       context: {
         pluginId: "com.lightfern.csv",
         path: "data.csv",
-        fileId: null,
         homePath: "csv-viewer",
         user: {
           id: "user-1",
@@ -178,33 +177,13 @@ describe("connect", () => {
     const seen: string[] = [];
     const off = ctx.onPathChange((next) => seen.push(next));
 
-    port.push({
-      source: "lf-plugin-host",
-      type: "path",
-      path: "notes.csv",
-      fileId: null,
-    });
+    port.push({ source: "lf-plugin-host", type: "path", path: "notes.csv" });
     expect(ctx.path).toBe("notes.csv");
     expect(seen).toEqual(["notes.csv"]);
 
-    // The file ID arrives once the file syncs, on the same path.
-    port.push({
-      source: "lf-plugin-host",
-      type: "path",
-      path: "notes.csv",
-      fileId: "f-1",
-    });
-    expect(ctx.fileId).toBe("f-1");
-    expect(seen).toEqual(["notes.csv", "notes.csv"]);
-
     off();
-    port.push({
-      source: "lf-plugin-host",
-      type: "path",
-      path: "done.csv",
-      fileId: null,
-    });
-    expect(seen).toEqual(["notes.csv", "notes.csv"]);
+    port.push({ source: "lf-plugin-host", type: "path", path: "done.csv" });
+    expect(seen).toEqual(["notes.csv"]);
     // The live value keeps tracking even without a listener.
     expect(ctx.path).toBe("done.csv");
   });

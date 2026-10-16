@@ -21,12 +21,6 @@ export function usePath(): string {
   return useSyncExternalStore(ctx.onPathChange, () => ctx.path);
 }
 
-/** The opened node's server file ID, or `null` until it has synced. */
-export function useFileId(): string | null {
-  const ctx = hostContext();
-  return useSyncExternalStore(ctx.onPathChange, () => ctx.fileId);
-}
-
 /**
  * Join the room `name` while the view is mounted, and leave it on unmount or when `name`
  * changes. `peers` re-renders as people join, leave or change presence; until the join

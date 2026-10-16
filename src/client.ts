@@ -69,7 +69,6 @@ export function hostContext(): ViewContext {
 
 function createContext(context: SerializableContext, port: MessagePort): ViewContext {
   let path = context.path;
-  let fileId = context.fileId;
   let user = context.user;
   const pathListeners = new Set<(path: string) => void>();
   const userListeners = new Set<(user: CurrentUser | null) => void>();
@@ -79,7 +78,6 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
   const call = openChannel(port, (push) => {
     if (push.type === "path") {
       path = push.path;
-      fileId = push.fileId;
       for (const listener of pathListeners) listener(path);
     } else if (push.type === "multiplayer.peers") {
       rooms.get(push.room)?.(push.peers);
@@ -162,9 +160,6 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
       return path;
     },
     homePath: context.homePath,
-    get fileId() {
-      return fileId;
-    },
     files,
     multiplayer: { joinRoom },
     open: async (openPath, newTab) => {

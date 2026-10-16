@@ -56,7 +56,7 @@ async function connectTo(port: ReturnType<typeof fakeHost>, path: string) {
     data: {
       source: "lf-plugin-host",
       type: "init",
-      context: { pluginId: "deck", path, fileId: null, homePath: "deck", user: null },
+      context: { pluginId: "deck", path, homePath: "deck", user: null },
     },
   });
   Object.defineProperty(init, "ports", { value: [port] });
@@ -116,7 +116,6 @@ describe("the React bindings", () => {
         source: "lf-plugin-host",
         type: "path",
         path: "Golden Gate Bridge.md",
-        fileId: null,
       });
     });
 
@@ -241,26 +240,6 @@ describe("the React bindings", () => {
     act(() => unmount());
     expect(created).toEqual(["blob:mock/0"]);
     expect(revoked).toEqual(["blob:mock/0"]);
-  });
-
-  it("re-renders the file ID once the file syncs", async () => {
-    const port = fakeHost({});
-    await connectTo(port, "notes.md");
-    const { useFileId } = await import("./react");
-
-    const View = () => <span>{useFileId() ?? "unsynced"}</span>;
-    render(<View />);
-    expect(screen.getByText("unsynced")).toBeDefined();
-
-    await act(async () => {
-      port.push({
-        source: "lf-plugin-host",
-        type: "path",
-        path: "notes.md",
-        fileId: "f-1",
-      });
-    });
-    expect(screen.getByText("f-1")).toBeDefined();
   });
 
   it("joins a room while mounted, re-renders its peers, and leaves on unmount", async () => {

@@ -88,7 +88,7 @@ export interface Room<Presence = unknown> {
 export interface MultiplayerApi {
   /**
    * Join the room `name` of this app: everyone who holds the app's folder and joins the same
-   * name is in it, and a copy of the app has rooms of its own. Pass `ctx.fileId` for a room
+   * name is in it, and a copy of the app has rooms of its own. Pass a file's path for a room
    * per file. While signed out or offline, or before the app has synced, you get a room with
    * nobody else in it that fills up once Lightfern can connect. Requires `multiplayer`.
    */
@@ -115,12 +115,6 @@ export interface ViewContext {
    * from any file view without the plugin having to know its own folder name.
    */
   readonly homePath: string;
-  /**
-   * The opened node's server file ID: the same for everyone who holds it, and kept through
-   * renames and moves. `null` until the node has synced, and while signed out. Live like
-   * `path`; `onPathChange` fires when it changes.
-   */
-  readonly fileId: string | null;
   readonly files: FilesApi;
   readonly multiplayer: MultiplayerApi;
   /**
@@ -136,8 +130,7 @@ export interface ViewContext {
    * same entry module in the same activation folder. The view stays mounted and the
    * iframe does not reload, so state and in-flight animations survive. Only a different
    * entry module or activation folder replaces the view, and that arrives as a fresh
-   * `connect()` rather than here. Also called, with the same path, when `fileId` arrives
-   * once the node first syncs. Returns an unsubscribe.
+   * `connect()` rather than here. Returns an unsubscribe.
    */
   onPathChange(listener: (path: string) => void): () => void;
 }
