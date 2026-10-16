@@ -17,6 +17,8 @@
 export interface SerializableContext {
   pluginId: string;
   path: string;
+  /** The opened node's server file ID, or null until it has synced. */
+  fileId: string | null;
   homePath: string;
   user: CurrentUser | null;
 }
@@ -96,6 +98,7 @@ export interface PathChangedMessage {
   source: "lf-plugin-host";
   type: "path";
   path: string;
+  fileId: string | null;
 }
 
 export interface RoomChangedMessage {

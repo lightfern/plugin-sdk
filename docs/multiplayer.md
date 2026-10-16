@@ -136,7 +136,7 @@ function useSetPresence<Presence = unknown>(name: string): (presence: Presence |
 
 - Every hook in a view that uses the same name shares one room. The room is joined when the first of
   them mounts and left when the last one unmounts.
-- A component can use as many room names as it needs, like `"board"` and a file's path.
+- A component can use as many room names as it needs, like `"board"` and a file's ID.
 - `useConnected(name)` re-renders only when the connection changes. It is `false` until the room is
   joined and connected.
 - `usePeers(name)` re-renders only when a peer joins, leaves or changes. It is empty until the room
@@ -157,9 +157,10 @@ Keep presence to IDs, positions and short labels. Never put file contents in it.
 ## Choosing room names
 
 - Use one name, like `"board"`, to put everyone in the app together.
-- Use a file's path to give each file its own room. Paths are the same for everyone with access to
-  the app.
-- Renaming a file gives it a new room.
+- Use a file's ID to give each file its own room. `ctx.fileId` (or `useFileId()`) is the opened
+  file's ID. It is the same for everyone with access to the file, and stays the same when the file
+  is renamed or moved.
+- A file's ID is `null` until the file has synced. Wait for it before joining the file's room.
 - Rooms belong to one copy of the app. If someone copies the app's folder, or installs the same
   plugin themselves, they are in different rooms from the original, even with the same name.
 

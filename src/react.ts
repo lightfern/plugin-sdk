@@ -21,6 +21,12 @@ export function usePath(): string {
   return useSyncExternalStore(ctx.onPathChange, () => ctx.path);
 }
 
+/** The opened node's server file ID, or `null` until it has synced. */
+export function useFileId(): string | null {
+  const ctx = hostContext();
+  return useSyncExternalStore(ctx.onPathChange, () => ctx.fileId);
+}
+
 // One store per room name in this view, shared by every hook using that name. The room is
 // joined when the first hook mounts and left once the last one unmounts.
 interface RoomStore {
