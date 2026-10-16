@@ -73,8 +73,10 @@ export const MAX_PRESENCE_BYTES = 8 * 1024;
 
 export interface Room<Presence = unknown> {
   readonly peers: readonly Peer<Presence>[];
+  readonly connected: boolean;
   setPresence(presence: Presence | null): void;
   onPeersChange(listener: (peers: readonly Peer<Presence>[]) => void): () => void;
+  onConnectedChange(listener: (connected: boolean) => void): () => void;
   leave(): void;
 }
 

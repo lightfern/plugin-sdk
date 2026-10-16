@@ -98,11 +98,12 @@ export interface PathChangedMessage {
   path: string;
 }
 
-export interface PeersChangedMessage {
+export interface RoomChangedMessage {
   source: "lf-plugin-host";
-  type: "multiplayer.peers";
+  type: "multiplayer.room";
   room: string;
   peers: Peer[];
+  connected: boolean;
 }
 
 export interface PeerUser {
@@ -144,7 +145,7 @@ export interface FilesChangedMessage {
 
 // Everything the host pushes to a view over the port after the handshake.
 export type HostPushMessage =
-  PathChangedMessage | FilesChangedMessage | UserChangedMessage | PeersChangedMessage;
+  PathChangedMessage | FilesChangedMessage | UserChangedMessage | RoomChangedMessage;
 
 export type RpcMethod =
   | "files.read"
@@ -203,6 +204,7 @@ export interface MultiplayerJoinParams {
 export interface MultiplayerJoinResult {
   room: string;
   peers: Peer[];
+  connected: boolean;
 }
 
 export interface MultiplayerLeaveParams {

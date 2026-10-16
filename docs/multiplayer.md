@@ -55,8 +55,10 @@ ctx.multiplayer.joinRoom<Presence = unknown>(name: string): Promise<Room<Presenc
 
 interface Room<Presence> {
   readonly peers: readonly Peer<Presence>[];
+  readonly connected: boolean;
   setPresence(presence: Presence | null): void;
   onPeersChange(listener: (peers: readonly Peer<Presence>[]) => void): () => void;
+  onConnectedChange(listener: (connected: boolean) => void): () => void;
   leave(): void;
 }
 
@@ -67,17 +69,19 @@ interface Peer<Presence> {
 }
 
 // From "lightfern:host/react"
-function useRoom<Presence = unknown>(
-  name: string
-): { peers: readonly Peer<Presence>[]; setPresence: (presence: Presence | null) => void };
+function useRoom<Presence = unknown>(name: string): {
+  peers: readonly Peer<Presence>[];
+  connected: boolean;
+  setPresence: (presence: Presence | null) => void;
+};
 ```
 
 ### `joinRoom(name)`
 
 - Rejects if the manifest does not have the `multiplayer` permission.
 - Rejects if `name` is empty or longer than 256 characters.
-- Works when the person is offline, signed out, or the app has not synced yet. The room has no peers
-  until Lightfern can reach the server.
+- Works when the person is offline, signed out, or the app has not synced yet. The room is not
+  connected and has no peers until Lightfern can reach the server.
 - Has no peers in the public share viewer, or in screenshots Lightfern's assistant takes.
 - Joining the same name twice in one view gives you the same room and the same presence.
 
@@ -89,6 +93,16 @@ function useRoom<Presence = unknown>(
   with the same `user.id`. Group by `user.id` to show each person once.
 - Keeps someone for up to 30 seconds if they lose their connection without leaving.
 - Does not include you. Use `ctx.currentUser` for that.
+
+### `connected` and `onConnectedChange(listener)`
+
+- `connected` is `true` while this view is connected to the room, so it gets peers and sends your
+  presence.
+- It is `false` while the person is offline or signed out, before the app has synced, and while
+  Lightfern reconnects.
+- It is always `false` in the public share viewer and in screenshots Lightfern's assistant takes.
+- Use it to tell "nobody else is here" from "you are offline".
+- `onConnectedChange` runs when it changes, and returns a function that stops it.
 
 ### `onPeersChange(listener)`
 
@@ -115,6 +129,7 @@ function useRoom<Presence = unknown>(
 
 - Joins when the component mounts, and leaves when it unmounts or `name` changes.
 - Returns `peers`, which is empty until the room is joined.
+- Returns `connected`, which is `false` until the room is joined and connected.
 - Returns `setPresence`, which is the same function on every render.
 - Sends presence you set before the room is joined once it is.
 

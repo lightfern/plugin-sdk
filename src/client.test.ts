@@ -256,7 +256,7 @@ describe("connect", () => {
       sent.push(request);
       const result =
         request.method === "multiplayer.join"
-          ? { room: "r-1", peers: [ada] }
+          ? { room: "r-1", peers: [ada], connected: false }
           : undefined;
       return { id: request.id, ok: true, result };
     });
@@ -265,17 +265,23 @@ describe("connect", () => {
     const room = await ctx.multiplayer.joinRoom("board");
     expect(sent[0].params).toEqual({ name: "board" });
     expect(room.peers).toEqual([ada]);
+    expect(room.connected).toBe(false);
 
     const seen = vi.fn();
+    const connected = vi.fn();
     room.onPeersChange(seen);
+    room.onConnectedChange(connected);
     port.push({
       source: "lf-plugin-host",
-      type: "multiplayer.peers",
+      type: "multiplayer.room",
       room: "r-1",
       peers: [],
+      connected: true,
     });
     expect(room.peers).toEqual([]);
     expect(seen).toHaveBeenCalledWith([]);
+    expect(room.connected).toBe(true);
+    expect(connected).toHaveBeenCalledWith(true);
 
     room.setPresence({ card: "b" });
     // The fake host sees each request a microtask after it's posted.
@@ -294,9 +300,10 @@ describe("connect", () => {
     ).toHaveLength(1);
     port.push({
       source: "lf-plugin-host",
-      type: "multiplayer.peers",
+      type: "multiplayer.room",
       room: "r-1",
       peers: [ada],
+      connected: true,
     });
     expect(room.peers).toEqual([]);
   });
@@ -312,7 +319,11 @@ describe("connect", () => {
       ok: true,
       result:
         request.method === "multiplayer.join"
-          ? { room: "r-1", peers: [peer("ada", "a"), peer("bob", "b")] }
+          ? {
+              room: "r-1",
+              peers: [peer("ada", "a"), peer("bob", "b")],
+              connected: true,
+            }
           : undefined,
     }));
     const ctx = await connectWithHost(port);
@@ -323,9 +334,10 @@ describe("connect", () => {
     const push = (peers: ReturnType<typeof peer>[]) =>
       port.push({
         source: "lf-plugin-host",
-        type: "multiplayer.peers",
+        type: "multiplayer.room",
         room: "r-1",
         peers,
+        connected: true,
       });
 
     push([peer("ada", "a"), peer("bob", "c")]);

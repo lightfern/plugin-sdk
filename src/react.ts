@@ -31,12 +31,14 @@ export function useRoom<Presence = unknown>(
   name: string
 ): {
   peers: readonly Peer<Presence>[];
+  connected: boolean;
   setPresence: (presence: Presence | null) => void;
 } {
   const ctx = hostContext();
   const [joined, setJoined] = useState<{
     name: string;
     peers: readonly Peer<Presence>[];
+    connected: boolean;
   } | null>(null);
   const room = useRef<Room<Presence> | null>(null);
   // Presence set before the join lands is sent once it does.
@@ -50,8 +52,11 @@ export function useRoom<Presence = unknown>(
       if (!live) return next.leave();
       room.current = next;
       if (presence.current) next.setPresence(presence.current.value);
-      setJoined({ name, peers: next.peers });
-      next.onPeersChange((peers) => setJoined({ name, peers }));
+      const update = () =>
+        setJoined({ name, peers: next.peers, connected: next.connected });
+      update();
+      next.onPeersChange(update);
+      next.onConnectedChange(update);
     });
     return () => {
       live = false;
@@ -65,7 +70,12 @@ export function useRoom<Presence = unknown>(
     room.current?.setPresence(value);
   }, []);
 
-  return { peers: joined?.name === name ? joined.peers : [], setPresence };
+  const current = joined?.name === name ? joined : null;
+  return {
+    peers: current?.peers ?? [],
+    connected: current?.connected ?? false,
+    setPresence,
+  };
 }
 
 /**

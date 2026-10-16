@@ -30,7 +30,7 @@ function fakeHost(
         ok: true,
         result:
           request.method === "multiplayer.join"
-            ? { room: name, peers: [] }
+            ? { room: name, peers: [], connected: false }
             : request.method === "files.list"
               ? folders[path]
               : disk[path],
@@ -265,23 +265,24 @@ describe("the React bindings", () => {
     );
   });
 
-  it("joins a room while mounted, re-renders its peers, and leaves on unmount", async () => {
+  it("joins a room while mounted, re-renders its peers and connection, and leaves on unmount", async () => {
     const port = fakeHost({});
     await connectTo(port, "board");
     const { useRoom } = await import("./react");
 
     function View() {
-      const { peers } = useRoom("board");
-      return <span>{peers.map((peer) => peer.user.name).join(", ") || "alone"}</span>;
+      const { peers, connected } = useRoom("board");
+      const names = peers.map((peer) => peer.user.name).join(", ");
+      return <span>{connected ? names : "offline"}</span>;
     }
 
     const { unmount } = render(<View />);
-    expect(await screen.findByText("alone")).toBeDefined();
+    expect(await screen.findByText("offline")).toBeDefined();
 
     await act(async () => {
       port.push({
         source: "lf-plugin-host",
-        type: "multiplayer.peers",
+        type: "multiplayer.room",
         room: "board",
         peers: [
           {
@@ -290,6 +291,7 @@ describe("the React bindings", () => {
             presence: null,
           },
         ],
+        connected: true,
       });
     });
     expect(screen.getByText("Ada Lovelace")).toBeDefined();
