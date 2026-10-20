@@ -98,7 +98,9 @@ function useSetPresence<Presence = unknown>(name: string): (presence: Presence |
 - In no fixed order. Sort it yourself, for example by name.
 - Lists each view separately. Someone with your app open on 2 devices, or in 2 tabs, appears twice
   with the same `user.id`. Group by `user.id` to show each person once.
-- Keeps someone for up to 30 seconds if they lose their connection without leaving.
+- Keeps someone for 5 seconds after they leave or lose their connection, so a connection that drops
+  and comes straight back doesn't look like leaving and rejoining. If their connection dies without
+  closing, they can stay for up to 35 seconds.
 - Does not include you. Use `ctx.currentUser` for that.
 
 ### `connected` and `onConnectedChange(listener)`
@@ -107,6 +109,8 @@ function useSetPresence<Presence = unknown>(name: string): (presence: Presence |
   presence.
 - It is `false` while the person is offline or signed out, before the app has synced, and while
   Lightfern reconnects.
+- While it's `false`, `peers` keeps the people this view last saw. Once the room reconnects, anyone
+  who left in the meantime goes 5 seconds later.
 - It is always `false` in the public share viewer and in screenshots Lightfern's assistant takes.
 - Use it to tell "nobody else is here" from "you are offline".
 - `onConnectedChange` runs when it changes, and returns a function that stops it.
@@ -129,7 +133,7 @@ function useSetPresence<Presence = unknown>(name: string): (presence: Presence |
 
 ### `leave()`
 
-- Takes this view out of the room straight away.
+- Takes this view out of the room straight away. Its peers see it go 5 seconds later.
 - Happens automatically for every room when the view closes.
 
 ### React hooks
