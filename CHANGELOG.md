@@ -7,6 +7,12 @@ implements.
 
 ## [Unreleased]
 
+## [2.3.2] - 2026-10-20
+
+- A room's `peers` keeps the people a view last saw while `connected` is `false`, and keeps a peer
+  for 5 seconds after they leave or lose their connection, so a connection that drops and comes
+  straight back no longer looks like leaving and rejoining.
+
 ## [2.3.1] - 2026-10-16
 
 - `ctx.fileId` is now documented as the file's ID from the start, which can change once when a new
