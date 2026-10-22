@@ -10,10 +10,10 @@ Your view runs in this iframe:
 ```
 
 The iframe allows scripts, popups, pointer lock, fullscreen, clipboard access, and screen wake lock.
-Its sandbox and content security policy still restrict other browser APIs. Files go through
-`ctx.files`, navigation through `ctx.open`, and network through the origins in
-`network_permissions`. Render dialogs as React UI in your own tree; native
-`alert`/`confirm`/`prompt` are off.
+Each device in your `permissions` is added to `allow` (see [Devices](#devices)). The sandbox and
+content security policy still restrict other browser APIs. Files go through `ctx.files`, navigation
+through `ctx.open`, and network through the origins in `network_permissions`. Render dialogs as
+React UI in your own tree; native `alert`/`confirm`/`prompt` are off.
 
 **Network requests are subject to CORS.** Declaring an origin lets your `fetch` leave the frame, but
 the server still decides whether you can read the response, and the frame sends `Origin: null` with
@@ -28,6 +28,29 @@ no cookie jar.
 Call `navigator.wakeLock.request("screen")` when a view needs to keep the display awake, and release
 the returned lock when it no longer does. The browser or operating system can release the lock when
 the view is hidden or power is low, so request it again if the view still needs it.
+
+## Devices
+
+Declare a device in `permissions` to use it through the usual browser API. Without the permission,
+the API fails as if the device were blocked.
+
+| Permission      | Browser API                                                  |
+| --------------- | ------------------------------------------------------------ |
+| `accelerometer` | `Accelerometer`, `LinearAccelerationSensor`, `GravitySensor` |
+| `gyroscope`     | `Gyroscope`                                                  |
+| `camera`        | `navigator.mediaDevices.getUserMedia({ video: true })`       |
+| `microphone`    | `navigator.mediaDevices.getUserMedia({ audio: true })`       |
+
+The `devicemotion` and `deviceorientation` events need both `accelerometer` and `gyroscope`.
+
+Macs have no motion sensors a view can read, so in the desktop app a sensor reports an error. Phones
+and tablets that open a shared view do have them. Listen for the sensor's `error` event and keep the
+view usable without it.
+
+The first time a view uses the camera or microphone, macOS asks the user to allow Lightfern. If they
+refuse, `getUserMedia` rejects with `NotAllowedError`, so show what went wrong. Call `stop()` on
+every track when you finish, so the camera light turns off. Shared views can't use the camera or
+microphone.
 
 ## Fullscreen
 

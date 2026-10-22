@@ -7,6 +7,13 @@ implements.
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-10-22
+
+`manifestVersion: "2.4"`.
+
+- Add the `accelerometer`, `gyroscope`, `camera` and `microphone` permissions. Each lets a view use
+  that device through the browser's own API. See [Devices](docs/sandbox.md#devices).
+
 ## [2.3.1] - 2026-10-16
 
 - `ctx.fileId` is now documented as the file's ID from the start, which can change once when a new

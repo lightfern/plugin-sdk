@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 import type { ManifestVersion, PluginManifest } from "./manifest";
-import { MANIFEST_VERSION, supportsManifestVersion } from "./manifest";
+import {
+  DEVICE_PERMISSIONS,
+  MANIFEST_VERSION,
+  supportsManifestVersion,
+} from "./manifest";
 import { validateMatchPattern } from "./match";
 import { validateNetworkPermission } from "./network";
 
@@ -16,7 +20,12 @@ const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 // (for example, `react-dom` permits `react-dom/client`).
 const PACKAGE_NAME = /^(?:@[-a-z0-9~][-.a-z0-9~]*\/)?[-a-z0-9~][-.a-z0-9~]*$/i;
 
-const permissionSchema = z.enum(["files.read", "files.write", "multiplayer"]);
+const permissionSchema = z.enum([
+  "files.read",
+  "files.write",
+  "multiplayer",
+  ...DEVICE_PERMISSIONS,
+]);
 
 const viewSchema = z
   .object({

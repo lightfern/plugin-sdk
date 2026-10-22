@@ -7,13 +7,23 @@
 
 export type FilePermission = "files.read" | "files.write";
 
-export type PluginPermission = FilePermission | "multiplayer";
+/** Devices a view reaches through browser APIs. Each name is also the iframe `allow` feature it grants. */
+export const DEVICE_PERMISSIONS = [
+  "accelerometer",
+  "gyroscope",
+  "camera",
+  "microphone",
+] as const;
+
+export type DevicePermission = (typeof DEVICE_PERMISSIONS)[number];
+
+export type PluginPermission = FilePermission | DevicePermission | "multiplayer";
 
 /** `"MAJOR.MINOR"`, matching the SDK release tag `vMAJOR.MINOR.x`. */
 export type ManifestVersion = `${number}.${number}`;
 
 /** The contract version this SDK implements. See {@link PluginManifest.manifestVersion}. */
-export const MANIFEST_VERSION: ManifestVersion = "2.3";
+export const MANIFEST_VERSION: ManifestVersion = "2.4";
 
 /** A host on `supported` can run a plugin on the same major and the same or an older minor. */
 export function supportsManifestVersion(
