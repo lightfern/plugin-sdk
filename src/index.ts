@@ -8,6 +8,7 @@ export {
   type ViewContext,
 } from "./context";
 export type {
+  DevicePermission,
   FilePermission,
   ManifestVersion,
   PluginContributions,
@@ -16,7 +17,12 @@ export type {
   PluginPermission,
   ViewContribution,
 } from "./manifest";
-export { MANIFEST_VERSION, manifestEntries, supportsManifestVersion } from "./manifest";
+export {
+  DEVICE_PERMISSIONS,
+  MANIFEST_VERSION,
+  manifestEntries,
+  supportsManifestVersion,
+} from "./manifest";
 export {
   formatManifestErrors,
   manifestSchema,

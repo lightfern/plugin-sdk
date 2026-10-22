@@ -5,12 +5,13 @@ Your view runs in this iframe:
 ```html
 <iframe
   sandbox="allow-scripts allow-popups allow-pointer-lock"
-  allow="clipboard-read; clipboard-write; screen-wake-lock; fullscreen"
+  allow="clipboard-read; clipboard-write; screen-wake-lock; fullscreen; accelerometer; gyroscope"
 ></iframe>
 ```
 
-The iframe allows scripts, popups, pointer lock, fullscreen, clipboard access, and screen wake lock.
-Its sandbox and content security policy still restrict other browser APIs. Files go through
+The iframe allows scripts, popups, pointer lock, fullscreen, clipboard access, screen wake lock and
+motion sensors. The camera and microphone are added to `allow` when your `permissions` declare them.
+The sandbox and content security policy still restrict other browser APIs. Files go through
 `ctx.files`, navigation through `ctx.open`, and network through the origins in
 `network_permissions`. Render dialogs as React UI in your own tree; native
 `alert`/`confirm`/`prompt` are off.
@@ -28,6 +29,26 @@ no cookie jar.
 Call `navigator.wakeLock.request("screen")` when a view needs to keep the display awake, and release
 the returned lock when it no longer does. The browser or operating system can release the lock when
 the view is hidden or power is low, so request it again if the view still needs it.
+
+## Motion sensors
+
+Listen for `devicemotion` and `deviceorientation` events to follow how the device moves. Safari has
+no `Accelerometer` or `Gyroscope` classes, so the events are the way that works everywhere. On an
+iPhone or iPad, call `DeviceMotionEvent.requestPermission()` from a tap first, or no events arrive.
+
+Macs have no motion sensors a view can read, so in the desktop app no events arrive. Phones and
+tablets that open a shared view do have them. Keep the view usable without them.
+
+## Camera and microphone
+
+Declare `camera` or `microphone` in `permissions`, then call
+`navigator.mediaDevices.getUserMedia({ video: true })` or `getUserMedia({ audio: true })`. Without
+the permission, the call rejects.
+
+The first time a view uses the camera or microphone, macOS asks the user to allow Lightfern. If they
+refuse, `getUserMedia` rejects with `NotAllowedError`, so show what went wrong. Call `stop()` on
+every track when you finish, so the camera light turns off. Shared views can't use the camera or
+microphone.
 
 ## Fullscreen
 

@@ -85,8 +85,9 @@ assistant to write them. Concretely:
   `react-dom` when using React/TSX. Each declared package loads once per view, and its subpaths
   share that copy. A package's required peer dependencies must be declared too.
 - `permissions`: optional; the capabilities the plugin uses, empty by default: `files.read`,
-  `files.write`, `multiplayer` (see [Multiplayer](multiplayer.md)). Declare exactly what the views
-  call; using an undeclared capability fails.
+  `files.write`, `multiplayer` (see [Multiplayer](multiplayer.md)), `camera` and `microphone` (see
+  [Camera and microphone](sandbox.md#camera-and-microphone)). Declare exactly what the views call;
+  using an undeclared capability fails.
 - `network_permissions`: optional; allowed network origins, empty by default. An entry is an
   `https://` origin, optionally with a `*.` subdomain wildcard: `https://api.example.com`,
   `https://*.example.com` (matches subdomains only, not `example.com` itself). No paths, no

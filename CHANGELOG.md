@@ -7,6 +7,15 @@ implements.
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-10-22
+
+`manifestVersion: "2.4"`.
+
+- Add the `camera` and `microphone` permissions. Each lets a view use that device through
+  `getUserMedia`. See [Camera and microphone](docs/sandbox.md#camera-and-microphone).
+- Views can use motion sensors without a permission. See
+  [Motion sensors](docs/sandbox.md#motion-sensors).
+
 ## [2.3.1] - 2026-10-16
 
 - `ctx.fileId` is now documented as the file's ID from the start, which can change once when a new
