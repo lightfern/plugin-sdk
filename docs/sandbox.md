@@ -5,15 +5,16 @@ Your view runs in this iframe:
 ```html
 <iframe
   sandbox="allow-scripts allow-popups allow-pointer-lock"
-  allow="clipboard-read; clipboard-write; screen-wake-lock; fullscreen"
+  allow="clipboard-read; clipboard-write; screen-wake-lock; fullscreen; accelerometer; gyroscope"
 ></iframe>
 ```
 
-The iframe allows scripts, popups, pointer lock, fullscreen, clipboard access, and screen wake lock.
-Each device in your `permissions` is added to `allow` (see [Devices](#devices)). The sandbox and
-content security policy still restrict other browser APIs. Files go through `ctx.files`, navigation
-through `ctx.open`, and network through the origins in `network_permissions`. Render dialogs as
-React UI in your own tree; native `alert`/`confirm`/`prompt` are off.
+The iframe allows scripts, popups, pointer lock, fullscreen, clipboard access, screen wake lock and
+motion sensors. The camera and microphone are added to `allow` when your `permissions` declare them.
+The sandbox and content security policy still restrict other browser APIs. Files go through
+`ctx.files`, navigation through `ctx.open`, and network through the origins in
+`network_permissions`. Render dialogs as React UI in your own tree; native
+`alert`/`confirm`/`prompt` are off.
 
 **Network requests are subject to CORS.** Declaring an origin lets your `fetch` leave the frame, but
 the server still decides whether you can read the response, and the frame sends `Origin: null` with
@@ -29,23 +30,20 @@ Call `navigator.wakeLock.request("screen")` when a view needs to keep the displa
 the returned lock when it no longer does. The browser or operating system can release the lock when
 the view is hidden or power is low, so request it again if the view still needs it.
 
-## Devices
+## Motion sensors
 
-Declare a device in `permissions` to use it through the usual browser API. Without the permission,
-the API fails as if the device were blocked.
+Listen for `devicemotion` and `deviceorientation` events to follow how the device moves. Safari has
+no `Accelerometer` or `Gyroscope` classes, so the events are the way that works everywhere. On an
+iPhone or iPad, call `DeviceMotionEvent.requestPermission()` from a tap first, or no events arrive.
 
-| Permission      | Browser API                                                  |
-| --------------- | ------------------------------------------------------------ |
-| `accelerometer` | `Accelerometer`, `LinearAccelerationSensor`, `GravitySensor` |
-| `gyroscope`     | `Gyroscope`                                                  |
-| `camera`        | `navigator.mediaDevices.getUserMedia({ video: true })`       |
-| `microphone`    | `navigator.mediaDevices.getUserMedia({ audio: true })`       |
+Macs have no motion sensors a view can read, so in the desktop app no events arrive. Phones and
+tablets that open a shared view do have them. Keep the view usable without them.
 
-The `devicemotion` and `deviceorientation` events need both `accelerometer` and `gyroscope`.
+## Camera and microphone
 
-Macs have no motion sensors a view can read, so in the desktop app a sensor reports an error. Phones
-and tablets that open a shared view do have them. Listen for the sensor's `error` event and keep the
-view usable without it.
+Declare `camera` or `microphone` in `permissions`, then call
+`navigator.mediaDevices.getUserMedia({ video: true })` or `getUserMedia({ audio: true })`. Without
+the permission, the call rejects.
 
 The first time a view uses the camera or microphone, macOS asks the user to allow Lightfern. If they
 refuse, `getUserMedia` rejects with `NotAllowedError`, so show what went wrong. Call `stop()` on

@@ -8,12 +8,7 @@
 export type FilePermission = "files.read" | "files.write";
 
 /** Devices a view reaches through browser APIs. Each name is also the iframe `allow` feature it grants. */
-export const DEVICE_PERMISSIONS = [
-  "accelerometer",
-  "gyroscope",
-  "camera",
-  "microphone",
-] as const;
+export const DEVICE_PERMISSIONS = ["camera", "microphone"] as const;
 
 export type DevicePermission = (typeof DEVICE_PERMISSIONS)[number];
 
