@@ -1,18 +1,18 @@
 # Multiplayer
 
-With the `multiplayer` permission, your plugin can show people what everyone else in the same app is
+With the `multiplayer` permission, your app can show people what everyone else in the same app is
 doing right now: who has which card open, where their cursor is, what they're dragging.
 
 ## How it works
 
-- A **room** is a named channel in your app. Your plugin chooses the name.
+- A **room** is a named channel in your app. Your app chooses the name.
 - Everyone with access to your app who joins the same room name is in the same room. That's the
   app's owner and everyone it's shared with.
-- Each person in a room has one **presence**: a small JSON value your plugin sets, like
+- Each person in a room has one **presence**: a small JSON value your app sets, like
   `{ "card": "card-3" }`.
 - Everyone else in the room is a **peer**. You get each peer's presence, name and picture within a
   fraction of a second of it changing.
-- A **view** is one open tab of your plugin. Each view joins rooms separately.
+- A **view** is one open tab of your app. Each view joins rooms separately.
 - Presence is never saved. A peer's presence goes when they leave.
 
 Use presence for what is happening now. Save anything that should still be there later, like a moved
@@ -162,13 +162,13 @@ Keep presence to IDs, positions and short labels. Never put file contents in it.
   is renamed or moved.
 - A new file's ID can change once, when it first syncs. `useFileId()` re-renders when it does, so a
   room named by it follows.
-- Rooms belong to one copy of the app. If someone copies the app's folder, or installs the same
-  plugin themselves, they are in different rooms from the original, even with the same name.
+- Rooms belong to one copy of the app. If someone copies the app's folder, or installs the same app
+  themselves, they are in different rooms from the original, even with the same name.
 
 ## What you can trust
 
 - `peer.user` is the name and picture on the person's Lightfern account.
-- `peer.presence` is whatever their copy of your plugin sent. Check its shape before you use it.
+- `peer.presence` is whatever their copy of your app sent. Check its shape before you use it.
 - Never render presence as HTML.
 - To show `profilePictureUrl`, add its origin to `network_permissions`.
 

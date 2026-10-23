@@ -1,14 +1,14 @@
-# Styling a plugin view
+# Styling an app's views
 
-Styling is a plain `styles.css` at the plugin root, linked into the view document by convention.
-Target its class names from your JSX. Do **not** use Tailwind or the app's own classes: neither
-exists in the plugin frame, so they render unstyled. Write real CSS.
+Styling is a plain `styles.css` at the top of the code folder, linked into the view document by
+convention. Target its class names from your JSX. Do **not** use Tailwind or Lightfern's own
+classes: neither exists in the app's frame, so they render unstyled. Write real CSS.
 
 ## Choosing a look
 
 Before writing any CSS, decide whether the view should look like Lightfern or like its subject.
 
-**Match the app when the plugin is a tool:** a tracker, a dashboard, a CRM or applicant tracker, a
+**Match Lightfern when the app is a tool:** a tracker, a dashboard, a CRM or applicant tracker, a
 file browser, a form, a settings screen, a viewer for notes or tables. These sit beside the rest of
 the library and should read as part of it, so build them from the `--lf-*` tokens below. Most work
 tools belong here.
@@ -143,4 +143,4 @@ Theme every state: hover, selected, empty and error, and native inputs and selec
 keep the system look. Keep body text at 4.5:1 contrast however atmospheric the palette.
 
 Load a font by `@import`ing it from Google Fonts at the top of `styles.css`, or from a file in the
-plugin folder. Other font CDNs won't load.
+code folder. Other font CDNs won't load.

@@ -9,9 +9,9 @@ implements.
 
 ## [2.4.1] - 2026-10-23
 
-- Document apps: the folder that holds a plugin folder is the plugin's app, which the library shows
-  as one row. An app runs one plugin, and a plugin never runs at the top of a shared folder. See
-  [How you build one](docs/guide.md#how-you-build-one).
+- The docs call plugins apps. An app's code folder sits in its app folder, which the library shows
+  as one row. An app folder runs one app, and a code folder never runs at the top of a shared
+  folder. See [How you build one](docs/guide.md#how-you-build-one).
 
 ## [2.4.0] - 2026-10-22
 

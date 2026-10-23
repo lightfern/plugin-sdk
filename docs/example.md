@@ -1,9 +1,9 @@
-# Reference plugin: Recruiting ATS
+# Reference app: Recruiting ATS
 
-[`examples/recruiting-ats/`](../examples/recruiting-ats/) is a complete in-folder plugin. Follow its
-shape rather than inventing structure. It shows the whole runtime contract in two small views:
-connect, mount, enumerate a folder, read each file, follow disk changes, navigate, and write a file
-back.
+[`examples/recruiting-ats/`](../examples/recruiting-ats/) is the code folder of a complete app.
+Follow its shape rather than inventing structure. It shows the whole runtime contract in two small
+views: connect, mount, enumerate a folder, read each file, follow disk changes, navigate, and write
+a file back.
 
 ```
 Recruiting ATS/            ← name the folder for people; the library shows this string

@@ -1,72 +1,76 @@
-# Building a Lightfern plugin
+# Building a Lightfern app
 
-This is the complete contract for an **in-folder plugin**: a small app that lives as a folder in
-your Lightfern library and is built by Lightfern itself, with no toolchain on your side. Read it
-before you create or edit a plugin, and start from the
-[reference plugin](../examples/recruiting-ats/) rather than inventing structure. Lightfern's
-built-in assistant writes plugins against this same contract, so what you learn here is what it
-follows.
+This is the complete contract for a Lightfern **app**: a small app that lives as a folder in your
+Lightfern library and is built by Lightfern itself, with no toolchain on your side. Read it before
+you create or edit an app, and start from the [reference app](../examples/recruiting-ats/) rather
+than inventing structure. Lightfern's built-in assistant writes apps against this same contract, so
+what you learn here is what it follows. (This package and some of its names still say "plugin"; a
+plugin is an app's code.)
 
 Companion documents:
 
-- [Styling](styling.md): when a view should look like part of the app and when it should have its
+- [Styling](styling.md): when a view should look like part of Lightfern and when it should have its
   own look, the `--lf-*` design tokens, and CSS recipes for both.
 - [The sandbox](sandbox.md): what a view can and cannot do inside its iframe, including network
   requests, screen wake lock, background workers, keyboard shortcuts and text selection.
 - [Multiplayer](multiplayer.md): live presence between everyone using a shared app, and how it works
   alongside the files they share.
-- [Reference plugin](example.md): a walkthrough of the Recruiting ATS example.
+- [Reference app](example.md): a walkthrough of the Recruiting ATS example.
 
-## What a plugin is
+## What an app is
 
-A plugin is a small **app** that lives as a folder in the library. It contributes UI in two ways,
-and can use either or both:
+An app lives as a folder in the library. It contributes UI in two ways, and can use either or both:
 
-- A **home view**: the UI that opens when you click the plugin in the library. Think dashboard,
-  tool, or custom workspace: something you open and use, not just a file.
+- A **home view**: the UI that opens when you click the app in the library. Think dashboard, tool,
+  or custom workspace: something you open and use, not just a file.
 - **File views**: custom UIs that replace the default viewer for particular files you already have
   (a `.csv` that renders as an editable table, a note that renders as a checklist).
 
-Most plugins center on a home view, but a plugin that only contributes file views (a CSV viewer,
-say) is just as valid.
+Most apps center on a home view, but an app that only contributes file views (a CSV viewer, say) is
+just as valid.
 
-An in-folder plugin is just source files in a folder in the library: a `manifest.json`, some
-`.tsx`/`.ts`, and an optional `styles.css`. There is **no** `package.json`, `node_modules`, bundler
-config, or compiled output. The source files are the artifact. Lightfern transpiles and bundles them
-in-process on save.
+An app is made of two folders:
+
+- The **app folder** is what the library shows. It holds the files the app works on.
+- The **code folder** sits inside the app folder. It holds `manifest.json`, some `.tsx`/`.ts`, and
+  an optional `styles.css`.
+
+There is **no** `package.json`, `node_modules`, bundler config, or compiled output. The source files
+are the artifact. Lightfern transpiles and bundles them in-process on save.
 
 ## How you build one
 
-A plugin is any folder that holds a `manifest.json`. The folder that holds the plugin folder is the
-plugin's **app**. The plugin works on the files in its app, and any file views it declares apply to
-the files in the app and its subfolders. So put the plugin folder inside the folder whose files it
+Any folder that holds a `manifest.json` is a code folder, and the folder that holds it is its app
+folder. The app works on the files in its app folder, and any file views it declares apply to the
+files there and in its subfolders. So put the code folder inside the folder whose files the app
 works on.
 
-The library shows an app as one row. Clicking it opens the plugin's home view. The app's files,
-including the plugin's code, stay hidden until the user chooses "Show contents". A plugin folder
-can't be moved out of its app, so moving the app keeps its code and data together.
+The library shows an app as one row. Clicking it opens the home view. The app's files stay hidden
+until the user chooses "Show contents", and the code folder shows as one more row with a code icon.
+The code folder can't be moved out of its app folder, so moving the app keeps its code and data
+together.
 
-**Name the app for people.** The library and the home view's tab show the app's folder name, so give
-it a real name: `Recruiting`, not `recruiting-data`. The manifest's `id` stays a stable slug for the
+**Name the app folder for people.** The library and the home view's tab show its name, so give it a
+real name: `Recruiting`, not `recruiting-data`. The manifest's `id` stays a stable slug for the
 host.
 
 A few rules keep apps predictable and safe:
 
-- An app runs one plugin. If a folder holds more than one plugin folder, only the first
-  alphabetically runs, and the others say the folder already has an app.
-- A plugin folder at the top of the library has no app. It shows as its own row and works on the
-  whole library.
-- A plugin folder never runs at the top of a shared folder, because there it could read the folder
-  each member places the share in. Lightfern won't share a plugin folder on its own, and won't put a
-  `manifest.json` at the top of a shared folder. Share the app instead.
+- An app folder runs one app. If it holds more than one code folder, only the first alphabetically
+  runs, and the others say the folder already has an app.
+- A code folder at the top of the library has no app folder. It shows as its own row and works on
+  the whole library.
+- A code folder never runs at the top of a shared folder, because there it could read the folder
+  each member places the share in. Lightfern won't share a code folder on its own, and won't put a
+  `manifest.json` at the top of a shared folder. Share the app folder instead.
 
-Your library is a folder on disk. Create the plugin folder and its files there however you like:
-from inside Lightfern, with any editor pointed at the library folder, or by asking Lightfern's
-assistant to write them. Concretely:
+Your library is a folder on disk. Create the app's folders and files there however you like: from
+inside Lightfern, with any editor pointed at the library folder, or by asking Lightfern's assistant
+to write them. Concretely:
 
-1. Create the plugin folder and its files (`manifest.json`, `src/…`) in the library.
-2. Lightfern builds on save. Click the plugin to see its home view; open a matching file to see a
-   file view.
+1. Create the code folder and its files (`manifest.json`, `src/…`) inside the app folder.
+2. Lightfern builds on save. Click the app to see its home view; open a matching file to see a file
+   view.
 3. Iterate: edit a file, the view hot-reloads. If it does not compile, the view slot shows a
    structured build error (file, line, column, message). Read it, fix the file, re-save.
 
@@ -87,19 +91,19 @@ assistant to write them. Concretely:
 }
 ```
 
-- `manifestVersion`: required. This is the SDK version your plugin is built against, and it covers
-  the manifest format, the `ctx` API, the `lightfern:host` imports, and the `--lf-*` theme tokens.
-  Use the latest major, with the earliest minor that has everything your plugin uses.
+- `manifestVersion`: required. This is the SDK version your app is built against, and it covers the
+  manifest format, the `ctx` API, the `lightfern:host` imports, and the `--lf-*` theme tokens. Use
+  the latest major, with the earliest minor that has everything your app uses.
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
-  (`recruiting-ats`, `com.acme.ats`) that is **unique across every plugin in the library** (two
-  plugins sharing an `id` serve one bundle), a human-readable name, and a semver string (display
-  metadata only, for an in-folder plugin).
+  (`recruiting-ats`, `com.acme.ats`) that is **unique across every app in the library** (two apps
+  sharing an `id` serve one bundle), a human-readable name, and a semver string (display metadata
+  only).
 - `dependencies`: optional browser packages, keyed by package name with an **exact** version.
-  Lightfern downloads and caches their esm.sh browser modules before serving them from the local
-  plugin origin; dependencies are not loaded from remote script URLs. Declare `react` and
-  `react-dom` when using React/TSX. Each declared package loads once per view, and its subpaths
-  share that copy. A package's required peer dependencies must be declared too.
-- `permissions`: optional; the capabilities the plugin uses, empty by default: `files.read`,
+  Lightfern downloads and caches their esm.sh browser modules before serving them from the app's
+  local origin; dependencies are not loaded from remote script URLs. Declare `react` and `react-dom`
+  when using React/TSX. Each declared package loads once per view, and its subpaths share that copy.
+  A package's required peer dependencies must be declared too.
+- `permissions`: optional; the capabilities the app uses, empty by default: `files.read`,
   `files.write`, `multiplayer` (see [Multiplayer](multiplayer.md)), `camera` and `microphone` (see
   [Camera and microphone](sandbox.md#camera-and-microphone)). Declare exactly what the views call;
   using an undeclared capability fails.
@@ -110,8 +114,8 @@ assistant to write them. Concretely:
   media assets. It does not permit remote JavaScript or worker URLs. A view can run code from a blob
   worker, so never turn fetched content into worker code; see
   [The sandbox](sandbox.md#background-workers).
-- `contributes.home`: the plugin's home view (see below). Optional, but it's the usual reason to
-  build a plugin.
+- `contributes.home`: the app's home view (see below). Optional, but it's the usual reason to build
+  an app.
 - `contributes.views`: file views (see **File views**). Optional; omit it for a home-only app.
 
 The schema is enforced by the host and is exported from this package as `manifestSchema` (zod), with
@@ -119,18 +123,18 @@ The schema is enforced by the host and is exported from this package as `manifes
 
 ## Home views
 
-The home view is the plugin as an app: the UI that opens when you click its app in the library. Use
-it for a home screen, dashboard, tool, or settings: anything that is about the plugin itself rather
-than one file next to it. Most plugins are built for their home view; file views are the add-on.
+The home view is the app itself: the UI that opens when you click the app in the library. Use it for
+a home screen, dashboard, tool, or settings: anything that is about the app rather than one file in
+it. Most apps are built for their home view; file views are the add-on.
 
-Declare it as `contributes.home`. It has **no `match`**: it is bound to the plugin's own folder,
-which the manifest can't name anyway. That is wherever the plugin folder is dropped in the library,
-not something the author writes down.
+Declare it as `contributes.home`. It has **no `match`**: it is bound to the app, which the manifest
+can't name anyway. That is wherever the app folder sits in the library, not something the author
+writes down.
 
 | Field   | Required | Meaning                                                  |
 | ------- | -------- | -------------------------------------------------------- |
 | `entry` | yes      | The source module Lightfern builds, e.g. `src/home.tsx`. |
-| `title` | no       | Label for the view; defaults to the app's name.          |
+| `title` | no       | Label for the view; defaults to the app folder's name.   |
 
 ```json
 "contributes": {
@@ -141,16 +145,15 @@ not something the author writes down.
 A home-only app declares just `home` and omits `views` entirely. The view is written exactly like
 any other (`connect`, `createRoot`, the same `ctx`).
 
-**Where a home view reads and writes.** A plugin works with the files around it: everything in the
-folder it lives in and below (paths are relative to that folder; `""` is the folder itself).
-`ctx.path` is the plugin's own folder within it, so `ctx.files.list("")` enumerates the surrounding
-folder, `ctx.files.list(ctx.path)` enumerates the plugin's own files, and `ctx.open(...)` navigates
-anywhere in range. A plugin without a `home` has nothing to open, so its app shows as a plain
-folder.
+**Where a home view reads and writes.** An app works with the files in its app folder and below
+(paths are relative to the app folder; `""` is the app folder itself). `ctx.path` is the code folder
+within it, so `ctx.files.list("")` enumerates the app folder, `ctx.files.list(ctx.path)` enumerates
+the app's own code, and `ctx.open(...)` navigates anywhere in range. An app without a `home` has
+nothing to open, so its app folder shows as a plain folder.
 
-Because a home-only plugin claims no `views`, files beside it still open in Lightfern's own viewer
-when clicked; the home view only renders them when the app is opened. To present the same files in
-two ways, give each plugin an app of its own.
+Because a home-only app claims no `views`, its files still open in Lightfern's own viewer when
+clicked; the home view only renders them when the app is opened. To present the same files in two
+ways, give each app a folder of its own.
 
 ## File views
 
@@ -162,9 +165,9 @@ A file view replaces the default viewer for particular files. Each entry has:
 | `entry` | yes      | The source module Lightfern builds, e.g. `src/candidate.tsx`. |
 | `title` | no       | Label for the view; defaults to the opened file's name.       |
 
-Patterns are matched against file paths in the folder the plugin lives in and its subfolders; they
-cannot reach siblings or parents of that folder. A pattern only ever names files; a trailing `/` is
-rejected. Folders don't open views; a plugin's own folder opens its `home`.
+Patterns are matched against file paths in the app folder and its subfolders; they cannot reach
+siblings or parents of that folder. A pattern only ever names files; a trailing `/` is rejected.
+Folders don't open views; the app folder opens its `home`.
 
 - `*`: zero or more characters within one segment (never matches `/`).
 - `?`: exactly one character within one segment.
@@ -191,19 +194,19 @@ empty `<div id="root">`. Your entry module connects to the host and mounts. That
 
 **Imports come from exactly two places:**
 
-- **Relative** imports (`./helpers`) resolve within the plugin folder.
+- **Relative** imports (`./helpers`) resolve within the code folder.
 - **Bare** imports resolve through the host-injected import map. Nothing is installed, and nothing
   else is importable:
 
   | Import                 | What it is                                                                                                                                                                                                   |
   | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-  | `lightfern:host`       | The plugin SDK: `connect()` and its types. Needs no dependencies.                                                                                                                                            |
+  | `lightfern:host`       | The app SDK: `connect()` and its types. Needs no dependencies.                                                                                                                                               |
   | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, `useCurrentUser()`, `useFileId()`, `useConnected()`, `usePeers()` and `useSetPresence()`. Requires `react` in `dependencies`. |
   | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.                                                                           |
 
   Declare every bare package import in `dependencies`, including the peer dependencies of the
   packages you use. A subpath of a declared package uses the same instance as the package, so
-  three.js add-ons work with the plugin's own `three`:
+  three.js add-ons work with the app's own `three`:
 
   ```json
   "dependencies": { "three": "0.170.0" }
@@ -219,8 +222,8 @@ empty `<div id="root">`. Your entry module connects to the host and mounts. That
   prepare with a build error rather than causing a remote script fetch.
 
 **All data access goes through `ctx.files`.** There is no `fetch` to undeclared origins, no direct
-filesystem, no reach beyond the folder the plugin lives in. Every path is relative to that folder
-(`""` is the folder itself):
+filesystem, no reach beyond the app folder. Every path is relative to the app folder (`""` is the
+folder itself):
 
 - `ctx.files.read(path, encoding?)` → `string | Uint8Array`: reads the file at `path`. `encoding` is
   `"utf-8"` (default → text) or `"binary"` (→ raw bytes). Binary files (images, PDFs) **must** use
@@ -242,33 +245,32 @@ filesystem, no reach beyond the folder the plugin lives in. Every path is relati
   node the `path` covers changes on disk. Returns an unsubscribe. See **Staying in sync**. Requires
   `files.read`.
 
-**Keep code and data separate.** A plugin can never write into its own folder; such writes are
-rejected. Write data the plugin produces to the surrounding folder or a subfolder of it, alongside
-the files already kept there. Don't treat the plugin folder as a private data store.
+**Keep code and data separate.** An app can never write into its code folder; such writes are
+rejected. Write data the app produces to the app folder or a subfolder of it, alongside the files
+already kept there. Don't treat the code folder as a private data store.
 
 **Save data files as compact JSON.** When your view writes its data to a `.json` file, serialize it
 with `JSON.stringify(data)` without the `space` argument. Indented JSON wastes disk space and costs
 many more tokens to read. This applies only to the data a view writes at runtime. Keep
 `manifest.json` indented, since people read and edit it by hand.
 
-`ctx.path` is the opened node's path relative to the folder the plugin lives in: the plugin's own
-folder for a home view, the opened file for a file view. `ctx.homePath` is the plugin's own folder
-(where its `manifest.json` sits) relative to that same root. It never moves as `ctx.path` does, so a
-file view can reach its home without hardcoding the folder name. `ctx.pluginId` is also available.
+`ctx.path` is the opened node's path relative to the app folder: the code folder for a home view,
+the opened file for a file view. `ctx.homePath` is the code folder (where `manifest.json` sits)
+relative to that same root. It never moves as `ctx.path` does, so a file view can reach its home
+without hardcoding the folder name. `ctx.pluginId` is also available.
 
 `ctx.currentUser` is the signed-in Lightfern user, or `null` when signed out. It has `id`, `email`,
 `name` (nullable), and `profilePictureUrl` (nullable). Use the stable `id` for ownership in shared
 data such as a game leaderboard, and `name` or `profilePictureUrl` for display. The value updates
 when desktop sign-in state changes; subscribe with `ctx.onCurrentUserChange(listener)` or use
 `useCurrentUser()` in React if the view needs to react while it stays open. This identity is public
-to the plugin and is not an authentication credential. Rendering a remote `profilePictureUrl`
-requires its origin in the plugin's `network_permissions`.
+to the app and is not an authentication credential. Rendering a remote `profilePictureUrl` requires
+its origin in the app's `network_permissions`.
 
 `ctx.open(path, newTab?)` → `void` opens another node exactly as a click in the library would:
-routing to a file's view, opening a plugin's `home` view for its own folder, or revealing an
-ordinary folder in the tree. The path may not reach beyond the folder the plugin lives in;
-`newTab: true` opens beside the current tab. Needs no permission. A file view returns to its home
-with `ctx.open(ctx.homePath)`.
+routing to a file's view, opening an app's `home` view for its code folder, or revealing an ordinary
+folder in the tree. The path may not reach beyond the app folder; `newTab: true` opens beside the
+current tab. Needs no permission. A file view returns to its home with `ctx.open(ctx.homePath)`.
 
 `ctx.fileId` is the opened node's file ID: the same for everyone with access to the file, and kept
 through renames and moves. A new file's ID can change once, when it first syncs; `onPathChange` (or
@@ -297,7 +299,7 @@ const text = useFile(path); // null until the first read lands — never the fil
 `useFolder(path)` lists the folder's immediate files and subfolders as `FileEntry[]`, or `null`
 until the first listing lands. It re-lists when an immediate entry is created, deleted, or renamed;
 changes to file contents do not change the listing. Like `useFile`, it drops the previous folder's
-entries when `path` changes. Plugins using it should declare `"manifestVersion": "2.2"`:
+entries when `path` changes. Apps using it should declare `"manifestVersion": "2.2"`:
 
 ```tsx
 import { useFolder } from "lightfern:host/react";
@@ -320,8 +322,8 @@ const src = useFileObjectUrl("cover.png"); // null until the first read lands
 return src && <img src={src} alt="" />;
 ```
 
-The frame's Content-Security-Policy allows `<img>` from the plugin's own bundled assets, `data:`,
-and `blob:`. An object URL is a `blob:`, so it renders; a remote image URL is blocked.
+The frame's Content-Security-Policy allows `<img>` from the app's own bundled assets, `data:`, and
+`blob:`. An object URL is a `blob:`, so it renders; a remote image URL is blocked.
 
 **Saving a remote image to the library**: `fetch` its bytes from an origin you declared in
 `network_permissions`, then write the `Uint8Array` (not a decoded string):
@@ -333,12 +335,12 @@ await ctx.files.write("cover.png", new Uint8Array(await res.arrayBuffer()));
 
 Underneath are `ctx.path` (live), `ctx.onPathChange(next => …)` and
 `ctx.files.watch(path, listener)`. Reach for those when the bindings do not fit, e.g. a view that
-must read each listed file's contents as in the reference plugin. A watcher is pinned to the path
-you pass, so re-register it when the path moves.
+must read each listed file's contents as in the reference app. A watcher is pinned to the path you
+pass, so re-register it when the path moves.
 
 `watch` filters by that path: a **file** path fires only for that file, a **folder** path (or `""`,
-the folder the plugin lives in) for anything in its subtree: a child added/removed/renamed, or a
-descendant's content changing. The listener gets the change:
+the app folder) for anything in its subtree: a child added/removed/renamed, or a descendant's
+content changing. The listener gets the change:
 
 ```ts
 type FileChange = { type: "created" | "changed" | "deleted"; path: string };
@@ -362,22 +364,22 @@ useEffect(() => {
 
 ### Styling
 
-Styling is a plain `styles.css` at the plugin root, linked into the view document by convention. Do
-**not** use Tailwind classes: there is no Tailwind in the plugin frame, so they render unstyled.
-Write real CSS.
+Styling is a plain `styles.css` at the top of the code folder, linked into the view document by
+convention. Do **not** use Tailwind classes: there is no Tailwind in the app's frame, so they render
+unstyled. Write real CSS.
 
 Decide first whether the view should look like Lightfern or like its subject. A tool for working
-with files (a tracker, a dashboard, a form) should match the app: Lightfern serves its design tokens
-into the frame as `--lf-*` CSS variables, and a view built from them reads as part of the app and
-follows dark mode for free. A view whose look is part of its content (a D&D map, a game board, an
-invoice or slide deck, a client's brand, a photo gallery) should get its own. [Styling](styling.md)
-covers how to choose, the token table, the recipes for cards, controls, hover washes and elevation,
-and how to build a look of your own.
+with files (a tracker, a dashboard, a form) should match Lightfern: Lightfern serves its design
+tokens into the frame as `--lf-*` CSS variables, and a view built from them reads as part of
+Lightfern and follows dark mode for free. A view whose look is part of its content (a D&D map, a
+game board, an invoice or slide deck, a client's brand, a photo gallery) should get its own.
+[Styling](styling.md) covers how to choose, the token table, the recipes for cards, controls, hover
+washes and elevation, and how to build a look of your own.
 
 **TypeScript and JSX just work.** Lightfern bundles the import graph on save. You never run a
 compiler.
 
-## What is not available in-folder
+## What is not available
 
 - **npm installation or arbitrary URLs.** Use exact versions in `dependencies`; do not add a
   `package.json`, lockfile, CDN script tag, or URL import. Lightfern owns package preparation and
@@ -387,9 +389,10 @@ compiler.
   iframe attributes and what they imply (no `<form>` submission, no native dialogs, CORS applies to
   every request).
 
-## Reference plugin
+## Reference app
 
-[`examples/recruiting-ats/`](../examples/recruiting-ats/) is a complete plugin that shows the whole
-runtime shape in two views: connect, mount, enumerate a folder, read each file, follow disk changes,
-navigate, and write a file back. Copy it into your library as `Recruiting ATS` (the folder name is
-what the library shows) and it runs as-is. [Reference plugin](example.md) walks through it.
+[`examples/recruiting-ats/`](../examples/recruiting-ats/) is the code folder of a complete app that
+shows the whole runtime shape in two views: connect, mount, enumerate a folder, read each file,
+follow disk changes, navigate, and write a file back. Copy it into a folder in your library, such as
+`Recruiting` (the app folder's name is what the library shows), and it runs as-is.
+[Reference app](example.md) walks through it.
