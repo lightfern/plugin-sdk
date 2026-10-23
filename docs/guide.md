@@ -37,13 +37,28 @@ in-process on save.
 
 ## How you build one
 
-A plugin is any folder that holds a `manifest.json`. Drop that folder anywhere in the library and it
-becomes a plugin: clicking it opens its home view, and any file views it declares apply to the files
-that sit alongside it, in the folder the plugin lives in and its subfolders.
+A plugin is any folder that holds a `manifest.json`. The folder that holds the plugin folder is the
+plugin's **app**. The plugin works on the files in its app, and any file views it declares apply to
+the files in the app and its subfolders. So put the plugin folder inside the folder whose files it
+works on.
 
-**Name the folder for people.** The plugin's folder name is the label shown in the library, so give
-it a real name: `Recruiting ATS`, not `recruiting-ats`. The manifest's `id` stays a stable slug for
-the host; the folder name (and the manifest `name`) are the human-facing labels.
+The library shows an app as one row. Clicking it opens the plugin's home view. The app's files,
+including the plugin's code, stay hidden until the user chooses "Show contents". A plugin folder
+can't be moved out of its app, so moving the app keeps its code and data together.
+
+**Name the app for people.** The library and the home view's tab show the app's folder name, so give
+it a real name: `Recruiting`, not `recruiting-data`. The manifest's `id` stays a stable slug for the
+host.
+
+A few rules keep apps predictable and safe:
+
+- An app runs one plugin. If a folder holds more than one plugin folder, only the first
+  alphabetically runs, and the others say the folder already has an app.
+- A plugin folder at the top of the library has no app. It shows as its own row and works on the
+  whole library.
+- A plugin folder never runs at the top of a shared folder, because there it could read the folder
+  each member places the share in. Lightfern won't share a plugin folder on its own, and won't put a
+  `manifest.json` at the top of a shared folder. Share the app instead.
 
 Your library is a folder on disk. Create the plugin folder and its files there however you like:
 from inside Lightfern, with any editor pointed at the library folder, or by asking Lightfern's
@@ -104,10 +119,9 @@ The schema is enforced by the host and is exported from this package as `manifes
 
 ## Home views
 
-The home view is the plugin as an app: the UI that opens when you click the plugin's own node in the
-library (the folder that holds its `manifest.json`). Use it for a home screen, dashboard, tool, or
-settings: anything that is about the plugin itself rather than one file next to it. Most plugins are
-built for their home view; file views are the add-on.
+The home view is the plugin as an app: the UI that opens when you click its app in the library. Use
+it for a home screen, dashboard, tool, or settings: anything that is about the plugin itself rather
+than one file next to it. Most plugins are built for their home view; file views are the add-on.
 
 Declare it as `contributes.home`. It has **no `match`**: it is bound to the plugin's own folder,
 which the manifest can't name anyway. That is wherever the plugin folder is dropped in the library,
@@ -116,7 +130,7 @@ not something the author writes down.
 | Field   | Required | Meaning                                                  |
 | ------- | -------- | -------------------------------------------------------- |
 | `entry` | yes      | The source module Lightfern builds, e.g. `src/home.tsx`. |
-| `title` | no       | Label for the view; defaults to the plugin's `name`.     |
+| `title` | no       | Label for the view; defaults to the app's name.          |
 
 ```json
 "contributes": {
@@ -131,11 +145,12 @@ any other (`connect`, `createRoot`, the same `ctx`).
 folder it lives in and below (paths are relative to that folder; `""` is the folder itself).
 `ctx.path` is the plugin's own folder within it, so `ctx.files.list("")` enumerates the surrounding
 folder, `ctx.files.list(ctx.path)` enumerates the plugin's own files, and `ctx.open(...)` navigates
-anywhere in range. A plugin without a `home` is inert to clicks: selecting its node just selects it.
+anywhere in range. A plugin without a `home` has nothing to open, so its app shows as a plain
+folder.
 
 Because a home-only plugin claims no `views`, files beside it still open in Lightfern's own viewer
-when clicked; the home view only renders them when the plugin's own node is opened. Two home-only
-plugins can sit in the same folder and each present the shared files their own way.
+when clicked; the home view only renders them when the app is opened. To present the same files in
+two ways, give each plugin an app of its own.
 
 ## File views
 
