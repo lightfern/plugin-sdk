@@ -42,8 +42,29 @@ are the artifact. Lightfern transpiles and bundles them in-process on save.
 
 Any folder that holds a `manifest.json` is a code folder, and the folder that holds it is its app
 folder. The app works on the files in its app folder, and any file views it declares apply to the
-files there and in its subfolders. So put the code folder inside the folder whose files the app
-works on.
+files there and in its subfolders. An app always looks like this:
+
+```
+Recruiting/              ← the app folder: the library shows this name, and the app's data lives here
+├── candidates/
+│   └── ada.md
+└── code/                ← the code folder
+    ├── manifest.json
+    ├── styles.css
+    └── src/
+        └── home.tsx
+```
+
+So the code folder always goes **inside** an app folder:
+
+- **For a new app,** create the app folder first, named for people (`Habit Tracker`), then create
+  the code folder inside it (`Habit Tracker/code`). Write the app's data into the app folder, never
+  into the code folder.
+- **For an app over files someone already has,** put the code folder inside the folder that holds
+  those files.
+
+Never put `manifest.json` straight into a new folder at the top of the library. That folder is then
+the code folder with no app folder around it, so the app works on the whole library.
 
 The library shows an app as one row. Clicking it opens the home view. The app's files stay hidden
 until the user chooses "Show contents", and the code folder shows as one more row with a code icon.
@@ -68,7 +89,7 @@ Your library is a folder on disk. Create the app's folders and files there howev
 inside Lightfern, with any editor pointed at the library folder, or by asking Lightfern's assistant
 to write them. Concretely:
 
-1. Create the code folder and its files (`manifest.json`, `src/…`) inside the app folder.
+1. Create the app folder, then the code folder inside it with its files (`manifest.json`, `src/…`).
 2. Lightfern builds on save. Click the app to see its home view; open a matching file to see a file
    view.
 3. Iterate: edit a file, the view hot-reloads. If it does not compile, the view slot shows a
@@ -393,6 +414,6 @@ compiler.
 
 [`examples/recruiting-ats/`](../examples/recruiting-ats/) is the code folder of a complete app that
 shows the whole runtime shape in two views: connect, mount, enumerate a folder, read each file,
-follow disk changes, navigate, and write a file back. Copy it into a folder in your library, such as
-`Recruiting` (the app folder's name is what the library shows), and it runs as-is.
-[Reference app](example.md) walks through it.
+follow disk changes, navigate, and write a file back. Copy it into an app folder such as
+`Recruiting`, as `Recruiting/code` (the app folder's name is what the library shows), and it runs
+as-is. [Reference app](example.md) walks through it.

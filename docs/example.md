@@ -6,17 +6,20 @@ views: connect, mount, enumerate a folder, read each file, follow disk changes, 
 a file back.
 
 ```
-Recruiting ATS/            ← name the folder for people; the library shows this string
-├── manifest.json
-├── styles.css
-└── src/
-    ├── home.tsx           ← home view: the hiring pipeline
-    └── candidate.tsx      ← file view for candidates/*.md
+Recruiting/                ← the app folder: name it for people; the library shows this string
+├── candidates/            ← the app's data
+│   └── ada.md
+└── code/                  ← examples/recruiting-ats/, the code folder
+    ├── manifest.json
+    ├── styles.css
+    └── src/
+        ├── home.tsx       ← home view: the hiring pipeline
+        └── candidate.tsx  ← file view for candidates/*.md
 ```
 
-To run it, copy the folder into your library as `Recruiting ATS` (spaces and all) and add a
-`candidates/` folder beside it with a few markdown files. Each candidate file carries a `Stage:`
-line and some `- [ ]` interview steps.
+To run it, create a `Recruiting` folder in your library, copy `examples/recruiting-ats/` into it as
+`code`, and add a `candidates/` folder beside the code with a few markdown files. Each candidate
+file carries a `Stage:` line and some `- [ ]` interview steps.
 
 ## `manifest.json`
 
