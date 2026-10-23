@@ -1,22 +1,26 @@
-# Reference plugin: Recruiting ATS
+# Reference app: Recruiting ATS
 
-[`examples/recruiting-ats/`](../examples/recruiting-ats/) is a complete in-folder plugin. Follow its
-shape rather than inventing structure. It shows the whole runtime contract in two small views:
-connect, mount, enumerate a folder, read each file, follow disk changes, navigate, and write a file
-back.
+[`examples/recruiting-ats/`](../examples/recruiting-ats/) is the code folder of a complete app.
+Follow its shape rather than inventing structure. It shows the whole runtime contract in two small
+views: connect, mount, enumerate a folder, read each file, follow disk changes, navigate, and write
+a file back.
 
 ```
-Recruiting ATS/            ← name the folder for people; the library shows this string
-├── manifest.json
-├── styles.css
-└── src/
-    ├── home.tsx           ← home view: the hiring pipeline
-    └── candidate.tsx      ← file view for candidates/*.md
+Recruiting/                ← the app folder: name it for people; the library shows this string
+├── candidates/            ← the app's data
+│   └── ada.md
+└── code/                  ← examples/recruiting-ats/, the code folder
+    ├── manifest.json
+    ├── styles.css
+    └── src/
+        ├── home.tsx       ← home view: the hiring pipeline
+        └── candidate.tsx  ← file view for candidates/*.md
 ```
 
-To run it, copy the folder into your library as `Recruiting ATS` (spaces and all) and add a
-`candidates/` folder beside it with a few markdown files. Each candidate file carries a `Stage:`
-line and some `- [ ]` interview steps.
+To run it, create a `Recruiting` folder in your library, copy `examples/recruiting-ats/` into it as
+`code`, and add a `candidates/` folder beside the code with a few markdown files. Each candidate
+file carries a `Stage:` line and some `- [ ]` interview steps. When you build your own app from it,
+give it its own `id`, since two apps with the same `id` run one copy of the code.
 
 ## `manifest.json`
 

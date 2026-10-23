@@ -1,13 +1,13 @@
 # @lightfern/plugin-sdk
 
-The contract between [Lightfern](https://lightfern.com) plugins and the Lightfern desktop host:
+The contract between [Lightfern](https://lightfern.com) apps and the Lightfern desktop host:
 manifest schema, view context, React bindings, wire protocol and theme tokens, plus the guide for
-writing a plugin.
+writing an app. The package keeps its `plugin-sdk` name; a plugin is an app's code.
 
-A plugin is a folder in your Lightfern library holding a `manifest.json` and some `.tsx`. Lightfern
-builds it in-process on save; there is no toolchain on your side. Inside a view this package is
-imported as `lightfern:host`, served by the app through an injected import map, so nothing is
-installed:
+An app is a folder in your Lightfern library whose code folder holds a `manifest.json` and some
+`.tsx`. Lightfern builds it in-process on save; there is no toolchain on your side. Inside a view
+this package is imported as `lightfern:host`, served by Lightfern through an injected import map, so
+nothing is installed:
 
 ```ts
 import { connect } from "lightfern:host";
@@ -21,13 +21,13 @@ The host imports the same types to drive the other end of the bridge.
 
 ## Start here
 
-- [Building a Lightfern plugin](docs/guide.md): the complete contract, from the manifest to the
+- [Building a Lightfern app](docs/guide.md): the complete contract, from the manifest to the
   `ctx.files` API and keeping a view in sync with disk.
 - [Styling](docs/styling.md): when to match the app or give a view its own look, the `--lf-*` design
   tokens, and CSS recipes.
 - [The sandbox](docs/sandbox.md): what the iframe allows, CORS, keyboard shortcuts, text selection.
 - [Multiplayer](docs/multiplayer.md): live presence between everyone using a shared app.
-- [Reference plugin](docs/example.md) and its source in
+- [Reference app](docs/example.md) and its source in
   [`examples/recruiting-ats/`](examples/recruiting-ats/).
 
 ## What the package exports
@@ -40,17 +40,17 @@ The host imports the same types to drive the other end of the bridge.
 | `@lightfern/plugin-sdk/match`      | The segment-aware glob matcher used for view `match` patterns.                                                                        |
 | `@lightfern/plugin-sdk/protocol`   | The message shapes that cross the sandbox boundary.                                                                                   |
 | `@lightfern/plugin-sdk/testing`    | `testManifest()` for tests.                                                                                                           |
-| `@lightfern/plugin-sdk/theme.css`  | The default plugin theme: `--lf-*` tokens for light and dark, plus base element rules.                                                |
+| `@lightfern/plugin-sdk/theme.css`  | The default app theme: `--lf-*` tokens for light and dark, plus base element rules.                                                   |
 | `@lightfern/plugin-sdk/docs/*`     | The guide as raw markdown, for tools that serve it.                                                                                   |
-| `@lightfern/plugin-sdk/examples/*` | The reference plugin source.                                                                                                          |
+| `@lightfern/plugin-sdk/examples/*` | The reference app source.                                                                                                             |
 
 Every code export points at TypeScript source; there is no build step. The root barrel stays free of
 React so Node-side consumers can import it.
 
 ## Versioning
 
-Tags follow semver, and a plugin's `manifestVersion` is the tag's major and minor, so `v2.0.3`
-implements `manifestVersion` `"2.0"`. Lightfern runs a plugin when they're on the same major version
+Tags follow semver, and an app's `manifestVersion` is the tag's major and minor, so `v2.0.3`
+implements `manifestVersion` `"2.0"`. Lightfern runs an app when they're on the same major version
 and Lightfern's minor version is the same or newer.
 
 - **Patch**: fixes and documentation changes.

@@ -20,9 +20,9 @@ The sandbox and content security policy still restrict other browser APIs. Files
 the server still decides whether you can read the response, and the frame sends `Origin: null` with
 no cookies. In practice: APIs built for browser use (GitHub, OpenAI, Slack, Airtable, …) work; APIs
 that never send `Access-Control-Allow-Origin` (for example Notion) do not, and no manifest entry
-changes that. WebSockets are not supported. Authenticate by sending a token the plugin obtained
-itself (e.g. an `Authorization` header from a key the user pasted into your settings UI); there is
-no cookie jar.
+changes that. WebSockets are not supported. Authenticate by sending a token the app obtained itself
+(e.g. an `Authorization` header from a key the user pasted into your settings UI); there is no
+cookie jar.
 
 ## Screen wake lock
 
@@ -59,14 +59,14 @@ Esc. Use it for viewers and games.
 
 Styles injected at runtime are allowed, so CSS-in-JS libraries (emotion, styled-components, and the
 component libraries built on them) work as they do in a browser. Scripts are different: only the
-plugin's own bundled code and declared dependencies run, and nothing inline.
+app's own bundled code and declared dependencies run, and nothing inline.
 
 ## Background workers
 
 Use a web worker for CPU-heavy work that would freeze the view. Ordinary `async` code is enough for
 waiting on network requests. The sandbox gives the view an opaque origin, so
-`new Worker("worker.js")` cannot load a worker file from the plugin's URL. Create a worker from a
-blob URL instead:
+`new Worker("worker.js")` cannot load a worker file from the app's URL. Create a worker from a blob
+URL instead:
 
 ```ts
 const workerUrl = URL.createObjectURL(
@@ -80,7 +80,7 @@ const worker = new Worker(workerUrl);
 Workers cannot access the view's DOM or `ctx`; exchange data with them through `postMessage`. They
 inherit the view's content security policy. Call `worker.terminate()` and
 `URL.revokeObjectURL(workerUrl)` when done. A blob worker runs whatever JavaScript you put in the
-blob, so use code bundled with the plugin. Never turn a network response into worker code.
+blob, so use code bundled with the app. Never turn a network response into worker code.
 
 Don't use `<form>`. The sandbox has no `allow-forms`, so submission does nothing (no navigation, no
 request), and you never need it. Hold input in React state and act on a button `onClick`.
