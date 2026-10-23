@@ -19,7 +19,8 @@ Recruiting/                ← the app folder: name it for people; the library s
 
 To run it, create a `Recruiting` folder in your library, copy `examples/recruiting-ats/` into it as
 `code`, and add a `candidates/` folder beside the code with a few markdown files. Each candidate
-file carries a `Stage:` line and some `- [ ]` interview steps.
+file carries a `Stage:` line and some `- [ ]` interview steps. When you build your own app from it,
+give it its own `id`, since two apps with the same `id` run one copy of the code.
 
 ## `manifest.json`
 

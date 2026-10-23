@@ -60,11 +60,15 @@ So the code folder always goes **inside** an app folder:
 - **For a new app,** create the app folder first, named for people (`Habit Tracker`), then create
   the code folder inside it (`Habit Tracker/code`). Write the app's data into the app folder, never
   into the code folder.
-- **For an app over files someone already has,** put the code folder inside the folder that holds
-  those files.
+- **For an app over files someone already has,** put the code folder in the folder that holds those
+  files, beside them: `Hiring/code` next to `Hiring/candidates`.
 
-Never put `manifest.json` straight into a new folder at the top of the library. That folder is then
-the code folder with no app folder around it, so the app works on the whole library.
+The code folder can have any name; `code` is just the convention for new apps. An existing app is
+already laid out this way, so don't rename or move its code folder.
+
+Never put `manifest.json` in a folder at the top of the library, such as
+`Habit Tracker/manifest.json`. That folder is then the code folder with no app folder around it, so
+the app works on the whole library.
 
 The library shows an app as one row. Clicking it opens the home view. The app's files stay hidden
 until the user chooses "Show contents", and the code folder shows as one more row with a code icon.
@@ -152,10 +156,10 @@ Declare it as `contributes.home`. It has **no `match`**: it is bound to the app,
 can't name anyway. That is wherever the app folder sits in the library, not something the author
 writes down.
 
-| Field   | Required | Meaning                                                  |
-| ------- | -------- | -------------------------------------------------------- |
-| `entry` | yes      | The source module Lightfern builds, e.g. `src/home.tsx`. |
-| `title` | no       | Label for the view; defaults to the app folder's name.   |
+| Field   | Required | Meaning                                                         |
+| ------- | -------- | --------------------------------------------------------------- |
+| `entry` | yes      | The source module, relative to the code folder: `src/home.tsx`. |
+| `title` | no       | Label for the view; defaults to the app folder's name.          |
 
 ```json
 "contributes": {
@@ -188,7 +192,7 @@ A file view replaces the default viewer for particular files. Each entry has:
 
 Patterns are matched against file paths in the app folder and its subfolders; they cannot reach
 siblings or parents of that folder. A pattern only ever names files; a trailing `/` is rejected.
-Folders don't open views; the app folder opens its `home`.
+Folders don't open views; clicking the app opens its `home`.
 
 - `*`: zero or more characters within one segment (never matches `/`).
 - `?`: exactly one character within one segment.
@@ -276,9 +280,10 @@ many more tokens to read. This applies only to the data a view writes at runtime
 `manifest.json` indented, since people read and edit it by hand.
 
 `ctx.path` is the opened node's path relative to the app folder: the code folder for a home view,
-the opened file for a file view. `ctx.homePath` is the code folder (where `manifest.json` sits)
-relative to that same root. It never moves as `ctx.path` does, so a file view can reach its home
-without hardcoding the folder name. `ctx.pluginId` is also available.
+the opened file for a file view. So read and write data from `""` (the app folder), never from
+`ctx.path` in a home view, which points into the code. `ctx.homePath` is the code folder (where
+`manifest.json` sits) relative to that same root. It never moves as `ctx.path` does, so a file view
+can reach its home without hardcoding the folder name. `ctx.pluginId` is also available.
 
 `ctx.currentUser` is the signed-in Lightfern user, or `null` when signed out. It has `id`, `email`,
 `name` (nullable), and `profilePictureUrl` (nullable). Use the stable `id` for ownership in shared
@@ -289,9 +294,10 @@ to the app and is not an authentication credential. Rendering a remote `profileP
 its origin in the app's `network_permissions`.
 
 `ctx.open(path, newTab?)` → `void` opens another node exactly as a click in the library would:
-routing to a file's view, opening an app's `home` view for its code folder, or revealing an ordinary
-folder in the tree. The path may not reach beyond the app folder; `newTab: true` opens beside the
-current tab. Needs no permission. A file view returns to its home with `ctx.open(ctx.homePath)`.
+routing to a file's view, opening the home view when `path` is `ctx.homePath`, or revealing an
+ordinary folder in the tree. The path may not reach beyond the app folder; `newTab: true` opens
+beside the current tab. Needs no permission. A file view returns to its home with
+`ctx.open(ctx.homePath)`.
 
 `ctx.fileId` is the opened node's file ID: the same for everyone with access to the file, and kept
 through renames and moves. A new file's ID can change once, when it first syncs; `onPathChange` (or
