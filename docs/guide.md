@@ -60,13 +60,14 @@ So the code folder always goes **inside** an app folder:
 - **For a new app,** create the app folder first, named for people (`Habit Tracker`), then create
   the code folder inside it (`Habit Tracker/code`). Write the app's data into the app folder, never
   into the code folder.
-- **For an app over files someone already has,** put the code folder in the folder that holds those
-  files, beside them: `Hiring/code` next to `Hiring/candidates`.
+- **For an app over files someone already has,** put the code folder in the folder the app works on,
+  beside the files and folders it uses: `Hiring/code` next to `Hiring/candidates`, or `Finance/code`
+  for CSVs in `Finance/2025`.
 
 The code folder can have any name; `code` is just the convention for new apps. An existing app is
 already laid out this way, so don't rename or move its code folder.
 
-Never put `manifest.json` in a folder at the top of the library, such as
+Never put `manifest.json` directly in a folder at the top of the library, such as
 `Habit Tracker/manifest.json`. That folder is then the code folder with no app folder around it, so
 the app works on the whole library.
 
@@ -280,10 +281,11 @@ many more tokens to read. This applies only to the data a view writes at runtime
 `manifest.json` indented, since people read and edit it by hand.
 
 `ctx.path` is the opened node's path relative to the app folder: the code folder for a home view,
-the opened file for a file view. So read and write data from `""` (the app folder), never from
-`ctx.path` in a home view, which points into the code. `ctx.homePath` is the code folder (where
-`manifest.json` sits) relative to that same root. It never moves as `ctx.path` does, so a file view
-can reach its home without hardcoding the folder name. `ctx.pluginId` is also available.
+the opened file for a file view. So give data paths relative to the app folder, like
+`candidates/ada.md`, and never build them from `ctx.path` in a home view, which points into the
+code. `ctx.homePath` is the code folder (where `manifest.json` sits) relative to that same root. It
+never moves as `ctx.path` does, so a file view can reach its home without hardcoding the folder
+name. `ctx.pluginId` is also available.
 
 `ctx.currentUser` is the signed-in Lightfern user, or `null` when signed out. It has `id`, `email`,
 `name` (nullable), and `profilePictureUrl` (nullable). Use the stable `id` for ownership in shared
