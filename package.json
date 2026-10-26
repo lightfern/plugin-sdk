@@ -40,7 +40,7 @@
     ".prettierrc": "prettier --write"
   },
   "dependencies": {
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
