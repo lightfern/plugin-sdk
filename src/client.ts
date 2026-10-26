@@ -124,13 +124,19 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
     }
     const joined = (await call("multiplayer.join", { name })) as MultiplayerJoinResult;
     let peers = joined.peers as Peer<Presence>[];
+    let me = joined.me as Peer<Presence>;
     let connected = joined.connected;
     const listeners = new Set<(peers: readonly Peer<Presence>[]) => void>();
+    const meListeners = new Set<(me: Peer<Presence>) => void>();
     const connectedListeners = new Set<(connected: boolean) => void>();
     rooms.set(joined.room, (push) => {
       if (push.connected !== connected) {
         connected = push.connected;
         for (const listener of connectedListeners) listener(connected);
+      }
+      if (JSON.stringify(push.me) !== JSON.stringify(me)) {
+        me = push.me as Peer<Presence>;
+        for (const listener of meListeners) listener(me);
       }
       // An unchanged peer keeps its object, so a view can skip it with `===`.
       const before = new Map(peers.map((peer) => [peer.peerId, peer]));
@@ -147,6 +153,10 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
       get peers() {
         return peers;
       },
+      get me() {
+        return me;
+      },
+      viewId: joined.viewId,
       get connected() {
         return connected;
       },
@@ -161,6 +171,12 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
         listeners.add(listener);
         return () => {
           listeners.delete(listener);
+        };
+      },
+      onMeChange: (listener) => {
+        meListeners.add(listener);
+        return () => {
+          meListeners.delete(listener);
         };
       },
       onConnectedChange: (listener) => {

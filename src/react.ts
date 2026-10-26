@@ -58,6 +58,7 @@ function storeFor(name: string): RoomStore {
       if (store.presence) room.setPresence(store.presence.value);
       const notify = () => store.listeners.forEach((listener) => listener());
       room.onPeersChange(notify);
+      room.onMeChange(notify);
       room.onConnectedChange(notify);
       notify();
     });
@@ -112,6 +113,19 @@ export function usePeers<Presence = unknown>(name: string): readonly Peer<Presen
     (room) => room.peers,
     NO_PEERS
   ) as readonly Peer<Presence>[];
+}
+
+/**
+ * You in the room `name`, across all your views, or `null` until the room is joined. Re-renders
+ * only when one of your views joins, leaves or changes.
+ */
+export function useMe<Presence = unknown>(name: string): Peer<Presence> | null {
+  return useRoomValue(name, (room) => room.me, null) as Peer<Presence> | null;
+}
+
+/** This view's ID in the room `name`, to find it in `useMe(name).views`; `null` until joined. */
+export function useViewId(name: string): string | null {
+  return useRoomValue(name, (room) => room.viewId, null);
 }
 
 /**

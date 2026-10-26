@@ -76,7 +76,7 @@ describe("safeParseManifest", () => {
   });
 
   it("rejects a minor newer than the SDK's", () => {
-    expectErrorContaining({ ...clone(), manifestVersion: "2.5" }, "manifestVersion");
+    expectErrorContaining({ ...clone(), manifestVersion: "2.6" }, "manifestVersion");
   });
 
   it("rejects a decimal number", () => {

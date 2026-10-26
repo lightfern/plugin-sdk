@@ -268,16 +268,23 @@ describe("connect", () => {
 
   it("joins a room, follows its peers, sends presence and leaves", async () => {
     const ada = {
-      peerId: "1",
+      peerId: "user-1",
       user: { id: "user-1", name: "Ada Lovelace", profilePictureUrl: null },
       presence: { card: "a" },
+      views: [{ viewId: "1", presence: { card: "a" }, activeAt: 5 }],
+    };
+    const me = {
+      peerId: "user-2",
+      user: { id: "user-2", name: "Bob", profilePictureUrl: null },
+      presence: null,
+      views: [{ viewId: "2", presence: null, activeAt: 0 }],
     };
     const sent: RpcRequest[] = [];
     const port = createFakeHostPort((request) => {
       sent.push(request);
       const result =
         request.method === "multiplayer.join"
-          ? { room: "r-1", peers: [ada], connected: false }
+          ? { room: "r-1", viewId: "2", peers: [ada], me, connected: false }
           : undefined;
       return { id: request.id, ok: true, result };
     });
@@ -286,21 +293,33 @@ describe("connect", () => {
     const room = await ctx.multiplayer.joinRoom("board");
     expect(sent[0].params).toEqual({ name: "board" });
     expect(room.peers).toEqual([ada]);
+    expect(room.me).toEqual(me);
+    expect(room.viewId).toBe("2");
     expect(room.connected).toBe(false);
 
     const seen = vi.fn();
+    const seenMe = vi.fn();
     const connected = vi.fn();
     room.onPeersChange(seen);
+    room.onMeChange(seenMe);
     room.onConnectedChange(connected);
+    const elsewhere = {
+      ...me,
+      presence: { card: "c" },
+      views: [{ viewId: "3", presence: { card: "c" }, activeAt: 9 }, ...me.views],
+    };
     port.push({
       source: "lf-plugin-host",
       type: "multiplayer.room",
       room: "r-1",
       peers: [],
+      me: elsewhere,
       connected: true,
     });
     expect(room.peers).toEqual([]);
     expect(seen).toHaveBeenCalledWith([]);
+    expect(room.me).toEqual(elsewhere);
+    expect(seenMe).toHaveBeenCalledWith(elsewhere);
     expect(room.connected).toBe(true);
     expect(connected).toHaveBeenCalledWith(true);
 
@@ -324,6 +343,7 @@ describe("connect", () => {
       type: "multiplayer.room",
       room: "r-1",
       peers: [ada],
+      me,
       connected: true,
     });
     expect(room.peers).toEqual([]);
@@ -334,7 +354,9 @@ describe("connect", () => {
       peerId: id,
       user: { id, name: id, profilePictureUrl: null },
       presence: { card },
+      views: [{ viewId: id, presence: { card }, activeAt: 1 }],
     });
+    const me = peer("me", "m");
     const port = createFakeHostPort((request) => ({
       id: request.id,
       ok: true,
@@ -342,7 +364,9 @@ describe("connect", () => {
         request.method === "multiplayer.join"
           ? {
               room: "r-1",
+              viewId: "me",
               peers: [peer("ada", "a"), peer("bob", "b")],
+              me,
               connected: true,
             }
           : undefined,
@@ -358,6 +382,7 @@ describe("connect", () => {
         type: "multiplayer.room",
         room: "r-1",
         peers,
+        me,
         connected: true,
       });
 

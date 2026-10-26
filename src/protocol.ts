@@ -106,6 +106,7 @@ export interface RoomChangedMessage {
   type: "multiplayer.room";
   room: string;
   peers: Peer[];
+  me: Peer;
   connected: boolean;
 }
 
@@ -116,9 +117,23 @@ export interface PeerUser {
 }
 
 export interface Peer<Presence = unknown> {
+  /** The person's user ID, the same as `user.id`. */
   peerId: string;
   user: PeerUser;
+  /** The presence of their most recently active view: `views[0].presence`. */
   presence: Presence | null;
+  /** Every view they have open in this room, most recently active first. */
+  views: PeerView<Presence>[];
+}
+
+export interface PeerView<Presence = unknown> {
+  viewId: string;
+  presence: Presence | null;
+  /**
+   * When this view joined or last changed its presence, in milliseconds by the server's clock.
+   * Compare it only with other `activeAt` values.
+   */
+  activeAt: number;
 }
 
 export interface UserChangedMessage {
@@ -206,7 +221,9 @@ export interface MultiplayerJoinParams {
 
 export interface MultiplayerJoinResult {
   room: string;
+  viewId: string;
   peers: Peer[];
+  me: Peer;
   connected: boolean;
 }
 

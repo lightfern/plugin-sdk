@@ -72,10 +72,16 @@ export interface FilesApi {
 export const MAX_PRESENCE_BYTES = 8 * 1024;
 
 export interface Room<Presence = unknown> {
+  /** One entry per other person in the room. */
   readonly peers: readonly Peer<Presence>[];
+  /** You, across all your views, including this one. */
+  readonly me: Peer<Presence>;
+  /** This view's ID, so you can find it in `me.views`. */
+  readonly viewId: string;
   readonly connected: boolean;
   setPresence(presence: Presence | null): void;
   onPeersChange(listener: (peers: readonly Peer<Presence>[]) => void): () => void;
+  onMeChange(listener: (me: Peer<Presence>) => void): () => void;
   onConnectedChange(listener: (connected: boolean) => void): () => void;
   leave(): void;
 }

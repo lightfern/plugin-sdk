@@ -55,6 +55,7 @@ export type {
   PathChangedMessage,
   Peer,
   PeerUser,
+  PeerView,
   RoomChangedMessage,
   RpcError,
   RpcMethod,
