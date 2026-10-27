@@ -185,20 +185,40 @@ function useSetPresence<Presence = unknown>(name: string): (presence: Presence |
 - `useSetPresence(name)` never re-renders. It returns the same function on every render, and
   presence you set before the room is joined is sent once it is.
 
-## One person, several views
+## People and their views
 
-People open apps in more than one place: a second window, a phone next to the laptop, a tab they
-forgot about yesterday. Every view keeps working fully. Each can set presence and save files,
-whether or not it's the one they're using now.
+`peers` and `me` group views by person, so showing each person once is the easy default. Each view
+still has its own presence, so your app can give one person's devices different jobs.
+
+- **Show each person once.** Draw one avatar or cursor for each peer, from `peer.presence`. That's
+  the presence of their most recently active view.
+- **Give each device its own job.** Have each view say what it's for in its presence, and read every
+  view in `views`. A card game can show its table on a TV everyone can see, while each player sees
+  their own hand on their phone, signed in to the same account:
+
+  ```ts
+  type Presence = { screen: "table" | "hand" };
+
+  const room = await ctx.multiplayer.joinRoom<Presence>("game");
+  // Let the person choose, for example with a "Use as the table" button.
+  room.setPresence({ screen: isTable ? "table" : "hand" });
+
+  // On the table: everyone holding their hand on another screen, you included.
+  const holding = [...room.peers, room.me].filter((person) =>
+    person.views.some((view) => view.presence?.screen === "hand")
+  );
+  ```
+
+  The table never draws anyone's cards, and a phone draws only the cards of `room.me.user.id`. This
+  hides cards from the screen, not from a determined player: everyone with access can read your
+  app's files and every view's presence.
 
 - **Seats and anything else that lasts.** Key them on `user.id`, never on a view's ID. Then someone
-  who reopens a tab, or reconnects, is back in their own seat.
+  who reopens a tab, or reconnects, is back in their own seat, and their TV and phone are the same
+  player.
 - **The view they're using now.** It's `me.views[0]`. A view can check
   `room.me.views[0]?.viewId === room.viewId`, for example to show "Active in another window" in a
   forgotten tab. This is a hint, not a lock: never stop a view working because it isn't first.
-- **A board on a TV with a phone as the remote.** Both views are yours, so the board finds the phone
-  in `me.views`, not in `peers`. Have the phone set presence like `{ "role": "remote" }`, and the
-  board read it from there.
 - **Testing a game alone in two windows.** `peers` is empty, because both windows are you. Treat
   every view as a player while you test:
 

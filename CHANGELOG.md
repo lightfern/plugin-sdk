@@ -7,6 +7,12 @@ implements.
 
 ## [Unreleased]
 
+## [2.5.1] - 2026-10-27
+
+- The [Multiplayer](docs/multiplayer.md#people-and-their-views) guide shows how to give each of a
+  person's devices its own job, like a card game's table on a TV and each player's hand on their
+  phone, as well as showing each person once.
+
 ## [2.5.0] - 2026-10-26
 
 `manifestVersion: "2.5"`.
@@ -21,8 +27,8 @@ implements.
 - A peer's `presence` is their most recently active view's, and `peerId` is now their user ID.
 - Add `room.me`, `room.viewId` and `room.onMeChange`, and the `useMe(name)` and `useViewId(name)`
   React hooks.
-- The [Multiplayer](docs/multiplayer.md#one-person-several-views) guide says how to handle one
-  person in several views: seats, a TV with a phone as its remote, and testing alone.
+- The [Multiplayer](docs/multiplayer.md#people-and-their-views) guide says how to handle one person
+  in several views: seats, a TV with a phone as its remote, and testing alone.
 
 ## [2.4.1] - 2026-10-23
 
