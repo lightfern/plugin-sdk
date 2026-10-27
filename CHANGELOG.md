@@ -7,6 +7,23 @@ implements.
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-10-26
+
+`manifestVersion: "2.5"`.
+
+- A room shows each person once, however many windows, tabs or devices they have it open in.
+  - `peers` now has one entry per person, not one per view.
+  - Your own other views are no longer in `peers`. They're in the new `room.me`.
+  - Apps that grouped peers by `user.id`, as the 2.3 docs said to, see no change.
+- Each peer has `views`, every view they have open in the room, most recently active first. Each
+  view has a `viewId`, its `presence` and `activeAt`, the server's time when it joined or last set
+  its presence.
+- A peer's `presence` is their most recently active view's, and `peerId` is now their user ID.
+- Add `room.me`, `room.viewId` and `room.onMeChange`, and the `useMe(name)` and `useViewId(name)`
+  React hooks.
+- The [Multiplayer](docs/multiplayer.md#one-person-several-views) guide says how to handle one
+  person in several views: seats, a TV with a phone as its remote, and testing alone.
+
 ## [2.4.1] - 2026-10-23
 
 - The docs call plugins apps. An app's code folder sits in its app folder, which the library shows

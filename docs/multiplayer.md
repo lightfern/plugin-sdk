@@ -10,9 +10,11 @@ doing right now: who has which card open, where their cursor is, what they're dr
   app's owner and everyone it's shared with.
 - Each person in a room has one **presence**: a small JSON value your app sets, like
   `{ "card": "card-3" }`.
-- Everyone else in the room is a **peer**. You get each peer's presence, name and picture within a
-  fraction of a second of it changing.
-- A **view** is one open tab of your app. Each view joins rooms separately.
+- A **view** is one window, tab or device with your app open. Each view joins rooms separately and
+  has its own presence.
+- Everyone else in the room is a **peer**: one per person, however many views they have open. You
+  get each peer's presence, name and picture within a fraction of a second of it changing.
+- **`me`** is you, across every view you have open in the room, this one included.
 - Presence is never saved. A peer's presence goes when they leave.
 
 Use presence for what is happening now. Save anything that should still be there later, like a moved
@@ -63,23 +65,42 @@ room.leave();
 ctx.multiplayer.joinRoom<Presence = unknown>(name: string): Promise<Room<Presence>>;
 
 interface Room<Presence> {
+  /** One entry per other person in the room. */
   readonly peers: readonly Peer<Presence>[];
+  /** You, across all your views, including this one. */
+  readonly me: Peer<Presence>;
+  /** This view's ID, so you can find it in `me.views`. */
+  readonly viewId: string;
   readonly connected: boolean;
   setPresence(presence: Presence | null): void;
   onPeersChange(listener: (peers: readonly Peer<Presence>[]) => void): () => void;
+  onMeChange(listener: (me: Peer<Presence>) => void): () => void;
   onConnectedChange(listener: (connected: boolean) => void): () => void;
   leave(): void;
 }
 
 interface Peer<Presence> {
+  /** The person's user ID, the same as `user.id`. */
   peerId: string;
   user: { id: string; name: string | null; profilePictureUrl: string | null };
+  /** The presence of their most recently active view: `views[0].presence`. */
   presence: Presence | null;
+  /** Every view they have open in this room, most recently active first. */
+  views: readonly PeerView<Presence>[];
+}
+
+interface PeerView<Presence> {
+  viewId: string;
+  presence: Presence | null;
+  /** When this view joined or last changed its presence, in milliseconds by the server's clock. */
+  activeAt: number;
 }
 
 // From "lightfern:host/react"
 function useConnected(name: string): boolean;
 function usePeers<Presence = unknown>(name: string): readonly Peer<Presence>[];
+function useMe<Presence = unknown>(name: string): Peer<Presence> | null;
+function useViewId(name: string): string | null;
 function useSetPresence<Presence = unknown>(name: string): (presence: Presence | null) => void;
 ```
 
@@ -94,12 +115,29 @@ function useSetPresence<Presence = unknown>(name: string): (presence: Presence |
 
 ### `peers`
 
-- Everyone in the room except this view.
+- One entry per person in the room, except you. Someone with your app open on 2 devices, or in 2
+  tabs, appears once, with both views in `views`.
 - In no fixed order. Sort it yourself, for example by name.
-- Lists each view separately. Someone with your app open on 2 devices, or in 2 tabs, appears twice
-  with the same `user.id`. Group by `user.id` to show each person once.
-- Keeps someone for up to 30 seconds if they lose their connection without leaving.
-- Does not include you. Use `ctx.currentUser` for that.
+- A peer's `presence` is the presence of their most recently active view.
+- Keeps a view for 5 seconds after it leaves, and for up to 30 seconds if it loses its connection
+  without leaving. A person goes only once all their views have.
+- Does not include you, even your other views. Use `me` for those.
+
+### `me`, `viewId` and `onMeChange(listener)`
+
+- `me` is you, with every view you have open in the room in `me.views`, this one included.
+- `viewId` is this view's ID, so you can find it in `me.views`.
+- `onMeChange` runs when one of your views joins, leaves or changes its presence, and returns a
+  function that stops it.
+- While you're signed out, `me.user.id` is `""` and `me.views` holds only this view.
+
+### `views` and `activeAt`
+
+- A view is most recently active when it joined or set its presence last. Lightfern's server keeps
+  the time, so devices with wrong clocks still sort correctly.
+- `activeAt` is in milliseconds by the server's clock. Compare it only with other `activeAt` values,
+  never with `Date.now()`.
+- This view's own `activeAt` is `0` until the server has seen it.
 
 ### `connected` and `onConnectedChange(listener)`
 
@@ -141,8 +179,32 @@ function useSetPresence<Presence = unknown>(name: string): (presence: Presence |
   joined and connected.
 - `usePeers(name)` re-renders only when a peer joins, leaves or changes. It is empty until the room
   is joined. Wrap each peer's component in `React.memo` so only the peer who changed re-renders.
+- `useMe(name)` re-renders only when one of your views joins, leaves or changes. It is `null` until
+  the room is joined.
+- `useViewId(name)` is this view's ID in the room, or `null` until the room is joined.
 - `useSetPresence(name)` never re-renders. It returns the same function on every render, and
   presence you set before the room is joined is sent once it is.
+
+## One person, several views
+
+People open apps in more than one place: a second window, a phone next to the laptop, a tab they
+forgot about yesterday. Every view keeps working fully. Each can set presence and save files,
+whether or not it's the one they're using now.
+
+- **Seats and anything else that lasts.** Key them on `user.id`, never on a view's ID. Then someone
+  who reopens a tab, or reconnects, is back in their own seat.
+- **The view they're using now.** It's `me.views[0]`. A view can check
+  `room.me.views[0]?.viewId === room.viewId`, for example to show "Active in another window" in a
+  forgotten tab. This is a hint, not a lock: never stop a view working because it isn't first.
+- **A board on a TV with a phone as the remote.** Both views are yours, so the board finds the phone
+  in `me.views`, not in `peers`. Have the phone set presence like `{ "role": "remote" }`, and the
+  board read it from there.
+- **Testing a game alone in two windows.** `peers` is empty, because both windows are you. Treat
+  every view as a player while you test:
+
+  ```ts
+  const players = [...room.peers, room.me].flatMap((person) => person.views);
+  ```
 
 ## Writing good presence
 

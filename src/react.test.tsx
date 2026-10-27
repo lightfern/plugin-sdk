@@ -12,6 +12,13 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+const alone = {
+  peerId: "me",
+  user: { id: "me", name: "Me", profilePictureUrl: null },
+  presence: null,
+  views: [{ viewId: "v-1", presence: null, activeAt: 0 }],
+};
+
 // The host end of the transferred port: answers reads and listings, and `push`
 // replays a host-initiated message (a new path, a disk change) back to the client.
 function fakeHost(
@@ -30,7 +37,7 @@ function fakeHost(
         ok: true,
         result:
           request.method === "multiplayer.join"
-            ? { room: name, peers: [], connected: false }
+            ? { room: name, viewId: "v-1", peers: [], me: alone, connected: false }
             : request.method === "files.list"
               ? folders[path]
               : disk[path],
@@ -271,7 +278,9 @@ describe("the React bindings", () => {
       peerId: name,
       user: { id: name, name, profilePictureUrl: null },
       presence: null,
+      views: [{ viewId: name, presence: null, activeAt: 1 }],
     })),
+    me: alone,
     connected,
   });
 
@@ -316,6 +325,35 @@ describe("the React bindings", () => {
     expect(screen.getByText("Ada")).toBeDefined();
     expect(renders.status).toBe(before.status);
     expect(renders.peers).toBe(before.peers + 1);
+  });
+
+  it("tells a view whether it is your most recently active one", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "board");
+    const { useMe, useViewId } = await import("./react");
+
+    function Banner() {
+      const me = useMe("board");
+      const viewId = useViewId("board");
+      if (!me) return null;
+      return (
+        <span>
+          {me.views[0]?.viewId === viewId ? "here" : "Active in another window"}
+        </span>
+      );
+    }
+
+    render(<Banner />);
+    await waitFor(() => expect(screen.getByText("here")).toBeDefined());
+
+    const other = { viewId: "v-2", presence: null, activeAt: 2 };
+    await act(async () =>
+      port.push({
+        ...roomPush(true, []),
+        me: { ...alone, views: [other, ...alone.views] },
+      })
+    );
+    expect(screen.getByText("Active in another window")).toBeDefined();
   });
 
   it("sends presence set on mount once the room is joined", async () => {
