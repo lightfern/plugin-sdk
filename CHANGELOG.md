@@ -7,6 +7,11 @@ implements.
 
 ## [Unreleased]
 
+## [2.5.2] - 2026-10-29
+
+- The [guide](docs/guide.md#how-you-build-one) says apps don't nest: an app folder inside another
+  app folder doesn't run, and only the outermost app does.
+
 ## [2.5.1] - 2026-10-27
 
 - The [Multiplayer](docs/multiplayer.md#people-and-their-views) guide shows how to give each of a
