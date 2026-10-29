@@ -84,6 +84,9 @@ A few rules keep apps predictable and safe:
 
 - An app folder runs one app. If it holds more than one code folder, only the first alphabetically
   runs, and the others say the folder already has an app.
+- Apps don't nest. An app folder anywhere inside another app folder, at any depth, doesn't run: its
+  code folder says which app it's inside, and its files belong to the outer app. Only the outermost
+  app runs.
 - A code folder at the top of the library has no app folder. It shows as its own row and works on
   the whole library.
 - A code folder never runs at the top of a shared folder, because there it could read the folder
