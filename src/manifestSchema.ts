@@ -104,6 +104,7 @@ export const manifestSchema = z.object({
   contributes: z.object({
     views: z.array(viewSchema).default([]),
     home: homeViewSchema.optional(),
+    servers: z.array(z.string().min(1)).default([]),
   }),
 });
 

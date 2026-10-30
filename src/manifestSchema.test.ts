@@ -37,6 +37,19 @@ describe("parseManifest", () => {
     expect(parseManifest(bare).network_permissions).toEqual([]);
   });
 
+  it("reads server modules, and defaults an omitted list to none", () => {
+    const withServers = {
+      ...clone(),
+      contributes: { views: [], servers: ["src/cards.server.ts"] },
+    };
+    expect(parseManifest(withServers).contributes.servers).toEqual([
+      "src/cards.server.ts",
+    ]);
+    expect(parseManifest(clone()).contributes.servers).toEqual([]);
+    const empty = { ...clone(), contributes: { views: [], servers: [""] } };
+    expect(safeParseManifest(empty).success).toBe(false);
+  });
+
   it("defaults an omitted permissions to an empty array", () => {
     const { permissions: _omitted, ...bare } = clone();
     expect(parseManifest(bare).permissions).toEqual([]);

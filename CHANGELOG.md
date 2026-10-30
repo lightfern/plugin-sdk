@@ -7,6 +7,11 @@ implements.
 
 ## [Unreleased]
 
+- Manifests can list server modules under `contributes.servers`.
+- `@lightfern/plugin-sdk/server` (`lightfern:server` in an app) has what server code builds on:
+  `Server` for a private server, `Room` for a shared one, `UserError`, and the `ctx` types. Nothing
+  runs server code yet; it arrives with 3.0.
+
 ## [2.5.2] - 2026-10-29
 
 - The [guide](docs/guide.md#how-you-build-one) says apps don't nest: an app folder inside another

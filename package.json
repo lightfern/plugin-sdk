@@ -18,6 +18,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./react": "./src/react.ts",
+    "./server": "./src/server.ts",
     "./match": "./src/match.ts",
     "./manifest": "./src/manifest.ts",
     "./testing": "./src/testing.ts",
