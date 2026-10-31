@@ -10,7 +10,7 @@ import type {
   ServerPushMessage,
   ServerStatus,
 } from "./protocol";
-import type { Query, Room as RoomClass, Server as ServerClass } from "./server";
+import type { Caller, Query, Room as RoomClass, Server as ServerClass } from "./server";
 
 /** What `plugin-build` puts in place of a server class in views, under `Symbol.for("lightfern.server")`. */
 export interface ServerStub {
@@ -38,13 +38,13 @@ export type QueryMethod<Args extends unknown[], Result> = Method<Args, Result> &
   ): () => void;
 };
 
-/** The public methods and queries of a server class, as a view calls them. */
+/** The public methods and queries of a server class, as a view calls them: without the caller. */
 export type Methods<T> = {
   [
     K in keyof T as T[K] extends (...args: never[]) => Promise<unknown> ? K : never
   ]: T[K] extends Query<infer Args, infer Result>
     ? QueryMethod<Args, Result>
-    : T[K] extends (...args: infer Args) => Promise<infer Result>
+    : T[K] extends (caller: Caller, ...args: infer Args) => Promise<infer Result>
       ? Method<Args, Result>
       : never;
 };
