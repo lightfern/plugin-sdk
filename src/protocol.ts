@@ -170,9 +170,59 @@ export interface FilesChangedMessage {
   changes: FileChange[];
 }
 
+// Pushes for a handle made with `server` or `room` (manifest 3.0). `handle` is the number the
+// view gave it in `server.open`. The desktop holds the connection: it reconnects, resends calls and
+// subscribes again by itself, and reports how that's going as `status`.
+export type ServerStatus = "connecting" | "connected" | "offline" | "refused";
+
+export interface ServerStateMessage {
+  source: "lf-plugin-host";
+  type: "server.state";
+  handle: number;
+  status: ServerStatus;
+  /** This view's ID in a room, once joined; always `null` for a private server. */
+  viewId: string | null;
+  /** Everyone in a room, including this view's person; empty for a private server. */
+  participants: Participant[];
+  me: Participant | null;
+}
+
+export interface ServerSentMessage {
+  source: "lf-plugin-host";
+  type: "server.message";
+  handle: number;
+  data: unknown;
+}
+
+export interface ServerResultMessage {
+  source: "lf-plugin-host";
+  type: "server.result";
+  handle: number;
+  query: number;
+  result: unknown;
+}
+
+export interface ServerQueryErrorMessage {
+  source: "lf-plugin-host";
+  type: "server.queryError";
+  handle: number;
+  query: number;
+  error: RpcError;
+}
+
+export type ServerPushMessage =
+  | ServerStateMessage
+  | ServerSentMessage
+  | ServerResultMessage
+  | ServerQueryErrorMessage;
+
 // Everything the host pushes to a view over the port after the handshake.
 export type HostPushMessage =
-  PathChangedMessage | FilesChangedMessage | UserChangedMessage | RoomChangedMessage;
+  | PathChangedMessage
+  | FilesChangedMessage
+  | UserChangedMessage
+  | RoomChangedMessage
+  | ServerPushMessage;
 
 export type RpcMethod =
   | "files.read"
@@ -183,7 +233,13 @@ export type RpcMethod =
   | "open"
   | "multiplayer.join"
   | "multiplayer.leave"
-  | "multiplayer.setPresence";
+  | "multiplayer.setPresence"
+  | "server.open"
+  | "server.call"
+  | "server.subscribe"
+  | "server.unsubscribe"
+  | "server.setPresence"
+  | "server.close";
 
 // "utf-8" (the default) decodes to a string; "binary" returns the raw bytes untouched,
 // for content a text decode would corrupt (an image, a PDF).
@@ -245,6 +301,45 @@ export interface MultiplayerSetPresenceParams {
   presence: unknown;
 }
 
+// `className` is the server class's name; `room` is the room's name, or `null` for a private
+// server. The view numbers its handles itself, and the host answers at once.
+export interface ServerOpenParams {
+  handle: number;
+  className: string;
+  room: string | null;
+}
+
+// A failed call's `RpcError.code` is "offline" when the server couldn't be reached in time,
+// "refused" when the backend refused the ticket, and "user" for a `UserError` from server code.
+export interface ServerCallParams {
+  handle: number;
+  method: string;
+  args: unknown[];
+}
+
+// Results arrive as `server.result` pushes with the same `query` number, first and then each time
+// they change, until `server.unsubscribe`.
+export interface ServerSubscribeParams {
+  handle: number;
+  query: number;
+  method: string;
+  args: unknown[];
+}
+
+export interface ServerUnsubscribeParams {
+  handle: number;
+  query: number;
+}
+
+export interface ServerSetPresenceParams {
+  handle: number;
+  presence: unknown;
+}
+
+export interface ServerCloseParams {
+  handle: number;
+}
+
 export interface FileEntry {
   /** Path relative to the activation root. */
   path: string;
@@ -264,7 +359,13 @@ export interface RpcRequest {
     | OpenParams
     | MultiplayerJoinParams
     | MultiplayerLeaveParams
-    | MultiplayerSetPresenceParams;
+    | MultiplayerSetPresenceParams
+    | ServerOpenParams
+    | ServerCallParams
+    | ServerSubscribeParams
+    | ServerUnsubscribeParams
+    | ServerSetPresenceParams
+    | ServerCloseParams;
 }
 
 export interface RpcError {

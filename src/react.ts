@@ -5,9 +5,17 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
-import { hostContext } from "./client";
+import { hostContext, type PluginRpcError } from "./client";
 import type { Room } from "./context";
 import type { CurrentUser, FileEncoding, FileEntry, Peer } from "./protocol";
+import type { Room as RoomClass } from "./server";
+import {
+  type Constructor,
+  holdHandle,
+  openHandle,
+  type QueryMethod,
+  type RoomHandle,
+} from "./servers";
 
 /** The signed-in user, re-rendering when the desktop auth state changes. */
 export function useCurrentUser(): CurrentUser | null {
@@ -245,4 +253,49 @@ export function useFileObjectUrl(path: string, type?: string): string | null {
   }, [bytes, type]);
 
   return tagged?.bytes === bytes ? tagged.url : null;
+}
+
+/**
+ * The room `name` of `cls`, as `room()` returns it, re-rendering when its `status`, `participants`, `me`
+ * or `viewId` changes. You join when the first component using it mounts, and leave once the last
+ * one unmounts, unless `room()` opened it too.
+ */
+export function useRoom<T extends RoomClass, Presence = unknown>(
+  cls: Constructor<T>,
+  name: string
+): RoomHandle<T, Presence> {
+  const live = openHandle(cls, name, false);
+  useSyncExternalStore(live.handle.onChange, () => live.revision);
+  useEffect(() => holdHandle(live), [live]);
+  return live.handle as RoomHandle<T, Presence>;
+}
+
+/**
+ * The result of a query, such as `useQuery(crm.customers, "lead")`: `undefined` until
+ * the first result, then kept current by the server. Components asking for the same query and
+ * arguments share one subscription. Throws the query's error, for an error boundary to catch.
+ */
+export function useQuery<Args extends unknown[], Result>(
+  method: QueryMethod<Args, Result>,
+  ...args: Args
+): Result | undefined {
+  const key = JSON.stringify(args);
+  const [latest, setLatest] = useState<{
+    method: QueryMethod<Args, Result>;
+    key: string;
+    result?: Result;
+    error?: PluginRpcError;
+  }>();
+  useEffect(
+    () =>
+      method.subscribe(
+        JSON.parse(key) as Args,
+        (result) => setLatest({ method, key, result }),
+        (error) => setLatest({ method, key, error })
+      ),
+    [method, key]
+  );
+  if (latest?.method !== method || latest.key !== key) return undefined;
+  if (latest.error) throw latest.error;
+  return latest.result;
 }
