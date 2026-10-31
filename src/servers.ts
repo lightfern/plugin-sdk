@@ -4,7 +4,7 @@
 import { type Call, keepUnchanged, PluginRpcError, serverChannel } from "./client";
 import { MAX_PRESENCE_BYTES } from "./context";
 import type {
-  Peer,
+  Participant,
   RpcMethod,
   RpcRequest,
   ServerPushMessage,
@@ -58,7 +58,7 @@ export interface HandleState {
   readonly status: ServerStatus;
   /** Runs for each message server code sends this view with `send` or `sendTo`. */
   onMessage(listener: (data: unknown) => void): () => void;
-  /** Runs when `status` changes, and in a room when `peers`, `me` or `viewId` does. */
+  /** Runs when `status` changes, and in a room when `participants`, `me` or `viewId` does. */
   onChange(listener: () => void): () => void;
   /** Disconnects. Calls, queries and listeners on this handle stop working. */
   close(): void;
@@ -67,10 +67,13 @@ export interface HandleState {
 export interface RoomState<Presence> extends HandleState {
   /** This view's ID in the room, as in `ctx.caller.viewId` on the server; `null` until joined. */
   readonly viewId: string | null;
-  /** Everyone else in the room. An unchanged peer keeps its object, so `===` skips it. */
-  readonly peers: readonly Peer<Presence>[];
-  /** You, across all your views; `null` until joined. */
-  readonly me: Peer<Presence> | null;
+  /**
+   * Everyone in the room, including you. An unchanged participant keeps its object, so `===`
+   * skips it.
+   */
+  readonly participants: readonly Participant<Presence>[];
+  /** Your own entry in `participants`, across all your views; `null` until joined. */
+  readonly me: Participant<Presence> | null;
   /** Share what you're doing now, such as your cursor. Never saved; at most 8 KiB. */
   setPresence(presence: Presence | null): void;
 }
@@ -92,7 +95,7 @@ const opened = new Map<string, Live>();
 const byNumber = new Map<number, (push: ServerPushMessage) => void>();
 let channel: Promise<Call> | null = null;
 let nextNumber = 1;
-const NO_PEERS: readonly Peer[] = [];
+const NOBODY: readonly Participant[] = [];
 
 /**
  * This view's private server for `cls`. Synchronous: it connects in the background, and calls
@@ -108,7 +111,7 @@ export function server<T extends ServerClass>(
 
 /**
  * The room `name` of `cls`, shared by everyone who joins it. Synchronous like `server`. You're in
- * the room, and listed in everyone's `peers`, from now until `close()`. In React, `useRoom` also
+ * the room, and in everyone's `participants`, from now until `close()`. In React, `useRoom` also
  * leaves when the last component using it unmounts.
  */
 export function room<T extends RoomClass, Presence = unknown>(
@@ -170,8 +173,8 @@ export function openHandle(
 
   let status: ServerStatus = "connecting";
   let viewId: string | null = null;
-  let peers: readonly Peer[] = NO_PEERS;
-  let me: Peer | null = null;
+  let participants: readonly Participant[] = NOBODY;
+  let me: Participant | null = null;
   const messageListeners = new Set<(data: unknown) => void>();
   const changeListeners = new Set<() => void>();
   let nextQuery = 1;
@@ -192,20 +195,21 @@ export function openHandle(
     if (push.type === "server.message") {
       for (const listener of messageListeners) listener(push.data);
     } else if (push.type === "server.state") {
-      const kept = keepUnchanged(peers, push.peers);
+      const kept = keepUnchanged(participants, push.participants);
+      // `me` is your own entry in `participants`, so `participant !== me` finds everyone else.
       const nextMe =
-        me && JSON.stringify(me) === JSON.stringify(push.me) ? me : push.me;
+        kept.find((participant) => participant.user.id === push.me?.user.id) ?? null;
       if (
         push.status === status &&
         push.viewId === viewId &&
-        kept === peers &&
+        kept === participants &&
         nextMe === me
       ) {
         return;
       }
       status = push.status;
       viewId = push.viewId;
-      peers = kept;
+      participants = kept;
       me = nextMe;
       live.revision += 1;
       for (const listener of changeListeners) listener();
@@ -259,8 +263,8 @@ export function openHandle(
     get viewId() {
       return viewId;
     },
-    get peers() {
-      return peers;
+    get participants() {
+      return participants;
     },
     get me() {
       return me;

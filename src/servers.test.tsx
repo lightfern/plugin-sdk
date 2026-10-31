@@ -1,7 +1,12 @@
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Peer, RpcRequest, RpcResponse, ServerPushMessage } from "./protocol";
+import type {
+  Participant,
+  RpcRequest,
+  RpcResponse,
+  ServerPushMessage,
+} from "./protocol";
 import type { Query, Room } from "./server";
 import { Server } from "./server";
 import type { Constructor } from "./servers";
@@ -84,8 +89,7 @@ function fakeHost(answer: (request: RpcRequest) => unknown = () => undefined) {
 
 const settle = () => new Promise((resolve) => setTimeout(resolve));
 
-const alice: Peer = {
-  peerId: "alice",
+const alice: Participant = {
   user: { id: "alice", name: "Alice", profilePictureUrl: null },
   presence: null,
   views: [{ viewId: "v-2", presence: null, activeAt: 0 }],
@@ -128,7 +132,7 @@ describe("server and room", () => {
     expect(() => room(Crm, "x")).toThrow("Crm is a private server: use server()");
   });
 
-  it("follows the room's status and people, keeping unchanged peers", async () => {
+  it("follows the room's status and people, keeping unchanged participants", async () => {
     const { room } = await import("./servers");
     const host = fakeHost();
     const game = room(Cards, "123abc");
@@ -142,13 +146,14 @@ describe("server and room", () => {
       viewId: "v-1",
       me: alice,
     } as const;
-    host.push({ ...state, status: "connected", peers: [alice] });
-    const peers = game.peers;
-    host.push({ ...state, status: "connected", peers: [{ ...alice }] });
-    host.push({ ...state, status: "offline", peers: [{ ...alice }] });
+    host.push({ ...state, status: "connected", participants: [alice] });
+    const participants = game.participants;
+    host.push({ ...state, status: "connected", participants: [{ ...alice }] });
+    host.push({ ...state, status: "offline", participants: [{ ...alice }] });
 
     expect(changes).toHaveBeenCalledTimes(2);
-    expect(game.peers).toBe(peers);
+    expect(game.participants).toBe(participants);
+    expect(game.me).toBe(game.participants[0]);
     expect(game).toMatchObject({ status: "offline", viewId: "v-1", me: alice });
   });
 
@@ -271,7 +276,12 @@ describe("useQuery and useRoom", () => {
     const host = fakeHost();
     function Players() {
       const game = useRoom(Cards, "123abc");
-      return <p>{game.peers.map((peer) => peer.user.name).join(", ") || "Nobody"}</p>;
+      return (
+        <p>
+          {game.participants.map((participant) => participant.user.name).join(", ") ||
+            "Nobody"}
+        </p>
+      );
     }
 
     const { unmount } = render(<Players />);
@@ -283,7 +293,7 @@ describe("useQuery and useRoom", () => {
         handle: 1,
         status: "connected",
         viewId: "v-1",
-        peers: [alice],
+        participants: [alice],
         me: null,
       })
     );

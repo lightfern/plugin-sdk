@@ -173,8 +173,9 @@ export interface ServerStateMessage {
   status: ServerStatus;
   /** This view's ID in a room, once joined; always `null` for a private server. */
   viewId: string | null;
-  peers: Peer[];
-  me: Peer | null;
+  /** Everyone in a room, including this view's person; empty for a private server. */
+  participants: Participant[];
+  me: Participant | null;
 }
 
 export interface ServerSentMessage {

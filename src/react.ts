@@ -256,7 +256,7 @@ export function useFileObjectUrl(path: string, type?: string): string | null {
 }
 
 /**
- * The room `name` of `cls`, as `room()` returns it, re-rendering when its `status`, `peers`, `me`
+ * The room `name` of `cls`, as `room()` returns it, re-rendering when its `status`, `participants`, `me`
  * or `viewId` changes. You join when the first component using it mounts, and leave once the last
  * one unmounts, unless `room()` opened it too.
  */

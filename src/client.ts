@@ -231,15 +231,15 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
   };
 }
 
-// An unchanged peer keeps its object, so a view can skip it with `===`. Returns `before` itself
+// An unchanged person keeps their object, so a view can skip it with `===`. Returns `before` itself
 // when nothing changed.
-export function keepUnchanged<P extends Peer>(
+export function keepUnchanged<P extends { user: { id: string } }>(
   before: readonly P[],
   after: P[]
 ): readonly P[] {
-  const old = new Map(before.map((peer) => [peer.peerId, peer]));
+  const old = new Map(before.map((peer) => [peer.user.id, peer]));
   const kept = after.map((peer) => {
-    const was = old.get(peer.peerId);
+    const was = old.get(peer.user.id);
     return was && JSON.stringify(was) === JSON.stringify(peer) ? was : peer;
   });
   return kept.length === before.length && kept.every((peer, i) => peer === before[i])
