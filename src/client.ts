@@ -14,6 +14,7 @@ import type {
   RpcRequest,
   RpcResponse,
   SerializableContext,
+  ServerPushMessage,
   ViewReadyMessage,
 } from "./protocol";
 
@@ -29,6 +30,8 @@ export class PluginRpcError extends Error {
 
 let connectPromise: Promise<ViewContext> | null = null;
 let connected: ViewContext | null = null;
+let hostCall: Call | null = null;
+let onServerPush: ((push: ServerPushMessage) => void) | null = null;
 
 /**
  * Complete the host handshake and resolve the view's context. Idempotent — repeated
@@ -58,6 +61,15 @@ export function connect(): Promise<ViewContext> {
   return connectPromise;
 }
 
+/** For `server` and `room`: connects, routes `server.*` pushes to `onPush`, and returns the port. */
+export async function serverChannel(
+  onPush: (push: ServerPushMessage) => void
+): Promise<Call> {
+  onServerPush = onPush;
+  await connect();
+  return hostCall!;
+}
+
 /**
  * The connected context, for the React bindings — they take no arguments, so they read
  * it here. Throws if the view renders before `connect()` resolves, which is what a
@@ -78,7 +90,9 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
   const rooms = new Map<string, (push: RoomChangedMessage) => void>();
 
   const call = openChannel(port, (push) => {
-    if (push.type === "path") {
+    if (push.type.startsWith("server.")) {
+      onServerPush?.(push as ServerPushMessage);
+    } else if (push.type === "path") {
       path = push.path;
       fileId = push.fileId;
       for (const listener of pathListeners) listener(path);
@@ -87,7 +101,7 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
     } else if (push.type === "user") {
       user = push.user;
       for (const listener of userListeners) listener(user);
-    } else {
+    } else if (push.type === "files.change") {
       for (const change of push.changes) {
         for (const watcher of watchers) {
           if (pathCovers(watcher.path, change.path)) watcher.listener(change);
@@ -95,6 +109,7 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
       }
     }
   });
+  hostCall = call;
 
   const files: FilesApi = {
     read: ((path: string, encoding?: FileEncoding) =>
@@ -123,7 +138,7 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
       throw new PluginRpcError("A room name must be 1 to 256 characters");
     }
     const joined = (await call("multiplayer.join", { name })) as MultiplayerJoinResult;
-    let peers = joined.peers as Peer<Presence>[];
+    let peers: readonly Peer<Presence>[] = joined.peers as Peer<Presence>[];
     let me = joined.me as Peer<Presence>;
     let connected = joined.connected;
     const listeners = new Set<(peers: readonly Peer<Presence>[]) => void>();
@@ -138,14 +153,8 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
         me = push.me as Peer<Presence>;
         for (const listener of meListeners) listener(me);
       }
-      // An unchanged peer keeps its object, so a view can skip it with `===`.
-      const before = new Map(peers.map((peer) => [peer.peerId, peer]));
-      const kept = (push.peers as Peer<Presence>[]).map((peer) => {
-        const old = before.get(peer.peerId);
-        return old && JSON.stringify(old) === JSON.stringify(peer) ? old : peer;
-      });
-      if (kept.length === peers.length && kept.every((peer, i) => peer === peers[i]))
-        return;
+      const kept = keepUnchanged(peers, push.peers as Peer<Presence>[]);
+      if (kept === peers) return;
       peers = kept;
       for (const listener of listeners) listener(peers);
     });
@@ -222,6 +231,22 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
   };
 }
 
+// An unchanged peer keeps its object, so a view can skip it with `===`. Returns `before` itself
+// when nothing changed.
+export function keepUnchanged<P extends Peer>(
+  before: readonly P[],
+  after: P[]
+): readonly P[] {
+  const old = new Map(before.map((peer) => [peer.peerId, peer]));
+  const kept = after.map((peer) => {
+    const was = old.get(peer.peerId);
+    return was && JSON.stringify(was) === JSON.stringify(peer) ? was : peer;
+  });
+  return kept.length === before.length && kept.every((peer, i) => peer === before[i])
+    ? before
+    : kept;
+}
+
 // A watcher fires when its path is the changed node or an ancestor folder of it; `""`
 // (the activation root) covers everything.
 function pathCovers(watched: string, changed: string): boolean {
@@ -229,7 +254,10 @@ function pathCovers(watched: string, changed: string): boolean {
   return root === "" || changed === root || changed.startsWith(`${root}/`);
 }
 
-type Call = (method: RpcMethod, params: RpcRequest["params"]) => Promise<unknown>;
+export type Call = (
+  method: RpcMethod,
+  params: RpcRequest["params"]
+) => Promise<unknown>;
 
 // Multiplex the one port: correlate RpcResponses back to their callers by `id`, and
 // route the host's pushes (which carry `source`, not `id`) to `onPush`.
