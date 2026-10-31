@@ -76,29 +76,35 @@ export class UserError extends Error {
   override name = "UserError";
 }
 
+declare const queryBrand: unique symbol;
+
+/** A live query made with `query`. Only queries can be passed to `useQuery`. */
+export type Query<Args extends unknown[], Result> = ((
+  ...args: Args
+) => Promise<Result>) & {
+  readonly [queryBrand]: true;
+};
+
 /**
- * Marks a method as a live query, which views subscribe to with `useQuery`. A query only reads: its
- * writes are refused. It runs as the view that subscribed, its results reach only that view, and it
- * runs again whenever a file it read or a folder it listed changes, including edits made anywhere
- * else. Use queries for what views show, and `send` for events.
+ * Makes a live query, which views subscribe to with `useQuery`. A query only reads: its writes are
+ * refused. It runs as the view that subscribed, its results reach only that view, and it runs again
+ * whenever a file it read or a folder it listed changes, including edits made anywhere else. Use
+ * queries for what views show, and methods for changes.
  *
  * ```ts
- * @query async customers(stage: string) {
+ * customers = query(async (stage: string) => {
  *   const entries = await this.ctx.files.list("customers");
  *   …
- * }
+ * });
  * ```
  */
-export function query<This, Args extends unknown[], Result>(
-  method: (this: This, ...args: Args) => Promise<Result>,
-  _context: ClassMethodDecoratorContext<
-    This,
-    (this: This, ...args: Args) => Promise<Result>
-  >
-): (this: This, ...args: Args) => Promise<Result> {
+export function query<Args extends unknown[], Result>(
+  fn: (...args: Args) => Promise<Result>
+): Query<Args, Result> {
   // The runtime looks this up to refuse subscriptions to anything else.
-  Object.defineProperty(method, Symbol.for("lightfern.query"), { value: true });
-  return method;
+  return Object.defineProperty(fn, Symbol.for("lightfern.query"), {
+    value: true,
+  }) as Query<Args, Result>;
 }
 
 /**
