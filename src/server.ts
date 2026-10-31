@@ -71,7 +71,7 @@ export interface ServerContext {
 
 export interface RoomContext extends ServerContext {
   /** The name this room was joined with, such as "123abc". */
-  readonly name: string;
+  readonly roomName: string;
   /** Everyone with a view in the room, once each, in the same shape views get in `room.peers`. */
   readonly peers: readonly Peer[];
   /**
