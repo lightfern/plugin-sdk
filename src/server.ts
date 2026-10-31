@@ -7,9 +7,9 @@
 // and app methods can use any name. Only public methods the app's own class declares can be called
 // from views.
 
-import type { FileEntry, Peer, PeerUser } from "./protocol";
+import type { FileEntry, Participant, PeerUser } from "./protocol";
 
-export type { FileEntry, Peer, PeerUser, PeerView } from "./protocol";
+export type { FileEntry, Participant, PeerUser, PeerView } from "./protocol";
 
 /**
  * A person's access to the app's folder. More levels may be added later.
@@ -27,7 +27,7 @@ export type Access =
 /** Who made the call in progress. Set by Lightfern from the person's sign-in; views can't change it. */
 export interface Caller {
   readonly user: PeerUser;
-  /** The view the call came from: the same ID as `room.viewId` there, and in its peer's `views`. */
+  /** The view the call came from: the same ID as `room.viewId` there, and in its participant's `views`. */
   readonly viewId: string;
   readonly access: Access;
 }
@@ -72,11 +72,14 @@ export interface ServerContext {
 export interface RoomContext extends ServerContext {
   /** The name this room was joined with, such as "123abc". */
   readonly roomName: string;
-  /** Everyone with a view in the room, once each, in the same shape views get in `room.peers`. */
-  readonly peers: readonly Peer[];
+  /**
+   * Everyone with a view in the room, once each, including whoever is calling. The same list views
+   * get as `room.participants`.
+   */
+  readonly participants: readonly Participant[];
   /**
    * Send `data` to one view, for someone's private things like their hand of cards. To reach every
-   * view a person has open, loop over their peer's `views`.
+   * view a person has open, loop over their participant's `views`.
    */
   sendTo(viewId: string, data: unknown): Promise<void>;
 }
@@ -142,7 +145,7 @@ export abstract class Room extends Server {
 
   /**
    * A view joined the room. `ctx.caller` is that view. A person with the app open on several
-   * devices joins once per device; check `ctx.peers` to see whether they were already here.
+   * devices joins once per device; check `ctx.participants` to see whether they were already here.
    *
    * Throw to refuse the view: it gets the error as a call would, and nothing from the room. Views
    * choose room names, so a room whose members matter checks them here, such as a city refusing
@@ -152,7 +155,7 @@ export abstract class Room extends Server {
 
   /**
    * A view left the room, 5 seconds after it closed or dropped. `ctx.caller` is that view. The
-   * person has left entirely when they're no longer in `ctx.peers`.
+   * person has left entirely when they're no longer in `ctx.participants`.
    */
   protected onLeave?(): void | Promise<void>;
 }

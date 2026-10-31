@@ -126,6 +126,15 @@ export interface Peer<Presence = unknown> {
   views: PeerView<Presence>[];
 }
 
+/** Someone in a room from manifest 3.0, with every view they have open in it. */
+export interface Participant<Presence = unknown> {
+  user: PeerUser;
+  /** The presence of their most recently active view: `views[0].presence`. */
+  presence: Presence | null;
+  /** Every view they have open in this room, most recently active first. */
+  views: PeerView<Presence>[];
+}
+
 export interface PeerView<Presence = unknown> {
   viewId: string;
   presence: Presence | null;
