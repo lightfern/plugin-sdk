@@ -1,15 +1,15 @@
 // `lightfern:server`: what an app's server code imports. An app lists its server modules under
 // `contributes.servers` in its manifest. Each exports a class that extends `Server` (a private
-// server, joined with no name) or `Room` (a shared room, joined by name). Views join them with
-// `join` from `lightfern:host`.
+// server, one per view) or `Room` (a shared room, joined by name). Views reach them through
+// `server` and `room` from `lightfern:host`.
 //
 // Everything Lightfern provides is on `this.ctx`, which is protected, so a view can never reach it
 // and app methods can use any name. Only public methods the app's own class declares can be called
 // from views.
 
-import type { FileChange, FileEntry, Peer, PeerUser } from "./protocol";
+import type { FileEntry, Peer, PeerUser } from "./protocol";
 
-export type { FileChange, FileEntry, Peer, PeerUser, PeerView } from "./protocol";
+export type { FileEntry, Peer, PeerUser, PeerView } from "./protocol";
 
 /** A person's access to the app's folder. More levels may be added later. */
 export type Access = "owner" | "admin" | "edit" | "read" | "public";
@@ -41,20 +41,12 @@ export interface Files {
   ): Promise<void>;
   move(from: string, to: string): Promise<void>;
   delete(path: string): Promise<void>;
-  /**
-   * Hear about changes to a file, or to anything under a folder: the server's `onFileChange` runs
-   * for each one. Watching a path twice is one watch. Watches end with `unwatch`, when a private
-   * server's view closes, or when a room empties.
-   */
-  watch(path: string): Promise<void>;
-  /** Stop watching a path passed to `watch`. Unknown paths are ignored. */
-  unwatch(path: string): Promise<void>;
 }
 
 export interface ServerContext {
   /**
-   * Who made the call in progress. In a room's `onJoin` and `onLeave`, the view that joined or
-   * left. `null` in `onStart` and `onFileChange`, where nobody did.
+   * Who made the call in progress. In a query, the view that subscribed. In a room's `onJoin` and
+   * `onLeave`, the view that joined or left. `null` in `onStart`, where nobody did.
    */
   readonly caller: Caller | null;
   readonly files: Files;
@@ -85,24 +77,42 @@ export class UserError extends Error {
 }
 
 /**
+ * Marks a method as a live query, which views subscribe to with `useQuery`. A query only reads: its
+ * writes are refused. It runs as the view that subscribed, its results reach only that view, and it
+ * runs again whenever a file it read or a folder it listed changes, including edits made anywhere
+ * else. Use queries for what views show, and `send` for events.
+ *
+ * ```ts
+ * @query async customers(stage: string) {
+ *   const entries = await this.ctx.files.list("customers");
+ *   …
+ * }
+ * ```
+ */
+export function query<This, Args extends unknown[], Result>(
+  method: (this: This, ...args: Args) => Promise<Result>,
+  _context: ClassMethodDecoratorContext<
+    This,
+    (this: This, ...args: Args) => Promise<Result>
+  >
+): (this: This, ...args: Args) => Promise<Result> {
+  // The runtime looks this up to refuse subscriptions to anything else.
+  Object.defineProperty(method, Symbol.for("lightfern.query"), { value: true });
+  return method;
+}
+
+/**
  * Server code. Extend it directly for a private server, or extend `Room` for a shared one.
  *
- * A private server is joined with no name and serves one view: it knows nothing about anyone else
- * using the app. Lightfern may unload it about 10 seconds after its last call, and fields on the
- * class are lost then, so keep anything that lasts in files. Changes other people make reach it
- * through `onFileChange`.
+ * A private server serves one view: it knows nothing about anyone else using the app. Lightfern may
+ * unload it about 10 seconds after its last call, and fields on the class are lost then, so keep
+ * anything that lasts in files. Changes other people make reach views through queries.
  */
 export abstract class Server {
   declare protected readonly ctx: ServerContext;
 
-  /** Runs each time the server starts, including after it was unloaded. Watch files here. */
+  /** Runs each time the server starts, including after it was unloaded. */
   protected onStart?(): void | Promise<void>;
-
-  /**
-   * A watched file changed. Runs straight away for this server's own writes, and once the change
-   * syncs for edits made anywhere else, such as an agent editing the file on disk.
-   */
-  protected onFileChange?(change: FileChange): void | Promise<void>;
 }
 
 /**
@@ -117,6 +127,10 @@ export abstract class Room extends Server {
   /**
    * A view joined the room. `ctx.caller` is that view. A person with the app open on several
    * devices joins once per device; check `ctx.peers` to see whether they were already here.
+   *
+   * Throw to refuse the view: it gets the error as a call would, and nothing from the room. Views
+   * choose room names, so a room whose members matter checks them here, such as a city refusing
+   * players who aren't in it.
    */
   protected onJoin?(): void | Promise<void>;
 

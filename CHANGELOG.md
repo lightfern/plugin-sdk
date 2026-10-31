@@ -9,8 +9,8 @@ implements.
 
 - Manifests can list server modules under `contributes.servers`.
 - `@lightfern/plugin-sdk/server` (`lightfern:server` in an app) has what server code builds on:
-  `Server` for a private server, `Room` for a shared one, `UserError`, and the `ctx` types. Nothing
-  runs server code yet; it arrives with 3.0.
+  `Server` for a private server, `Room` for a shared one, `UserError`, the `@query` decorator for
+  live queries, and the `ctx` types. Nothing runs server code yet; it arrives with 3.0.
 
 ## [2.5.2] - 2026-10-29
 
