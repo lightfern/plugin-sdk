@@ -18,10 +18,11 @@ export type { FileEntry, Peer, PeerUser, PeerView } from "./protocol";
  *   server code.
  * - `read_code_and_data`: can read the app's code and all its files, which sync to their devices,
  *   but changes them only through server code.
- * - `public`: anyone, including people who aren't signed in. Not given yet.
+ * - `use_only`: can use the app through its views, but their devices don't have its code or files,
+ *   so server code can keep things from them. Not given yet.
  */
 export type Access =
-  "owner" | "admin" | "edit_code_and_data" | "read_code_and_data" | "public";
+  "owner" | "admin" | "edit_code_and_data" | "read_code_and_data" | "use_only";
 
 /** Who made the call in progress. Set by Lightfern from the person's sign-in; views can't change it. */
 export interface Caller {
