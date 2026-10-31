@@ -12,8 +12,8 @@ import type { Room as RoomClass } from "./server";
 import {
   type Constructor,
   holdHandle,
-  type Method,
   openHandle,
+  type QueryMethod,
   type RoomHandle,
 } from "./servers";
 
@@ -271,17 +271,17 @@ export function useRoom<T extends RoomClass, Presence = unknown>(
 }
 
 /**
- * The result of a `@query` method, such as `useQuery(crm.customers, "lead")`: `undefined` until
+ * The result of a query, such as `useQuery(crm.customers, "lead")`: `undefined` until
  * the first result, then kept current by the server. Components asking for the same query and
  * arguments share one subscription. Throws the query's error, for an error boundary to catch.
  */
 export function useQuery<Args extends unknown[], Result>(
-  method: Method<Args, Result>,
+  method: QueryMethod<Args, Result>,
   ...args: Args
 ): Result | undefined {
   const key = JSON.stringify(args);
   const [latest, setLatest] = useState<{
-    method: Method<Args, Result>;
+    method: QueryMethod<Args, Result>;
     key: string;
     result?: Result;
     error?: PluginRpcError;

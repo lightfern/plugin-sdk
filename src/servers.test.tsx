@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Peer, RpcRequest, RpcResponse, ServerPushMessage } from "./protocol";
-import type { Room } from "./server";
+import type { Query, Room } from "./server";
 import { Server } from "./server";
 import type { Constructor } from "./servers";
 
@@ -13,23 +13,19 @@ beforeEach(() => {
 
 interface CardsRoom extends Room {
   playCard(card: number): Promise<number>;
-  hand(): Promise<number[]>;
+  hand: Query<[], number[]>;
 }
 
 interface CrmServer extends Server {
-  customers(stage: string): Promise<string[]>;
+  customers: Query<[stage: string], string[]>;
+  moveCustomer(path: string, stage: string): Promise<void>;
 }
 
 // What `plugin-build` puts in place of a server class in views.
 const stub = (name: string, room: boolean, methods: string[], queries: string[]) =>
   ({ [Symbol.for("lightfern.server")]: { name, room, methods, queries } }) as never;
-const Cards: Constructor<CardsRoom> = stub(
-  "Cards",
-  true,
-  ["playCard", "hand"],
-  ["hand"]
-);
-const Crm: Constructor<CrmServer> = stub("Crm", false, ["customers"], ["customers"]);
+const Cards: Constructor<CardsRoom> = stub("Cards", true, ["playCard"], ["hand"]);
+const Crm: Constructor<CrmServer> = stub("Crm", false, ["moveCustomer"], ["customers"]);
 
 type Push<M = ServerPushMessage> = M extends unknown ? Omit<M, "source"> : never;
 
@@ -191,13 +187,14 @@ describe("server and room", () => {
     ]);
   });
 
-  it("refuses subscribing to a method that isn't a query", async () => {
+  it("gives only queries a subscribe", async () => {
     const { room } = await import("./servers");
     fakeHost();
+    const game = room(Cards, "123abc");
 
-    expect(() => room(Cards, "123abc").playCard.subscribe([7], () => {})).toThrow(
-      "Cards.playCard isn't marked @query"
-    );
+    // @ts-expect-error playCard isn't a query
+    expect(game.playCard.subscribe).toBeUndefined();
+    expect(game.hand.subscribe).toBeTypeOf("function");
   });
 
   it("delivers messages until the handle closes", async () => {
@@ -243,6 +240,13 @@ describe("useQuery and useRoom", () => {
       const customers = useQuery(crm.customers, "lead");
       return <p>{customers ? customers.join(", ") : "Loading"}</p>;
     }
+
+    function Misused() {
+      // @ts-expect-error moveCustomer isn't a query
+      useQuery(crm.moveCustomer, "a.md", "won");
+      return null;
+    }
+    expect(Misused).toBeTypeOf("function");
 
     render(<Board />);
     await act(settle);
