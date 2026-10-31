@@ -24,7 +24,10 @@ export type { FileEntry, Participant, PeerUser, PeerView } from "./protocol";
 export type Access =
   "owner" | "admin" | "edit_code_and_data" | "read_code_and_data" | "use_only";
 
-/** Who made the call in progress. Set by Lightfern from the person's sign-in; views can't change it. */
+/**
+ * Who made a call: the first parameter of every public method and query, and of `onJoin` and
+ * `onLeave`. Set by Lightfern from the person's sign-in; views can't change it.
+ */
 export interface Caller {
   readonly user: PeerUser;
   /** The view the call came from: the same ID as `room.viewId` there, and in its participant's `views`. */
@@ -54,11 +57,6 @@ export interface Files {
 }
 
 export interface ServerContext {
-  /**
-   * Who made the call in progress. In a query, the view that subscribed. In a room's `onJoin` and
-   * `onLeave`, the view that joined or left. `null` in `onStart`, where nobody did.
-   */
-  readonly caller: Caller | null;
   readonly files: Files;
   /**
    * Send `data` to every view connected to this server, through their `onMessage`. Nothing keeps
@@ -93,6 +91,7 @@ declare const queryBrand: unique symbol;
 
 /** A live query made with `query`. Only queries can be passed to `useQuery`. */
 export type Query<Args extends unknown[], Result> = ((
+  caller: Caller,
   ...args: Args
 ) => Promise<Result>) & {
   readonly [queryBrand]: true;
@@ -100,19 +99,19 @@ export type Query<Args extends unknown[], Result> = ((
 
 /**
  * Makes a live query, which views subscribe to with `useQuery`. A query only reads: its writes are
- * refused. It runs as the view that subscribed, its results reach only that view, and it runs again
+ * refused. It runs with the view that subscribed as its caller, its results reach only that view, and it runs again
  * whenever a file it read or a folder it listed changes, including edits made anywhere else. Use
  * queries for what views show, and methods for changes.
  *
  * ```ts
- * customers = query(async (stage: string) => {
+ * customers = query(async (caller: Caller, stage: string) => {
  *   const entries = await this.ctx.files.list("customers");
  *   …
  * });
  * ```
  */
 export function query<Args extends unknown[], Result>(
-  fn: (...args: Args) => Promise<Result>
+  fn: (caller: Caller, ...args: Args) => Promise<Result>
 ): Query<Args, Result> {
   // The runtime looks this up to refuse subscriptions to anything else.
   return Object.defineProperty(fn, Symbol.for("lightfern.query"), {
@@ -126,6 +125,10 @@ export function query<Args extends unknown[], Result>(
  * A private server serves one view: it knows nothing about anyone else using the app. Lightfern may
  * unload it about 10 seconds after its last call, and fields on the class are lost then, so keep
  * anything that lasts in files. Changes other people make reach views through queries.
+ *
+ * Every public method and query takes the caller first, and views call it without:
+ * `async moveCustomer(caller: Caller, path: string)` on the server is `crm.moveCustomer(path)` in a
+ * view. Names that start with `on` and a capital letter are kept for hooks, such as `onStart`.
  */
 export abstract class Server {
   declare protected readonly ctx: ServerContext;
@@ -144,18 +147,18 @@ export abstract class Room extends Server {
   declare protected readonly ctx: RoomContext;
 
   /**
-   * A view joined the room. `ctx.caller` is that view. A person with the app open on several
+   * A view joined the room. `caller` is that view. A person with the app open on several
    * devices joins once per device; check `ctx.participants` to see whether they were already here.
    *
    * Throw to refuse the view: it gets the error as a call would, and nothing from the room. Views
    * choose room names, so a room whose members matter checks them here, such as a city refusing
    * players who aren't in it.
    */
-  protected onJoin?(): void | Promise<void>;
+  protected onJoin?(caller: Caller): void | Promise<void>;
 
   /**
-   * A view left the room, 5 seconds after it closed or dropped. `ctx.caller` is that view. The
+   * A view left the room, 5 seconds after it closed or dropped. `caller` is that view. The
    * person has left entirely when they're no longer in `ctx.participants`.
    */
-  protected onLeave?(): void | Promise<void>;
+  protected onLeave?(caller: Caller): void | Promise<void>;
 }
