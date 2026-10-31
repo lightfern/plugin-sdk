@@ -11,8 +11,17 @@ import type { FileEntry, Peer, PeerUser } from "./protocol";
 
 export type { FileEntry, Peer, PeerUser, PeerView } from "./protocol";
 
-/** A person's access to the app's folder. More levels may be added later. */
-export type Access = "owner" | "admin" | "edit" | "read" | "public";
+/**
+ * A person's access to the app's folder. More levels may be added later.
+ *
+ * - `edit_code_and_data`: can change the app's code and files directly, without going through
+ *   server code.
+ * - `read_code_and_data`: can read the app's code and all its files, which sync to their devices,
+ *   but changes them only through server code.
+ * - `public`: anyone, including people who aren't signed in. Not given yet.
+ */
+export type Access =
+  "owner" | "admin" | "edit_code_and_data" | "read_code_and_data" | "public";
 
 /** Who made the call in progress. Set by Lightfern from the person's sign-in; views can't change it. */
 export interface Caller {
