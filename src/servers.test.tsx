@@ -7,7 +7,7 @@ import type {
   RpcResponse,
   ServerPushMessage,
 } from "./protocol";
-import type { Query, Room } from "./server";
+import type { Caller, Query, Room } from "./server";
 import { Server } from "./server";
 import type { Constructor } from "./servers";
 
@@ -17,13 +17,13 @@ beforeEach(() => {
 });
 
 interface CardsRoom extends Room {
-  playCard(card: number): Promise<number>;
+  playCard(caller: Caller, card: number): Promise<number>;
   hand: Query<[], number[]>;
 }
 
 interface CrmServer extends Server {
   customers: Query<[stage: string], string[]>;
-  moveCustomer(path: string, stage: string): Promise<void>;
+  moveCustomer(caller: Caller, path: string, stage: string): Promise<void>;
 }
 
 // What `plugin-build` puts in place of a server class in views.
@@ -227,6 +227,8 @@ describe("server and room", () => {
 
     // @ts-expect-error playCard takes a number
     void game.playCard("7").catch(() => {});
+    // @ts-expect-error Lightfern passes the caller, not the view
+    void game.playCard({} as Caller, 7).catch(() => {});
     // @ts-expect-error server code's ctx isn't on the handle
     void game.ctx;
     // @ts-expect-error nor are its hooks
