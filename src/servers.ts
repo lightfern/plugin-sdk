@@ -10,23 +10,26 @@ import type {
   ServerPushMessage,
   ServerStatus,
 } from "./protocol";
-import type { Room as RoomClass, Server as ServerClass } from "./server";
+import type { Query, Room as RoomClass, Server as ServerClass } from "./server";
 
 /** What `plugin-build` puts in place of a server class in views, under `Symbol.for("lightfern.server")`. */
 export interface ServerStub {
   name: string;
   room: boolean;
+  /** Public methods, other than queries. */
   methods: string[];
+  /** Fields made with `query`. */
   queries: string[];
 }
 
 /** A method of server code, called from a view. */
-export type Method<Args extends unknown[], Result> = ((
-  ...args: Args
-) => Promise<Result>) & {
+export type Method<Args extends unknown[], Result> = (...args: Args) => Promise<Result>;
+
+/** A query of server code: called once like a method, or subscribed to. */
+export type QueryMethod<Args extends unknown[], Result> = Method<Args, Result> & {
   /**
-   * For `@query` methods: `onResult` runs with the result, then again each time it changes, until
-   * the returned function is called. `onError` runs when the query throws. In React, use `useQuery`.
+   * `onResult` runs with the result, then again each time it changes, until the returned function
+   * is called. `onError` runs when the query throws. In React, use `useQuery`.
    */
   subscribe(
     args: Args,
@@ -35,13 +38,15 @@ export type Method<Args extends unknown[], Result> = ((
   ): () => void;
 };
 
-/** The public methods of a server class, as a view calls them. */
+/** The public methods and queries of a server class, as a view calls them. */
 export type Methods<T> = {
   [
     K in keyof T as T[K] extends (...args: never[]) => Promise<unknown> ? K : never
-  ]: T[K] extends (...args: infer Args) => Promise<infer Result>
-    ? Method<Args, Result>
-    : never;
+  ]: T[K] extends Query<infer Args, infer Result>
+    ? QueryMethod<Args, Result>
+    : T[K] extends (...args: infer Args) => Promise<infer Result>
+      ? Method<Args, Result>
+      : never;
 };
 
 export interface HandleState {
@@ -219,45 +224,33 @@ export function openHandle(
   });
   post("server.open", { className: stub.name, room: name });
 
-  const method = (methodName: string) =>
-    Object.assign(
-      (...args: unknown[]) => call("server.call", { method: methodName, args }),
-      {
-        subscribe(
-          args: unknown[],
-          onResult: (result: unknown) => void,
-          onError?: (error: PluginRpcError) => void
-        ) {
-          if (!stub.queries.includes(methodName)) {
-            throw new Error(`${stub.name}.${methodName} isn't marked @query`);
-          }
-          const key = JSON.stringify([methodName, args]);
-          let entry = queries.get(key);
-          if (!entry) {
-            entry = { query: nextQuery++, listeners: new Set() };
-            queries.set(key, entry);
-            queryKeys.set(entry.query, key);
-            post("server.subscribe", {
-              query: entry.query,
-              method: methodName,
-              args,
-            });
-          }
-          const listener = { onResult, onError };
-          entry.listeners.add(listener);
-          if (entry.latest && "result" in entry.latest) onResult(entry.latest.result);
-          else if (entry.latest) onError?.(entry.latest.error);
-          const shared = entry;
-          return () => {
-            shared.listeners.delete(listener);
-            if (shared.listeners.size > 0 || queries.get(key) !== shared) return;
-            queries.delete(key);
-            queryKeys.delete(shared.query);
-            post("server.unsubscribe", { query: shared.query });
-          };
-        },
-      }
-    );
+  const subscribe = (
+    methodName: string,
+    args: unknown[],
+    onResult: (result: unknown) => void,
+    onError?: (error: PluginRpcError) => void
+  ) => {
+    const key = JSON.stringify([methodName, args]);
+    let entry = queries.get(key);
+    if (!entry) {
+      entry = { query: nextQuery++, listeners: new Set() };
+      queries.set(key, entry);
+      queryKeys.set(entry.query, key);
+      post("server.subscribe", { query: entry.query, method: methodName, args });
+    }
+    const listener = { onResult, onError };
+    entry.listeners.add(listener);
+    if (entry.latest && "result" in entry.latest) onResult(entry.latest.result);
+    else if (entry.latest) onError?.(entry.latest.error);
+    const shared = entry;
+    return () => {
+      shared.listeners.delete(listener);
+      if (shared.listeners.size > 0 || queries.get(key) !== shared) return;
+      queries.delete(key);
+      queryKeys.delete(shared.query);
+      post("server.unsubscribe", { query: shared.query });
+    };
+  };
 
   const handle = {
     get status() {
@@ -294,11 +287,19 @@ export function openHandle(
       post("server.close", {});
     },
   } satisfies RoomState<unknown> as RoomHandle<unknown>;
-  for (const methodName of stub.methods) {
-    Object.defineProperty(handle, methodName, {
-      value: method(methodName),
-      enumerable: true,
-    });
+  for (const methodName of [...stub.methods, ...stub.queries]) {
+    const run = (...args: unknown[]) =>
+      call("server.call", { method: methodName, args });
+    const value = stub.queries.includes(methodName)
+      ? Object.assign(run, {
+          subscribe: (
+            args: unknown[],
+            onResult: (result: unknown) => void,
+            onError?: (error: PluginRpcError) => void
+          ) => subscribe(methodName, args, onResult, onError),
+        })
+      : run;
+    Object.defineProperty(handle, methodName, { value, enumerable: true });
   }
 
   const live: Live = { handle, revision: 0, pinned, hooks: 0 };

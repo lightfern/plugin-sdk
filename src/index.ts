@@ -85,6 +85,7 @@ export {
   type HandleState,
   type Method,
   type Methods,
+  type QueryMethod,
   room,
   type RoomHandle,
   type RoomState,
