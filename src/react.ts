@@ -256,8 +256,8 @@ export function useFileObjectUrl(path: string, type?: string): string | null {
 }
 
 /**
- * The room `name` of `cls`, as `room()` returns it, re-rendering when its `status`, `participants`, `me`
- * or `viewId` changes. You join when the first component using it mounts, and leave once the last
+ * The room `name` of `cls`, as `room()` returns it, re-rendering when anything on its `client`
+ * changes. You join when the first component using it mounts, and leave once the last
  * one unmounts, unless `room()` opened it too.
  */
 export function useRoom<T extends RoomClass, Presence = unknown>(
@@ -265,7 +265,7 @@ export function useRoom<T extends RoomClass, Presence = unknown>(
   name: string
 ): RoomHandle<T, Presence> {
   const live = openHandle(cls, name, false);
-  useSyncExternalStore(live.handle.onChange, () => live.revision);
+  useSyncExternalStore(live.watch, () => live.revision);
   useEffect(() => holdHandle(live), [live]);
   return live.handle as RoomHandle<T, Presence>;
 }

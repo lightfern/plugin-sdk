@@ -4,7 +4,7 @@
 import { type Call, keepUnchanged, PluginRpcError, serverChannel } from "./client";
 import { MAX_PRESENCE_BYTES } from "./context";
 import type {
-  Participant,
+  Peer,
   RpcMethod,
   RpcRequest,
   ServerPushMessage,
@@ -49,42 +49,49 @@ export type Methods<T> = {
       : never;
 };
 
-export interface HandleState {
+/** A private server's connection, as `crm.client`. */
+export interface ServerClient {
   /**
    * `"connecting"` until connected and while reconnecting; `"offline"` once the server can't be
    * reached; `"refused"` when the person can't use the app. Messages sent while a view wasn't
    * `"connected"` are lost; queries catch up by themselves.
    */
   readonly status: ServerStatus;
-  /** Runs for each message server code sends this view with `send` or `sendTo`. */
+  onStatusChange(listener: (status: ServerStatus) => void): () => void;
+  /** Runs for each message server code sends this view with `send`, or in a room `sendTo`. */
   onMessage(listener: (data: unknown) => void): () => void;
-  /** Runs when `status` changes, and in a room when `participants`, `me` or `viewId` does. */
-  onChange(listener: () => void): () => void;
-  /** Disconnects. Calls, queries and listeners on this handle stop working. */
+}
+
+/** A room's connection, as `game.client`. */
+export interface RoomClient<Presence = unknown> extends ServerClient {
+  /** This view's ID in the room, as `caller.viewId` is on the server; `null` until joined. */
+  readonly viewId: string | null;
+  /** Everyone else in the room. An unchanged peer keeps its object, so `===` skips it. */
+  readonly peers: readonly Peer<Presence>[];
+  /** You, across all your views in the room; `null` until joined. */
+  readonly me: Peer<Presence> | null;
+  /** Share what you're doing now, such as your cursor. Never saved; at most 8 KiB. */
+  setPresence(presence: Presence | null): void;
+  onPeersChange(listener: (peers: readonly Peer<Presence>[]) => void): () => void;
+  onMeChange(listener: (me: Peer<Presence> | null) => void): () => void;
+  /** Leaves the room. Calls, queries and listeners on this handle stop working. */
   close(): void;
 }
 
-export interface RoomState<Presence> extends HandleState {
-  /** This view's ID in the room, as in `ctx.caller.viewId` on the server; `null` until joined. */
-  readonly viewId: string | null;
-  /**
-   * Everyone in the room, including you. An unchanged participant keeps its object, so `===`
-   * skips it.
-   */
-  readonly participants: readonly Participant<Presence>[];
-  /** Your own entry in `participants`, across all your views; `null` until joined. */
-  readonly me: Participant<Presence> | null;
-  /** Share what you're doing now, such as your cursor. Never saved; at most 8 KiB. */
-  setPresence(presence: Presence | null): void;
-}
-
-export type ServerHandle<T> = Methods<T> & HandleState;
-export type RoomHandle<T, Presence = unknown> = Methods<T> & RoomState<Presence>;
+/** What `server()` returns: the class's methods and queries, and the connection as `client`. */
+export type ServerHandle<T> = Methods<T> & { readonly client: ServerClient };
+/** What `room()` returns: the class's methods and queries, and the connection as `client`. */
+export type RoomHandle<T, Presence = unknown> = Methods<T> & {
+  readonly client: RoomClient<Presence>;
+};
 
 export type Constructor<T> = abstract new (...args: never[]) => T;
 
 export interface Live {
   handle: RoomHandle<unknown>;
+  /** Runs `listener` on any change to the client, for `useRoom`. */
+  watch(listener: () => void): () => void;
+  /** Bumped on each change, for `useRoom`. */
   revision: number;
   pinned: boolean;
   hooks: number;
@@ -95,7 +102,7 @@ const opened = new Map<string, Live>();
 const byNumber = new Map<number, (push: ServerPushMessage) => void>();
 let channel: Promise<Call> | null = null;
 let nextNumber = 1;
-const NOBODY: readonly Participant[] = [];
+const NOBODY: readonly Peer[] = [];
 
 /**
  * This view's private server for `cls`. Synchronous: it connects in the background, and calls
@@ -111,7 +118,7 @@ export function server<T extends ServerClass>(
 
 /**
  * The room `name` of `cls`, shared by everyone who joins it. Synchronous like `server`. You're in
- * the room, and in everyone's `participants`, from now until `close()`. In React, `useRoom` also
+ * the room, and in everyone's `peers`, from now until `client.close()`. In React, `useRoom` also
  * leaves when the last component using it unmounts.
  */
 export function room<T extends RoomClass, Presence = unknown>(
@@ -129,7 +136,7 @@ export function holdHandle(live: Live): () => void {
     live.hooks -= 1;
     // Closed a moment later, so StrictMode's unmount and remount doesn't leave and rejoin.
     live.closing = setTimeout(() => {
-      if (live.hooks === 0 && !live.pinned) live.handle.close();
+      if (live.hooks === 0 && !live.pinned) live.handle.client.close();
     });
   };
 }
@@ -173,10 +180,13 @@ export function openHandle(
 
   let status: ServerStatus = "connecting";
   let viewId: string | null = null;
-  let participants: readonly Participant[] = NOBODY;
-  let me: Participant | null = null;
+  let peers: readonly Peer[] = NOBODY;
+  let me: Peer | null = null;
   const messageListeners = new Set<(data: unknown) => void>();
-  const changeListeners = new Set<() => void>();
+  const statusListeners = new Set<(status: ServerStatus) => void>();
+  const peersListeners = new Set<(peers: readonly Peer[]) => void>();
+  const meListeners = new Set<(me: Peer | null) => void>();
+  const anyListeners = new Set<() => void>();
   let nextQuery = 1;
   const queries = new Map<
     string,
@@ -195,24 +205,24 @@ export function openHandle(
     if (push.type === "server.message") {
       for (const listener of messageListeners) listener(push.data);
     } else if (push.type === "server.state") {
-      const kept = keepUnchanged(participants, push.participants);
-      // `me` is your own entry in `participants`, so `participant !== me` finds everyone else.
-      const nextMe =
-        kept.find((participant) => participant.user.id === push.me?.user.id) ?? null;
-      if (
-        push.status === status &&
-        push.viewId === viewId &&
-        kept === participants &&
-        nextMe === me
-      ) {
-        return;
-      }
+      const nextPeers = keepUnchanged(peers, push.peers);
+      const nextMe = JSON.stringify(me) === JSON.stringify(push.me) ? me : push.me;
+      const changed = {
+        status: push.status !== status,
+        peers: nextPeers !== peers,
+        me: nextMe !== me,
+        viewId: push.viewId !== viewId,
+      };
+      if (!Object.values(changed).some(Boolean)) return;
       status = push.status;
       viewId = push.viewId;
-      participants = kept;
+      peers = nextPeers;
       me = nextMe;
       live.revision += 1;
-      for (const listener of changeListeners) listener();
+      if (changed.status) for (const listener of statusListeners) listener(status);
+      if (changed.peers) for (const listener of peersListeners) listener(peers);
+      if (changed.me) for (const listener of meListeners) listener(me);
+      for (const listener of anyListeners) listener();
     } else {
       const entry = queries.get(queryKeys.get(push.query) ?? "");
       if (!entry) return;
@@ -256,15 +266,21 @@ export function openHandle(
     };
   };
 
-  const handle = {
+  const listen =
+    <L>(listeners: Set<L>) =>
+    (listener: L) => {
+      listeners.add(listener);
+      return () => void listeners.delete(listener);
+    };
+  const client: RoomClient = {
     get status() {
       return status;
     },
     get viewId() {
       return viewId;
     },
-    get participants() {
-      return participants;
+    get peers() {
+      return peers;
     },
     get me() {
       return me;
@@ -276,21 +292,19 @@ export function openHandle(
       }
       post("server.setPresence", { presence });
     },
-    onMessage: (listener) => {
-      messageListeners.add(listener);
-      return () => messageListeners.delete(listener);
-    },
-    onChange: (listener) => {
-      changeListeners.add(listener);
-      return () => changeListeners.delete(listener);
-    },
+    onStatusChange: listen(statusListeners),
+    onPeersChange: listen(peersListeners),
+    onMeChange: listen(meListeners),
+    onMessage: listen(messageListeners),
     close: () => {
       if (opened.get(key) !== live) return;
       opened.delete(key);
       byNumber.delete(number);
       post("server.close", {});
     },
-  } satisfies RoomState<unknown> as RoomHandle<unknown>;
+  };
+  // A private server's client is the same object; its types show only `ServerClient`.
+  const handle = { client } as RoomHandle<unknown>;
   for (const methodName of [...stub.methods, ...stub.queries]) {
     const run = (...args: unknown[]) =>
       call("server.call", { method: methodName, args });
@@ -306,7 +320,13 @@ export function openHandle(
     Object.defineProperty(handle, methodName, { value, enumerable: true });
   }
 
-  const live: Live = { handle, revision: 0, pinned, hooks: 0 };
+  const live: Live = {
+    handle,
+    watch: listen(anyListeners),
+    revision: 0,
+    pinned,
+    hooks: 0,
+  };
   opened.set(key, live);
   return live;
 }

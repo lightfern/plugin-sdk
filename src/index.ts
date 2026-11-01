@@ -82,14 +82,14 @@ export type {
   ViewSelectionMessage,
 } from "./protocol";
 export {
-  type HandleState,
   type Method,
   type Methods,
   type QueryMethod,
   room,
+  type RoomClient,
   type RoomHandle,
-  type RoomState,
   server,
+  type ServerClient,
   type ServerHandle,
   type ServerStub,
 } from "./servers";

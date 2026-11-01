@@ -1,12 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type {
-  Participant,
-  RpcRequest,
-  RpcResponse,
-  ServerPushMessage,
-} from "./protocol";
+import type { Peer, RpcRequest, RpcResponse, ServerPushMessage } from "./protocol";
 import type { Caller, Query, Room } from "./server";
 import { Server } from "./server";
 import type { Constructor } from "./servers";
@@ -89,10 +84,18 @@ function fakeHost(answer: (request: RpcRequest) => unknown = () => undefined) {
 
 const settle = () => new Promise((resolve) => setTimeout(resolve));
 
-const alice: Participant = {
+const alice: Peer = {
+  peerId: "alice",
   user: { id: "alice", name: "Alice", profilePictureUrl: null },
   presence: null,
   views: [{ viewId: "v-2", presence: null, activeAt: 0 }],
+};
+
+const bob: Peer = {
+  peerId: "bob",
+  user: { id: "bob", name: "Bob", profilePictureUrl: null },
+  presence: null,
+  views: [{ viewId: "v-1", presence: null, activeAt: 0 }],
 };
 
 describe("server and room", () => {
@@ -132,29 +135,26 @@ describe("server and room", () => {
     expect(() => room(Crm, "x")).toThrow("Crm is a private server: use server()");
   });
 
-  it("follows the room's status and people, keeping unchanged participants", async () => {
+  it("follows the room's status and people, keeping unchanged peers", async () => {
     const { room } = await import("./servers");
     const host = fakeHost();
     const game = room(Cards, "123abc");
     await settle();
-    const changes = vi.fn();
-    game.onChange(changes);
+    const statuses = vi.fn();
+    const peerLists = vi.fn();
+    game.client.onStatusChange(statuses);
+    game.client.onPeersChange(peerLists);
 
-    const state = {
-      type: "server.state",
-      handle: 1,
-      viewId: "v-1",
-      me: alice,
-    } as const;
-    host.push({ ...state, status: "connected", participants: [alice] });
-    const participants = game.participants;
-    host.push({ ...state, status: "connected", participants: [{ ...alice }] });
-    host.push({ ...state, status: "offline", participants: [{ ...alice }] });
+    const state = { type: "server.state", handle: 1, viewId: "v-1", me: bob } as const;
+    host.push({ ...state, status: "connected", peers: [alice] });
+    const peers = game.client.peers;
+    host.push({ ...state, status: "connected", peers: [{ ...alice }] });
+    host.push({ ...state, status: "offline", peers: [{ ...alice }] });
 
-    expect(changes).toHaveBeenCalledTimes(2);
-    expect(game.participants).toBe(participants);
-    expect(game.me).toBe(game.participants[0]);
-    expect(game).toMatchObject({ status: "offline", viewId: "v-1", me: alice });
+    expect(statuses.mock.calls).toEqual([["connected"], ["offline"]]);
+    expect(peerLists).toHaveBeenCalledTimes(1);
+    expect(game.client.peers).toBe(peers);
+    expect(game.client).toMatchObject({ status: "offline", viewId: "v-1", me: bob });
   });
 
   it("shares one subscription for the same query and arguments", async () => {
@@ -207,11 +207,11 @@ describe("server and room", () => {
     const host = fakeHost();
     const game = room(Cards, "123abc");
     const messages = vi.fn();
-    game.onMessage(messages);
+    game.client.onMessage(messages);
     await settle();
 
     host.push({ type: "server.message", handle: 1, data: { type: "yourTurn" } });
-    game.close();
+    game.client.close();
     host.push({ type: "server.message", handle: 1, data: { type: "yourTurn" } });
     await settle();
 
@@ -221,7 +221,7 @@ describe("server and room", () => {
   });
 
   it("types handles from the class, without ctx or hooks", async () => {
-    const { room } = await import("./servers");
+    const { room, server } = await import("./servers");
     fakeHost();
     const game = room(Cards, "123abc");
 
@@ -231,6 +231,8 @@ describe("server and room", () => {
     void game.playCard({} as Caller, 7).catch(() => {});
     // @ts-expect-error server code's ctx isn't on the handle
     void game.ctx;
+    // @ts-expect-error a private server has nobody else in it
+    void server(Crm).client.peers;
     // @ts-expect-error nor are its hooks
     void game.onJoin;
     expect(game).not.toHaveProperty("onJoin");
@@ -279,10 +281,7 @@ describe("useQuery and useRoom", () => {
     function Players() {
       const game = useRoom(Cards, "123abc");
       return (
-        <p>
-          {game.participants.map((participant) => participant.user.name).join(", ") ||
-            "Nobody"}
-        </p>
+        <p>{game.client.peers.map((peer) => peer.user.name).join(", ") || "Nobody"}</p>
       );
     }
 
@@ -295,8 +294,8 @@ describe("useQuery and useRoom", () => {
         handle: 1,
         status: "connected",
         viewId: "v-1",
-        participants: [alice],
-        me: null,
+        peers: [alice],
+        me: bob,
       })
     );
     expect(screen.getByText("Alice")).toBeTruthy();

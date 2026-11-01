@@ -13,9 +13,10 @@ implements.
   the `ctx` types. Nothing runs server code yet; it arrives with 3.0.
 - Views reach server code through handles: `server(Crm)` for the view's private server and
   `room(Cards, "123abc")` for a room, both from `lightfern:host`. A handle is synchronous: the
-  desktop connects in the background, and calls on it wait. It has the class's methods, `status`,
-  `onMessage`, and in a room `participants` (everyone, including you), `me`, `viewId` and
-  `setPresence`. Queries also have `subscribe`.
+  desktop connects in the background, and calls on it wait. It has the class's methods and queries,
+  and its connection as `client`: `status`, `onStatusChange` and `onMessage`, and in a room `peers`,
+  `me`, `viewId`, `setPresence`, `onPeersChange`, `onMeChange` and `close`. Queries also have
+  `subscribe`.
 - `useRoom(Cards, "123abc")` and `useQuery(crm.customers, "lead")` in `lightfern:host/react`.
 
 ## [2.5.2] - 2026-10-29
