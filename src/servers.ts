@@ -106,8 +106,9 @@ const NOBODY: readonly Peer[] = [];
 
 /**
  * This view's private server for `cls`. Synchronous: it connects in the background, and calls
- * wait for it. A call fails with a `PluginRpcError` whose `code` is `"offline"` when the server
- * can't be reached, `"refused"` when the person can't use the app, and `"user"` for a `UserError`.
+ * wait for it. A failed call rejects with a `PluginRpcError`. Its `code` is `"offline"` when the
+ * server can't be reached and `"refused"` when the person can't use the app; otherwise its message
+ * is server code's error, which people who can't read the app's code see only for a `UserError`.
  * Calling it again with the same class returns the same handle.
  */
 export function server<T extends ServerClass>(

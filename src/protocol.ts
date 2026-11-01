@@ -301,8 +301,9 @@ export interface ServerOpenParams {
   room: string | null;
 }
 
-// A failed call's `RpcError.code` is "offline" when the server couldn't be reached in time,
-// "refused" when the backend refused the ticket, and "user" for a `UserError` from server code.
+// A failed call's `RpcError.code` is "offline" when the server couldn't be reached in time, and
+// "refused" when the person can't use the app. Otherwise its message is server code's error, worded
+// for the caller: a `UserError`'s message, or a generic one for people who can't read the code.
 export interface ServerCallParams {
   handle: number;
   method: string;
