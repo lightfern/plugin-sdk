@@ -104,7 +104,16 @@ export const manifestSchema = z.object({
   contributes: z.object({
     views: z.array(viewSchema).default([]),
     home: homeViewSchema.optional(),
-    servers: z.array(z.string().min(1)).default([]),
+    servers: z
+      .array(
+        z
+          .string()
+          .regex(
+            /\.(ts|tsx|js|jsx|mjs)$/,
+            "a server module's path ends in its extension, like .ts"
+          )
+      )
+      .default([]),
   }),
 });
 

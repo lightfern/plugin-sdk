@@ -46,8 +46,10 @@ describe("parseManifest", () => {
       "src/cards.server.ts",
     ]);
     expect(parseManifest(clone()).contributes.servers).toEqual([]);
-    const empty = { ...clone(), contributes: { views: [], servers: [""] } };
-    expect(safeParseManifest(empty).success).toBe(false);
+    for (const path of ["", "src/cards.server"]) {
+      const invalid = { ...clone(), contributes: { views: [], servers: [path] } };
+      expect(safeParseManifest(invalid).success).toBe(false);
+    }
   });
 
   it("defaults an omitted permissions to an empty array", () => {

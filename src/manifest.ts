@@ -73,9 +73,9 @@ export interface PluginContributions {
    */
   home?: HomeViewContribution;
   /**
-   * Server modules, as paths within the plugin like `src/cards.server.ts`. Each exports a class
-   * that extends `Server` or `Room` from `lightfern:server`, which views join with `join`. Lightfern
-   * runs them on its servers, never in a view.
+   * Server modules, as paths within the plugin with their extension, like `src/cards.server.ts`.
+   * Each exports classes that extend `Server` or `Room` from `lightfern:server` (`export class`),
+   * which views reach with `server` and `room`. Lightfern runs them on its servers, never in a view.
    */
   servers?: string[];
 }
