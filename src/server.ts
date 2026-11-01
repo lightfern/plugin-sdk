@@ -7,9 +7,9 @@
 // and app methods can use any name. Only public methods the app's own class declares can be called
 // from views.
 
-import type { FileEntry, Participant, PeerUser } from "./protocol";
+import type { FileEntry, Peer, PeerUser } from "./protocol";
 
-export type { FileEntry, Participant, PeerUser, PeerView } from "./protocol";
+export type { FileEntry, Peer, PeerUser, PeerView } from "./protocol";
 
 /**
  * A person's access to the app's folder. More levels may be added later.
@@ -30,7 +30,7 @@ export type Access =
  */
 export interface Caller {
   readonly user: PeerUser;
-  /** The view the call came from: the same ID as `room.viewId` there, and in its participant's `views`. */
+  /** The view the call came from: the same ID as `room.viewId` there, and in its peer's `views`. */
   readonly viewId: string;
   readonly access: Access;
 }
@@ -71,13 +71,13 @@ export interface RoomContext extends ServerContext {
   /** The name this room was joined with, such as "123abc". */
   readonly roomName: string;
   /**
-   * Everyone with a view in the room, once each, including whoever is calling. The same list views
-   * get as `room.participants`.
+   * Everyone with a view in the room, once each, including whoever is calling. Views get the same
+   * people split in two: everyone else as `client.peers`, and themselves as `client.me`.
    */
-  readonly participants: readonly Participant[];
+  readonly participants: readonly Peer[];
   /**
    * Send `data` to one view, for someone's private things like their hand of cards. To reach every
-   * view a person has open, loop over their participant's `views`.
+   * view a person has open, loop over their peer's `views`.
    */
   sendTo(viewId: string, data: unknown): Promise<void>;
 }
@@ -128,7 +128,8 @@ export function query<Args extends unknown[], Result>(
  *
  * Every public method and query takes the caller first, and views call it without:
  * `async moveCustomer(caller: Caller, path: string)` on the server is `crm.moveCustomer(path)` in a
- * view. Names that start with `on` and a capital letter are kept for hooks, such as `onStart`.
+ * view. Names that start with `on` and a capital letter are kept for hooks, such as `onStart`, and
+ * `client`, `then`, `ctx` and `constructor` can't be method names.
  */
 export abstract class Server {
   declare protected readonly ctx: ServerContext;

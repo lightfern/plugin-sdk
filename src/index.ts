@@ -52,7 +52,6 @@ export type {
   MultiplayerLeaveParams,
   MultiplayerSetPresenceParams,
   OpenParams,
-  Participant,
   PathChangedMessage,
   Peer,
   PeerUser,
