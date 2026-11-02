@@ -128,9 +128,9 @@ interface Caller {
   the app, and `admin` and `edit_code_and_data` people can also edit the app's files and code
   directly. People with `read_code_and_data` can read every file, since the files sync to their
   devices. `use_only` isn't given yet.
-- Arguments and results go through JSON: a `Date` arrives as a string, and `undefined` fields are
-  dropped. A left-out argument arrives as `null`, and an optional parameter whose type doesn't allow
-  `null` gets `undefined` instead, so its default applies.
+- Arguments and results go through JSON: a `Date` arrives as a string, `NaN` and `Infinity` as
+  `null`, and `undefined` fields are dropped. A left-out argument arrives as `null`, and an optional
+  parameter whose type doesn't include `null` gets `undefined` instead, so its default applies.
 - Lightfern checks each argument against its parameter's TypeScript type before the method runs, so
   a modified view can't send text where a number belongs. The call fails with a message that names
   where, like `move's move.to must be "todo" or "done"`. It checks strings, numbers, booleans,
