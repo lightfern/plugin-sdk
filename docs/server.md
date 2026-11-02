@@ -31,8 +31,7 @@ export class Tasks extends Server {
     return JSON.parse(text) as Task[];
   });
 
-  async toggle(caller: Caller, id: string) {
-    if (caller.access === "use_only") throw new UserError("You can't change tasks");
+  async toggle(_caller: Caller, id: string) {
     const tasks = JSON.parse(await this.ctx.files.read("tasks.json").catch(() => "[]")) as Task[];
     const task = tasks.find((each) => each.id === id);
     if (!task) throw new UserError("That task is gone");
@@ -97,9 +96,9 @@ read that file, and the list re-renders. Nothing in the view watches files or re
 Both run one event at a time: two calls never interleave, even while one waits for a file. So "read
 the board, check the move, write the board" is safe without any locking within one server or room.
 Different servers and rooms run side by side, though: an app's home view and file view each have
-their own private server. If a file a call read changes before the call saves, from another server,
-a room or an edit elsewhere, Lightfern runs the call again on the files as they are now, a few times
-at most. So keep methods safe to run again: read, decide, write, and nothing else that lasts.
+their own private server, and so does each person using a `Server` app. Their saves merge with each
+other's, and with every other change to the files; see
+[Saves merge, and the last write wins](#saves-merge-and-the-last-write-wins).
 
 ## Methods
 
@@ -127,7 +126,9 @@ interface Caller {
 - `access` says what someone can do outside server code. `owner` is the person whose library holds
   the app, and `admin` and `edit_code_and_data` people can also edit the app's files and code
   directly. People with `read_code_and_data` can read every file, since the files sync to their
-  devices. `use_only` isn't given yet.
+  devices. `use_only` people use the app as fully as anyone, changes included, but only through its
+  views: they can't read its files or code. It's for sharing a usable app without the data under
+  it, and isn't given yet.
 - Arguments and results go through JSON: a `Date` arrives as a string, `NaN` and `Infinity` as
   `null`, and `undefined` fields are dropped. A left-out argument arrives as `null`, and an optional
   parameter whose type doesn't include `null` gets `undefined` instead, so its default applies.
@@ -181,6 +182,41 @@ interface Files {
 - Save data as compact JSON (`JSON.stringify(data)`, no indent).
 - People who can edit the app's files can still change them directly, as Lightfern's assistant does.
   Don't assume a file is exactly as your code last left it; parse it defensively.
+
+## Saves merge, and the last write wins
+
+A call saves its changes the way a device saves edits. Each write carries the version of the file
+the call read, and whatever changed in that file since then merges in, whoever changed it: another
+server or room of the app, someone editing the file directly, an agent or another device. A save
+never fails because a file changed, and a call never runs again. It's the same rule as everywhere
+else in Lightfern, so a file means the same thing whoever wrote it.
+
+How files merge:
+
+- **JSON** merges key by key, all the way down. Two people setting different fields of one record
+  both keep their change.
+- An array whose items are all objects with a unique `id` merges item by item, matched by `id`, in
+  order. Any other array is replaced whole.
+- `{ "__counter__": 5 }` is a counter: increments made in two places add up instead of one replacing
+  the other.
+- Where both changed the same value, the later save wins.
+- **CSV** merges cell by cell, and markdown and other text merge like two people typing together.
+  Any other file is replaced whole: the later save wins.
+
+What that means for your code:
+
+- Within one server or room, calls run one at a time on the files as that object last saw them, so
+  read, check, write is safe there.
+- Across servers, rooms and other writers, nothing checks again what a call read. Two private
+  servers can each check a rule and both save, breaking it: two people each taking the last seat,
+  or prices that must add up to 100. Keep a rule like that inside one room.
+- Store one record per file, like `contacts/ada.json`, not every record in one file, so unrelated
+  edits never touch the same values.
+- Keep lists as arrays of objects with `id`s, or as objects keyed by ID, so items added in two places
+  both survive. An array of plain values is replaced whole.
+- Compute totals and counts in queries rather than storing them: a stored total goes wrong when two
+  saves merge.
+- Use a counter for a number many people change at once, like votes or a score.
 
 ## Queries
 

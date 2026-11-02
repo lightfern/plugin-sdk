@@ -7,6 +7,14 @@ implements.
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-11-02
+
+- The server code guide says how saves work: they merge with changes made elsewhere and the last
+  write wins, instead of a call running again when a file changed. It covers how JSON, arrays,
+  counters, CSV and text merge, and how to design files for it.
+- `use_only` is for using an app fully, changes included, without reading its files. The examples
+  no longer refuse changes from it.
+
 ## [3.0.0] - 2026-11-02
 
 `manifestVersion: "3.0"`. Apps get server code, and views reach their files and rooms only through

@@ -23,7 +23,7 @@ each other.
 
 ```ts
 // src/board.server.ts
-import { type Caller, query, Room, UserError } from "lightfern:server";
+import { type Caller, query, Room } from "lightfern:server";
 
 type Cards = Record<string, string>; // card ID → column
 
@@ -37,8 +37,7 @@ export class Board extends Room {
     return JSON.parse(await this.ctx.files.read(this.#file)) as Cards;
   });
 
-  async move(caller: Caller, card: string, column: string) {
-    if (caller.access === "use_only") throw new UserError("You can't move cards");
+  async move(_caller: Caller, card: string, column: string) {
     const board = JSON.parse(await this.ctx.files.read(this.#file)) as Cards;
     board[card] = column;
     await this.ctx.files.write(this.#file, JSON.stringify(board), { overwrite: true });
