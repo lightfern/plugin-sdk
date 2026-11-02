@@ -9,9 +9,10 @@ implements.
 
 ## [3.0.1] - 2026-11-02
 
-- The server code guide says how saves work: they merge with changes made elsewhere and the last
-  write wins, instead of a call running again when a file changed. It covers how JSON, arrays,
-  counters, CSV and text merge, and how to design files for it.
+- The server code guide says how saves work: a call replies once its changes are kept, they reach
+  the library a moment later, and they merge with changes made elsewhere, the last write winning,
+  instead of a call running again when a file changed. It covers how JSON, arrays, counters, CSV
+  and text merge, and how to design files for it.
 - `use_only` is for using an app fully, changes included, without reading its files. The examples
   no longer refuse changes from it.
 

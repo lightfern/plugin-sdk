@@ -185,11 +185,16 @@ interface Files {
 
 ## Saves merge, and the last write wins
 
+A call replies as soon as Lightfern has kept its changes, without waiting for the library. The same
+server or room sees them straight away; everyone else gets them a moment later, once the library
+does. If the library is out of reach, they wait and go when it's back.
+
 A call saves its changes the way a device saves edits. Each write carries the version of the file
 the call read, and whatever changed in that file since then merges in, whoever changed it: another
 server or room of the app, someone editing the file directly, an agent or another device. A save
 never fails because a file changed, and a call never runs again. It's the same rule as everywhere
-else in Lightfern, so a file means the same thing whoever wrote it.
+else in Lightfern, so a file means the same thing whoever wrote it. In the rare case the library
+refuses a change outright, it's dropped and the app's queries go back to what the library holds.
 
 How files merge:
 
@@ -250,7 +255,7 @@ Use queries for what views show. Use methods for changes. Use messages (below) f
 with `client.onMessage((data) => …)`, which returns a function that stops it.
 
 - Nothing keeps a message. A view that isn't connected misses it.
-- A call's messages go out once its changes are saved, and not at all if it throws.
+- A call's messages go out once its changes are kept, and not at all if it throws.
 - Tag your own messages, like `{ type: "yourTurn" }`.
 - Use messages for events, such as a turn starting or a sound. What a view shows should come from a
   query, so a view that missed a message is still right.
