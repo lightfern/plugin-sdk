@@ -9,12 +9,14 @@ plugin is an app's code.)
 
 Companion documents:
 
+- [Server code](server.md): the classes that read and change an app's files, which views call like
+  ordinary methods. Every app that keeps data needs it.
 - [Styling](styling.md): when a view should look like part of Lightfern and when it should have its
   own look, the `--lf-*` design tokens, and CSS recipes for both.
 - [The sandbox](sandbox.md): what a view can and cannot do inside its iframe, including network
   requests, screen wake lock, background workers, keyboard shortcuts and text selection.
-- [Multiplayer](multiplayer.md): live presence between everyone using a shared app, and how it works
-  alongside the files they share.
+- [Multiplayer](multiplayer.md): rooms that people share, with everyone's presence, and how they fit
+  with server code.
 - [Reference app](example.md): a walkthrough of the Recruiting ATS example.
 
 ## What an app is
@@ -29,11 +31,14 @@ An app lives as a folder in the library. It contributes UI in two ways, and can 
 Most apps center on a home view, but an app that only contributes file views (a CSV viewer, say) is
 just as valid.
 
+Views show things. **Server code** reads and changes the app's files: small classes that run on
+Lightfern's servers, which views call like ordinary methods. See [Server code](server.md).
+
 An app is made of two folders:
 
 - The **app folder** is what the library shows. It holds the files the app works on.
-- The **code folder** sits inside the app folder. It holds `manifest.json`, some `.tsx`/`.ts`, and
-  an optional `styles.css`.
+- The **code folder** sits inside the app folder. It holds `manifest.json`, some `.tsx`/`.ts` for
+  views and server code, and an optional `styles.css`.
 
 There is **no** `package.json`, `node_modules`, bundler config, or compiled output. The source files
 are the artifact. Lightfern transpiles and bundles them in-process on save.
@@ -52,7 +57,8 @@ Recruiting/              ← the app folder: the library shows this name, and th
     ├── manifest.json
     ├── styles.css
     └── src/
-        └── home.tsx
+        ├── home.tsx
+        └── candidates.server.ts
 ```
 
 So the code folder always goes **inside** an app folder:
@@ -107,37 +113,38 @@ to write them. Concretely:
 
 ```json
 {
-  "manifestVersion": "2.1",
+  "manifestVersion": "3.0",
   "id": "recruiting-ats",
   "name": "Recruiting ATS",
   "version": "1.0.0",
   "dependencies": { "react": "19.2.0", "react-dom": "19.2.0" },
-  "permissions": ["files.read", "files.write"],
   "contributes": {
     "home": { "entry": "src/home.tsx" },
-    "views": [{ "match": "candidates/*.md", "entry": "src/candidate.tsx" }]
+    "views": [{ "match": "candidates/*.md", "entry": "src/candidate.tsx" }],
+    "servers": ["src/candidates.server.ts"]
   }
 }
 ```
 
 - `manifestVersion`: required. This is the SDK version your app is built against, and it covers the
-  manifest format, the `ctx` API, the `lightfern:host` imports, and the `--lf-*` theme tokens. Use
-  the latest major, with the earliest minor that has everything your app uses.
+  manifest format, the view and server APIs, the `lightfern:host` and `lightfern:server` imports,
+  and the `--lf-*` theme tokens. Use "3.0".
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every app in the library** (two apps
   sharing an `id` serve one bundle), a human-readable name, and a semver string (display metadata
   only).
-- `dependencies`: optional browser packages, keyed by package name with an **exact** version.
-  Lightfern downloads and caches their esm.sh browser modules before serving them from the app's
-  local origin; dependencies are not loaded from remote script URLs. Declare `react` and `react-dom`
-  when using React/TSX. Each declared package loads once per view, and its subpaths share that copy.
-  A package's required peer dependencies must be declared too.
-- `permissions`: optional; the capabilities the app uses, empty by default: `files.read`,
-  `files.write`, `multiplayer` (see [Multiplayer](multiplayer.md)), `camera` and `microphone` (see
-  [Camera and microphone](sandbox.md#camera-and-microphone)). Declare exactly what the views call;
-  using an undeclared capability fails.
-- `network_permissions`: optional; allowed network origins, empty by default. An entry is an
-  `https://` origin, optionally with a `*.` subdomain wildcard: `https://api.example.com`,
+- `dependencies`: optional browser packages for views, keyed by package name with an **exact**
+  version. Lightfern downloads and caches their esm.sh browser modules before serving them from the
+  app's local origin; dependencies are not loaded from remote script URLs. Declare `react` and
+  `react-dom` when using React/TSX. Each declared package loads once per view, and its subpaths
+  share that copy. A package's required peer dependencies must be declared too. Server code can't
+  use them.
+- `permissions`: optional; `camera` and `microphone` (see
+  [Camera and microphone](sandbox.md#camera-and-microphone)), when a view uses them. Using an
+  undeclared capability fails. Views reach files and rooms through server code, which needs no
+  permission.
+- `network_permissions`: optional; allowed network origins for views, empty by default. An entry is
+  an `https://` origin, optionally with a `*.` subdomain wildcard: `https://api.example.com`,
   `https://*.example.com` (matches subdomains only, not `example.com` itself). No paths, no
   `http://`, no `ws(s)://`. A declared origin can serve fetch/XHR data and non-code image, font, and
   media assets. It does not permit remote JavaScript or worker URLs. A view can run code from a blob
@@ -146,6 +153,8 @@ to write them. Concretely:
 - `contributes.home`: the app's home view (see below). Optional, but it's the usual reason to build
   an app.
 - `contributes.views`: file views (see **File views**). Optional; omit it for a home-only app.
+- `contributes.servers`: the app's server modules, as paths ending in their extension. See
+  [Server code](server.md).
 
 The schema is enforced by the host and is exported from this package as `manifestSchema` (zod), with
 `parseManifest`, `safeParseManifest` and `formatManifestErrors` alongside it.
@@ -172,13 +181,11 @@ writes down.
 ```
 
 A home-only app declares just `home` and omits `views` entirely. The view is written exactly like
-any other (`connect`, `createRoot`, the same `ctx`).
+any other.
 
-**Where a home view reads and writes.** An app works with the files in its app folder and below
-(paths are relative to the app folder; `""` is the app folder itself). `ctx.path` is the code folder
-within it, so `ctx.files.list("")` enumerates the app folder, `ctx.files.list(ctx.path)` enumerates
-the app's own code, and `ctx.open(...)` navigates anywhere in range. An app without a `home` has
-nothing to open, so its app folder shows as a plain folder.
+An app works with the files in its app folder and below, through its server code. `ctx.path` is the
+code folder within it for a home view, and `ctx.open(...)` navigates anywhere in range. An app
+without a `home` has nothing to open, so its app folder shows as a plain folder.
 
 Because a home-only app claims no `views`, its files still open in Lightfern's own viewer when
 clicked; the home view only renders them when the app is opened. To present the same files in two
@@ -218,20 +225,21 @@ tooling can evaluate patterns exactly as the host does.
 ## Writing a view
 
 Lightfern owns the iframe document: it injects the import map, links `styles.css`, and provides an
-empty `<div id="root">`. Your entry module connects to the host and mounts. That document is a
-**sandboxed** iframe; read [The sandbox](sandbox.md) before you reach for a browser API.
+empty `<div id="root">`. Your entry module mounts into it. That document is a **sandboxed** iframe;
+read [The sandbox](sandbox.md) before you reach for a browser API.
 
 **Imports come from exactly two places:**
 
-- **Relative** imports (`./helpers`) resolve within the code folder.
+- **Relative** imports (`./helpers`) resolve within the code folder. Importing a server module
+  (`./candidates.server`) gives the view a stub of each class to pass to `server()` and `room()`.
 - **Bare** imports resolve through the host-injected import map. Nothing is installed, and nothing
   else is importable:
 
-  | Import                 | What it is                                                                                                                                                                                                                             |
-  | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | `lightfern:host`       | The app SDK: `connect()` and its types. Needs no dependencies.                                                                                                                                                                         |
-  | `lightfern:host/react` | React bindings: `usePath()`, `useFile()`, `useFolder()`, `useFileObjectUrl()`, `useCurrentUser()`, `useFileId()`, `useConnected()`, `usePeers()`, `useMe()`, `useViewId()` and `useSetPresence()`. Requires `react` in `dependencies`. |
-  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.                                                                                                     |
+  | Import                 | What it is                                                                                                                              |
+  | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+  | `lightfern:host`       | The view SDK: `server()` and `room()` to reach server code, `connect()` for the view's context, and their types. Needs no dependencies. |
+  | `lightfern:host/react` | React bindings: `useQuery()`, `useRoom()`, `usePath()`, `useFileId()` and `useCurrentUser()`. Requires `react` in `dependencies`.       |
+  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.      |
 
   Declare every bare package import in `dependencies`, including the peer dependencies of the
   packages you use. A subpath of a declared package uses the same instance as the package, so
@@ -250,149 +258,78 @@ empty `<div id="root">`. Your entry module connects to the host and mounts. That
   URL remain unavailable. A package which does not produce a self-contained browser module fails to
   prepare with a build error rather than causing a remote script fetch.
 
-**All data access goes through `ctx.files`.** There is no `fetch` to undeclared origins, no direct
-filesystem, no reach beyond the app folder. Every path is relative to the app folder (`""` is the
-folder itself):
+**All data goes through server code.** A view has no file API. It gets what it shows from queries
+and changes things by calling methods:
 
-- `ctx.files.read(path, encoding?)` → `string | Uint8Array`: reads the file at `path`. `encoding` is
-  `"utf-8"` (default → text) or `"binary"` (→ raw bytes). Binary files (images, PDFs) **must** use
-  `"binary"`; the default text decode corrupts them. Requires `files.read`. To show a library image,
-  prefer the `useFileObjectUrl` binding below over decoding bytes yourself.
-- `ctx.files.write(path, content, options?)` → `void`: creates the file (and any missing parent
-  folders) at `path`. `content` is `string | Uint8Array`: a string is written as UTF-8 text; binary
-  content (an image, a PDF) **must** be a `Uint8Array` of its raw bytes, never a decoded string, or
-  the bytes are corrupted. By default (`overwrite: false`) a path already taken by a file rejects;
-  pass `{ overwrite: true }` to replace its contents. Requires `files.write`.
-- `ctx.files.list(path)` → `FileEntry[]` where `FileEntry` is `{ path, name, kind }` and `kind` is
-  `"file" | "folder"`. Requires `files.read`.
-- `ctx.files.move(from, to)` → `void`: moves or renames a node (a rename is a move within the same
-  folder). Creates missing parent folders of `to`; rejects if `to` is already taken by a different
-  node. Requires `files.write`.
-- `ctx.files.delete(path)` → `void`: deletes a file or folder (folders go with their contents);
-  deleting a missing path is a no-op. Requires `files.write`.
-- `ctx.files.watch(path, listener)` → `() => void`: calls `listener` with a `FileChange` each time a
-  node the `path` covers changes on disk. Returns an unsubscribe. See **Staying in sync**. Requires
-  `files.read`.
+```tsx
+import { server } from "lightfern:host";
+import { useQuery } from "lightfern:host/react";
 
-**Keep code and data separate.** An app can never write into its code folder; such writes are
-rejected. Write data the app produces to the app folder or a subfolder of it, alongside the files
-already kept there. Don't treat the code folder as a private data store.
+import { Candidates } from "./candidates.server";
 
-**Save data files as compact JSON.** When your view writes its data to a `.json` file, serialize it
-with `JSON.stringify(data)` without the `space` argument. Indented JSON wastes disk space and costs
-many more tokens to read. This applies only to the data a view writes at runtime. Keep
-`manifest.json` indented, since people read and edit it by hand.
+const candidates = server(Candidates);
 
-`ctx.path` is the opened node's path relative to the app folder: the code folder for a home view,
-the opened file for a file view. So give data paths relative to the app folder, like
-`candidates/ada.md`, and never build them from `ctx.path` in a home view, which points into the
-code. `ctx.homePath` is the code folder (where `manifest.json` sits) relative to that same root. It
-never moves as `ctx.path` does, so a file view can reach its home without hardcoding the folder
-name. `ctx.pluginId` is also available.
+function Pipeline() {
+  const all = useQuery(candidates.all); // undefined until the first result, then kept current
+  // …
+  const tick = (path: string, line: number) => void candidates.toggleStep(path, line);
+}
+```
 
-`ctx.currentUser` is the signed-in Lightfern user, or `null` when signed out. It has `id`, `email`,
-`name` (nullable), and `profilePictureUrl` (nullable). Use the stable `id` for ownership in shared
-data such as a game leaderboard, and `name` or `profilePictureUrl` for display. The value updates
-when desktop sign-in state changes; subscribe with `ctx.onCurrentUserChange(listener)` or use
-`useCurrentUser()` in React if the view needs to react while it stays open. This identity is public
-to the app and is not an authentication credential. Rendering a remote `profilePictureUrl` requires
-its origin in the app's `network_permissions`.
+[Server code](server.md) covers the classes, queries, calls and errors in full.
 
-`ctx.open(path, newTab?)` → `void` opens another node exactly as a click in the library would:
-routing to a file's view, opening the home view when `path` is `ctx.homePath`, or revealing an
-ordinary folder in the tree. The path may not reach beyond the app folder; `newTab: true` opens
-beside the current tab. Needs no permission. A file view returns to its home with
-`ctx.open(ctx.homePath)`.
+**Keep code and data separate.** Server code can never write into the code folder; such writes are
+refused. Keep the app's data in the app folder or a subfolder of it.
 
-`ctx.fileId` is the opened node's file ID: the same for everyone with access to the file, and kept
-through renames and moves. A new file's ID can change once, when it first syncs; `onPathChange` (or
-`useFileId()`) tells you when it does. It is `null` only where there is no library, like the public
-share viewer.
+`server()`, `room()`, `useQuery()` and `useRoom()` connect by themselves. Everything else about the
+view comes from its context, `ctx`, which `await connect()` resolves. Call it at the top of the
+entry module, before rendering: `usePath()`, `useFileId()` and `useCurrentUser()` throw if it hasn't
+resolved.
 
-The full `ViewContext` and `FilesApi` types, with their documentation comments, live in
-[`src/context.ts`](../src/context.ts).
+- `ctx.path` is the opened node's path relative to the app folder: the code folder for a home view,
+  the opened file for a file view. Pass it to server code when a query or method is about the open
+  file, like `useQuery(candidates.steps, path)`. Never build data paths from it in a home view,
+  which points into the code.
+- `ctx.homePath` is the code folder relative to that same root. It never moves as `ctx.path` does,
+  so a file view can reach its home without hardcoding the folder name. `ctx.pluginId` is also
+  available.
+- `ctx.currentUser` is the signed-in Lightfern user, or `null` when signed out. It has `id`,
+  `email`, `name` (nullable), and `profilePictureUrl` (nullable). Use it to draw the person; server
+  code gets the same person as its caller and should decide who may do what from that. Subscribe
+  with `ctx.onCurrentUserChange(listener)`, or use `useCurrentUser()` in React. Rendering a remote
+  `profilePictureUrl` requires its origin in the app's `network_permissions`.
+- `ctx.open(path, newTab?)` → `Promise<void>` opens another node exactly as a click in the library
+  would: routing to a file's view, opening the home view when `path` is `ctx.homePath`, or revealing
+  an ordinary folder in the tree. The path may not reach beyond the app folder; `newTab: true` opens
+  beside the current tab. A file view returns to its home with `ctx.open(ctx.homePath)`.
+- `ctx.fileId` is the opened node's file ID: the same for everyone with access to the file, and kept
+  through renames and moves. A new file's ID can change once, when it first syncs; `onPathChange`
+  (or `useFileId()`) tells you when it does.
+
+The full `ViewContext` type, with its documentation comments, lives in
+[`src/context.ts`](../src/context.ts). Its `files` and `multiplayer`, and the hooks built on them
+(`useFile`, `useFolder`, `useFileObjectUrl`, `useConnected`, `usePeers`, `useMe`, `useViewId` and
+`useSetPresence`), are for apps before 3.0: in a version 3 view, every request they make fails.
 
 ### Staying in sync
 
 A view is long-lived: the user navigates to another node it matches (the iframe does not reload;
-module state and transitions survive), and the files under it change on disk. A view that reads once
-in a `useEffect([])` goes stale on both.
+module state and transitions survive), and the files behind it change. Two bindings keep a view
+current:
 
-**The React bindings handle both.** `usePath()` turns navigation into state; `useFile(path)` reads
-that file and re-reads it on every disk change, dropping the old watch when the path moves:
-
-```tsx
-import { useFile, usePath } from "lightfern:host/react";
-
-const path = usePath();
-const text = useFile(path); // null until the first read lands — never the file you just left
-```
-
-`useFolder(path)` lists the folder's immediate files and subfolders as `FileEntry[]`, or `null`
-until the first listing lands. It re-lists when an immediate entry is created, deleted, or renamed;
-changes to file contents do not change the listing. Like `useFile`, it drops the previous folder's
-entries when `path` changes. Apps using it should declare `"manifestVersion": "2.2"`:
+- `usePath()` turns navigation into state.
+- `useQuery(query, ...args)` re-renders whenever the query's result changes, because Lightfern runs
+  it again when a file it read changes, whoever changed it.
 
 ```tsx
-import { useFolder } from "lightfern:host/react";
+import { usePath, useQuery } from "lightfern:host/react";
 
-const entries = useFolder("candidates");
-return entries?.map((entry) => <div key={entry.path}>{entry.name}</div>);
+const path = usePath(); // needs `await connect()` first
+const steps = useQuery(candidates.steps, path); // follows navigation and edits
 ```
 
-Write with `ctx.files.write`: your own write comes back as a disk change, so the view re-renders
-from disk.
-
-**Images and other binary files** use `useFileObjectUrl(path)` instead. It reads the bytes with
-`read(path, "binary")`, hands you an object URL for an `<img>` (or any URL sink), and revokes it
-when the path changes or the file is replaced, so a long-lived view doesn't leak URLs:
-
-```tsx
-import { useFileObjectUrl } from "lightfern:host/react";
-
-const src = useFileObjectUrl("cover.png"); // null until the first read lands
-return src && <img src={src} alt="" />;
-```
-
-The frame's Content-Security-Policy allows `<img>` from the app's own bundled assets, `data:`, and
-`blob:`. An object URL is a `blob:`, so it renders; a remote image URL is blocked.
-
-**Saving a remote image to the library**: `fetch` its bytes from an origin you declared in
-`network_permissions`, then write the `Uint8Array` (not a decoded string):
-
-```ts
-const res = await fetch("https://cdn.example.com/cover.png");
-await ctx.files.write("cover.png", new Uint8Array(await res.arrayBuffer()));
-```
-
-Underneath are `ctx.path` (live), `ctx.onPathChange(next => …)` and
-`ctx.files.watch(path, listener)`. Reach for those when the bindings do not fit, e.g. a view that
-must read each listed file's contents as in the reference app. A watcher is pinned to the path you
-pass, so re-register it when the path moves.
-
-`watch` filters by that path: a **file** path fires only for that file, a **folder** path (or `""`,
-the app folder) for anything in its subtree: a child added/removed/renamed, or a descendant's
-content changing. The listener gets the change:
-
-```ts
-type FileChange = { type: "created" | "changed" | "deleted"; path: string };
-```
-
-A move arrives as a `deleted` plus a `created`. Your own writes come back as `changed`, so
-re-reading in the listener is safe; writing back unconditionally loops.
-
-A home view that lists files can watch the whole folder and react to just the node that changed:
-re-list on structure, re-read one file on content:
-
-```tsx
-useEffect(() => {
-  void refreshIndex();
-  return ctx.files.watch("", (change) => {
-    if (change.type === "changed") void refreshItem(change.path);
-    else void refreshIndex(); // created / deleted → the set of files moved
-  });
-}, []);
-```
+When a call returns, the queries it affected have already re-rendered, so a view can clear what it
+was showing in the meantime, like a dragged card.
 
 ### Styling
 
@@ -417,6 +354,8 @@ compiler.
   `package.json`, lockfile, CDN script tag, or URL import. Lightfern owns package preparation and
   caching so the running frame stays local-only.
 - **Custom build config** (Vite, tsconfig). The build is fixed and unconfigurable.
+- **Showing an image from the app folder** in a view. Server code can read it, but can't send its
+  bytes to a view yet.
 - **Browser capabilities the sandbox does not grant.** See [The sandbox](sandbox.md) for the exact
   iframe attributes and what they imply (no `<form>` submission, no native dialogs, CORS applies to
   every request).
@@ -424,7 +363,7 @@ compiler.
 ## Reference app
 
 [`examples/recruiting-ats/`](../examples/recruiting-ats/) is the code folder of a complete app that
-shows the whole runtime shape in two views: connect, mount, enumerate a folder, read each file,
-follow disk changes, navigate, and write a file back. Copy it into an app folder such as
-`Recruiting`, as `Recruiting/code` (the app folder's name is what the library shows), and it runs
-as-is. [Reference app](example.md) walks through it.
+shows the whole shape: server code that lists and changes candidate files, a home view and a file
+view that subscribe to its queries and call its methods, and navigation between them. Copy it into
+an app folder such as `Recruiting`, as `Recruiting/code` (the app folder's name is what the library
+shows), and it runs as-is. [Reference app](example.md) walks through it.

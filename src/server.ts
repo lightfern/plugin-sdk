@@ -37,11 +37,12 @@ export interface Caller {
 
 /**
  * The app's files, as `ctx.files` was in views before 3.0. Paths are relative to the app's folder.
- * Anything outside it, dot-prefixed, inside an app's code folder, a `manifest.json` or under
- * `node_modules` is refused.
+ * A path can't leave it or have a dot-prefixed part, and writes, moves and deletes in a code folder,
+ * of a `manifest.json` or under `node_modules` are refused.
  *
  * Writes, moves and deletes made during a call apply when the method returns, and not at all if it
- * throws. Reads later in the same call see them.
+ * throws. Reads later in the same call see them. A call can't move a file it changed, or change a
+ * file it moved.
  */
 export interface Files {
   read(path: string): Promise<string>;
@@ -71,8 +72,9 @@ export interface RoomContext extends ServerContext {
   /** The name this room was joined with, such as "123abc". */
   readonly roomName: string;
   /**
-   * Everyone with a view in the room, once each, including whoever is calling. Views get the same
-   * people split in two: everyone else as `client.peers`, and themselves as `client.me`.
+   * Everyone with a view in the room, once each: in a call, including the caller; in `onJoin`,
+   * everyone already there. Views get the same people split in two: everyone else as
+   * `client.peers`, and themselves as `client.me`.
    */
   readonly participants: readonly Peer[];
   /**

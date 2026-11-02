@@ -1,42 +1,31 @@
-import { connect } from "lightfern:host";
-import { useFile, usePath } from "lightfern:host/react";
+import { connect, server } from "lightfern:host";
+import { usePath, useQuery } from "lightfern:host/react";
 import { createRoot } from "react-dom/client";
 
-const ctx = await connect();
+import { Candidates } from "./candidates.server";
+
+await connect();
+const candidates = server(Candidates);
 
 function Candidate() {
   const path = usePath();
-  const text = useFile(path);
-  const lines = text?.split("\n") ?? [];
-
-  const toggle = (index: number) => {
-    const next = lines.map((line, i) =>
-      i === index
-        ? line.replace(/^- \[( |x)\]/, (_, box) => `- [${box === "x" ? " " : "x"}]`)
-        : line
-    );
-    // The write comes back as a disk change, which re-reads and re-renders.
-    void ctx.files.write(path, next.join("\n"), { overwrite: true });
-  };
+  const steps = useQuery(candidates.steps, path) ?? [];
 
   return (
     <ul className="steps">
-      {lines.map((line, i) => {
-        const item = /^- \[( |x)\] (.*)/.exec(line);
-        if (!item) return null;
-        return (
-          <li key={i}>
-            <label>
-              <input
-                type="checkbox"
-                checked={item[1] === "x"}
-                onChange={() => toggle(i)}
-              />
-              {item[2]}
-            </label>
-          </li>
-        );
-      })}
+      {steps.map((step) => (
+        <li key={step.line}>
+          <label>
+            <input
+              type="checkbox"
+              checked={step.done}
+              // `steps` runs again once the file is saved, so the box follows the file.
+              onChange={() => void candidates.toggleStep(path, step.line)}
+            />
+            {step.label}
+          </label>
+        </li>
+      ))}
     </ul>
   );
 }

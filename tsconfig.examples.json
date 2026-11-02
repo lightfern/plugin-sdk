@@ -3,7 +3,8 @@
   "compilerOptions": {
     "paths": {
       "lightfern:host": ["./src/index.ts"],
-      "lightfern:host/react": ["./src/react.ts"]
+      "lightfern:host/react": ["./src/react.ts"],
+      "lightfern:server": ["./src/server.ts"]
     }
   },
   "include": ["examples/**/*.ts", "examples/**/*.tsx"]

@@ -27,8 +27,8 @@ describe("parseManifest", () => {
   });
 
   it("reads a legacy integer manifestVersion as MAJOR.0", () => {
-    expect(parseManifest({ ...clone(), manifestVersion: 2 }).manifestVersion).toBe(
-      "2.0"
+    expect(parseManifest({ ...clone(), manifestVersion: 3 }).manifestVersion).toBe(
+      "3.0"
     );
   });
 
