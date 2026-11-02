@@ -78,11 +78,11 @@ read that file, and the list re-renders. Nothing in the view watches files or re
   packages, no `lightfern:host`, no React.
 - Views import the class by relative path (`import { Tasks } from "./tasks.server"`). Lightfern
   replaces it in views with a stub that holds none of its code.
-- Lightfern builds the server modules when someone who can edit the app saves them, into
-  `server.bundle.js` in the code folder, which syncs with the app. Don't edit that file. A build
-  error shows on every view that imports the module.
-- New server code reaches a running server or room once the bundle has synced and the server or room
-  starts again, about 10 seconds after its last event. Until then, a view built from the new code
+- Lightfern builds the server modules when someone who can edit the app saves them, and keeps the
+  build itself; nothing is added to the app's folder. A build error shows on every view that imports
+  the module.
+- New server code reaches a running server or room once it's built and the server or room starts
+  again, about 10 seconds after its last event. Until then, a view built from the new code
   can get "Cards has no method deal" for a method it just added; reopen the view to retry.
 
 ## `Server` or `Room`

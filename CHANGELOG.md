@@ -13,6 +13,7 @@ implements.
   the library a moment later, and they merge with changes made elsewhere, the last write winning,
   instead of a call running again when a file changed. It covers how JSON, arrays, counters, CSV
   and text merge, and how to design files for it.
+- Lightfern no longer writes `server.bundle.js` into the app's code folder; it keeps the build itself.
 - `use_only` is for using an app fully, changes included, without reading its files. The examples
   no longer refuse changes from it.
 
