@@ -129,7 +129,13 @@ interface Caller {
   directly. People with `read_code_and_data` can read every file, since the files sync to their
   devices. `use_only` isn't given yet.
 - Arguments and results go through JSON: a `Date` arrives as a string, and `undefined` fields are
-  dropped. Check an argument's shape before you trust it, since a modified view can send anything.
+  dropped. Lightfern checks each argument against its parameter's TypeScript type before the method
+  runs, so a modified view can't send text where a number belongs, and the call fails with a message
+  like "playCard's card must be a number". It checks strings, numbers, booleans, `null`, literal
+  values, unions, arrays, tuples, object types, `Record<string, T>`, and type aliases and interfaces
+  from the server module or the app's own files. It doesn't check anything else, like a `Map`, a
+  class or a generic type, so check those yourself, and check values against your app's rules either
+  way: a type can't say "a card in your hand".
 - A method that throws `UserError` fails the call with that message, for the view to show. Any other
   error reaches people who can read the app's code as its message, and everyone else as "Something
   went wrong in this app's server code".
