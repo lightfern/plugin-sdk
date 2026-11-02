@@ -72,6 +72,12 @@ export interface PluginContributions {
    * host resolves it by identity rather than a path pattern.
    */
   home?: HomeViewContribution;
+  /**
+   * Server modules, as paths within the plugin with their extension, like `src/cards.server.ts`.
+   * Each exports classes that extend `Server` or `Room` from `lightfern:server` (`export class`),
+   * which views reach with `server` and `room`. Lightfern runs them on its servers, never in a view.
+   */
+  servers?: string[];
 }
 
 export interface PluginManifest {
