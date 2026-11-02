@@ -7,17 +7,33 @@ implements.
 
 ## [Unreleased]
 
-- Manifests can list server modules under `contributes.servers`.
-- `@lightfern/plugin-sdk/server` (`lightfern:server` in an app) has what server code builds on:
-  `Server` for a private server, `Room` for a shared one, `UserError`, `query` for live queries, and
-  the `ctx` types. Nothing runs server code yet; it arrives with 3.0.
-- Views reach server code through handles: `server(Crm)` for the view's private server and
-  `room(Cards, "123abc")` for a room, both from `lightfern:host`. A handle is synchronous: the
-  desktop connects in the background, and calls on it wait. It has the class's methods and queries,
-  and its connection as `client`: `status`, `onStatusChange` and `onMessage`, and in a room `peers`,
-  `me`, `viewId`, `setPresence`, `onPeersChange`, `onMeChange` and `close`. Queries also have
-  `subscribe`.
-- `useRoom(Cards, "123abc")` and `useQuery(crm.customers, "lead")` in `lightfern:host/react`.
+## [3.0.0] - 2026-11-02
+
+`manifestVersion: "3.0"`. Apps get server code, and views reach their files and rooms only through
+it. Lightfern runs version 3 apps only for people with app servers turned on until it's stable;
+older apps keep working as they are.
+
+- **Breaking:** views of version 3 apps have no file API and no presence rooms. `ctx.files` and
+  `ctx.multiplayer` refuse every request, and the `files.read`, `files.write` and `multiplayer`
+  permissions do nothing.
+- Server code: classes that extend `Server` (a private server, one per view) or `Room` (shared by
+  name), from `@lightfern/plugin-sdk/server` (`lightfern:server` in an app), listed under
+  `contributes.servers` as paths ending in their extension. Every public method takes the caller
+  (`{ user, viewId, access }`) first. `this.ctx` has the app's `files`, `send`, and in a room
+  `roomName`, `participants` and `sendTo`. Hooks: `onStart`, and in rooms `onJoin`, which can throw
+  to refuse a view, and `onLeave`. `UserError` shows its message to the person. See
+  [Server code](docs/server.md).
+- Live queries: `customers = query(async (caller, stage) => …)` only reads, and Lightfern runs it
+  again whenever a file it read changes. Views subscribe with `useQuery(crm.customers, "lead")`.
+- Views reach server code through handles: `server(Crm)` and `room(Cards, "123abc")` from
+  `lightfern:host`, with `useRoom(Cards, "123abc")` and `useQuery` in `lightfern:host/react`. A
+  handle has the class's methods and queries, and its connection as `client`: `status`,
+  `onStatusChange` and `onMessage`, and in a room `peers`, `me`, `viewId`, `setPresence`,
+  `onPeersChange`, `onMeChange` and `close`. A failed call's `code` is `"offline"` or `"refused"`.
+- Access levels say what someone can do outside server code: `owner`, `admin`, `edit_code_and_data`,
+  `read_code_and_data` and `use_only`.
+- The [guide](docs/guide.md), [Multiplayer](docs/multiplayer.md) and the
+  [reference app](docs/example.md) are rewritten for version 3.
 
 ## [2.5.2] - 2026-10-29
 

@@ -11,8 +11,8 @@ Your view runs in this iframe:
 
 The iframe allows scripts, popups, pointer lock, fullscreen, clipboard access, screen wake lock and
 motion sensors. The camera and microphone are added to `allow` when your `permissions` declare them.
-The sandbox and content security policy still restrict other browser APIs. Files go through
-`ctx.files`, navigation through `ctx.open`, and network through the origins in
+The sandbox and content security policy still restrict other browser APIs. Files go through the
+app's server code, navigation through `ctx.open`, and network through the origins in
 `network_permissions`. Render dialogs as React UI in your own tree; native
 `alert`/`confirm`/`prompt` are off.
 
@@ -92,11 +92,11 @@ browser (where their real sessions live), not a window inside Lightfern.
 
 A sandboxed iframe has an opaque origin, so the host cannot authenticate the view by `event.origin`.
 Instead, on load the view posts a ready message to its parent and the host replies with a
-transferred `MessagePort`; every later call (`ctx.files.*`, `ctx.open`) is an RPC over that port,
-and holding the port is what proves the channel. Each RPC is permission-checked on the host side
-against the manifest, so the capability list in `permissions` is exactly what a view can reach.
-Multiplayer rooms go through the port too: Lightfern holds the connection, so a view never opens a
-socket of its own. `connect()` performs this handshake for you; the message shapes are in
+transferred `MessagePort`; every later call (`ctx.open`, and every call to server code) is an RPC
+over that port, and holding the port is what proves the channel. Each RPC is checked on the host
+side against the manifest. Calls to server code go through the port too: Lightfern holds the
+connection to its servers, so a view never opens a socket of its own and never sees a ticket.
+`connect()` performs this handshake for you; the message shapes are in
 [`src/protocol.ts`](../src/protocol.ts) for anyone building tooling on either side.
 
 ## Keyboard shortcuts

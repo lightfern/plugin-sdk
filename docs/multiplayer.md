@@ -1,82 +1,129 @@
 # Multiplayer
 
-With the `multiplayer` permission, your app can show people what everyone else in the same app is
-doing right now: who has which card open, where their cursor is, what they're dragging.
+A **room** lets people use your app together: they see who else is there, where their cursors are
+and what they're dragging, and their changes go through one shared copy of your server code, in one
+order. Use rooms for boards people work on together, games, and anything where people should see
+each other.
 
 ## How it works
 
-- A **room** is a named channel in your app. Your app chooses the name.
-- Everyone with access to your app who joins the same room name is in the same room. That's the
+- A room is a class that extends `Room` from `lightfern:server`, joined by name. Everyone with
+  access to your app who joins the same class with the same name is in the same room. That's the
   app's owner and everyone it's shared with.
-- Each person in a room has one **presence**: a small JSON value your app sets, like
-  `{ "card": "card-3" }`.
-- A **view** is one window, tab or device with your app open. Each view joins rooms separately and
-  has its own presence.
-- Everyone else in the room is a **peer**: one per person, however many views they have open. You
-  get each peer's presence, name and picture within a fraction of a second of it changing.
-- **`me`** is you, across every view you have open in the room, this one included.
-- Presence is never saved. A peer's presence goes when they leave.
-
-Use presence for what is happening now. Save anything that should still be there later, like a moved
-card, a vote or a comment, to a file.
+- The room's server code runs once, for everyone, one event at a time. When two people make a move
+  at the same moment, one goes first and the other sees its result.
+- A **view** is one window, tab or device with your app open. Each view joins rooms separately.
+- Each view has one **presence**: a small JSON value your app sets, like `{ "card": "card-3" }`.
+  Presence is for what's happening now, and is never saved.
+- A **peer** is a person in the room: one per person, however many views they have open.
+- What should still be there later, like a moved card, a vote or a score, goes to a file, through
+  the room's methods.
 
 ## Example
 
-Each hook takes the room name and re-renders only for its own part of the room, so a component that
-only sets presence never re-renders, and a status badge doesn't re-render when cursors move.
+```ts
+// src/board.server.ts
+import { type Caller, query, Room, UserError } from "lightfern:server";
+
+type Cards = Record<string, string>; // card ID → column
+
+export class Board extends Room {
+  // Each board is a file named for its room.
+  get #file() {
+    return `boards/${this.ctx.roomName}.json`;
+  }
+
+  cards = query(async (_caller: Caller) => {
+    return JSON.parse(await this.ctx.files.read(this.#file)) as Cards;
+  });
+
+  async move(caller: Caller, card: string, column: string) {
+    if (caller.access === "use_only") throw new UserError("You can't move cards");
+    const board = JSON.parse(await this.ctx.files.read(this.#file)) as Cards;
+    board[card] = column;
+    await this.ctx.files.write(this.#file, JSON.stringify(board), { overwrite: true });
+  }
+}
+```
 
 ```tsx
-import { useEffect } from "react";
-import { useConnected, usePeers, useSetPresence } from "lightfern:host/react";
+// src/home.tsx
+import { useRoom, useQuery } from "lightfern:host/react";
 
-type Presence = { card: string | null };
+import { Board } from "./board.server";
 
-function Status() {
-  return useConnected("board") ? null : <span>Offline</span>;
-}
+type Presence = { dragging: string | null };
 
-function Card({ id, open }: { id: string; open: boolean }) {
-  const setPresence = useSetPresence<Presence>("board");
-  useEffect(() => {
-    if (open) setPresence({ card: id });
-  }, [id, open, setPresence]);
+function Columns() {
+  const board = useRoom<Board, Presence>(Board, "main");
+  const cards = useQuery(board.cards);
 
-  const viewers = usePeers<Presence>("board").filter((peer) => peer.presence?.card === id);
-  // Render the card with an avatar for each viewer.
+  const drop = async (card: string, column: string) => {
+    try {
+      await board.move(card, column);
+    } finally {
+      board.client.setPresence({ dragging: null });
+    }
+  };
+
+  // Draw `cards`, and an avatar on each card someone else is dragging:
+  // board.client.peers.filter((peer) => peer.presence?.dragging === id)
 }
 ```
 
-Without React:
+While Bob drags a card, his presence says which one, so Alice sees it move. When he drops it, `move`
+saves the board, the `cards` query runs again for everyone, and Bob clears his drag. Alice sees the
+card land, then Bob's drag end.
+
+## Presence and calls
+
+Clear the presence a call replaces only once the call has finished: `await` the method, then set
+presence, as `drop` does above. A call finishes only after everyone's queries have the new result,
+so others see the card land before the drag ends. Clearing first makes the card jump back for a
+moment for everyone else.
+
+## Joining a room
 
 ```ts
-const room = await ctx.multiplayer.joinRoom<Presence>("board");
-room.setPresence({ card: "card-3" });
-drawViewers(room.peers);
-const stop = room.onPeersChange(drawViewers);
+// From "lightfern:host"
+function room<T extends Room, Presence = unknown>(
+  cls: new () => T,
+  name: string
+): RoomHandle<T, Presence>;
 
-// When the view no longer needs the room:
-stop();
-room.leave();
+// From "lightfern:host/react": no `connect()` needed
+function useRoom<T extends Room, Presence = unknown>(
+  cls: new () => T,
+  name: string
+): RoomHandle<T, Presence>;
 ```
 
-## Reference
+- `room(Cls, name)` returns straight away and joins in the background. Calls wait until the view is
+  in. You're in the room, and in everyone's `peers`, until `client.close()`.
+- `useRoom(Cls, name)` is the same handle, re-rendering whenever anything on `client` changes. You
+  leave once the last component using it unmounts, unless `room()` opened it too.
+- Calling either again with the same class and name in one view gives the same handle.
+- The handle has the room's methods and queries, without the caller, and the connection as `client`.
+- `name` is 1 to 256 characters.
+
+## Who's in the room
 
 ```ts
-ctx.multiplayer.joinRoom<Presence = unknown>(name: string): Promise<Room<Presence>>;
-
-interface Room<Presence> {
-  /** One entry per other person in the room. */
+interface RoomClient<Presence> {
+  /** Everyone else in the room. */
   readonly peers: readonly Peer<Presence>[];
-  /** You, across all your views, including this one. */
-  readonly me: Peer<Presence>;
-  /** This view's ID, so you can find it in `me.views`. */
-  readonly viewId: string;
-  readonly connected: boolean;
+  /** You, across all your views in the room; `null` until joined. */
+  readonly me: Peer<Presence> | null;
+  /** This view's ID, as `caller.viewId` is on the server; `null` until joined. */
+  readonly viewId: string | null;
+  /** "connecting" | "connected" | "offline" | "refused" */
+  readonly status: ServerStatus;
   setPresence(presence: Presence | null): void;
   onPeersChange(listener: (peers: readonly Peer<Presence>[]) => void): () => void;
-  onMeChange(listener: (me: Peer<Presence>) => void): () => void;
-  onConnectedChange(listener: (connected: boolean) => void): () => void;
-  leave(): void;
+  onMeChange(listener: (me: Peer<Presence> | null) => void): () => void;
+  onStatusChange(listener: (status: ServerStatus) => void): () => void;
+  onMessage(listener: (data: unknown) => void): () => void;
+  close(): void;
 }
 
 interface Peer<Presence> {
@@ -95,172 +142,111 @@ interface PeerView<Presence> {
   /** When this view joined or last changed its presence, in milliseconds by the server's clock. */
   activeAt: number;
 }
-
-// From "lightfern:host/react"
-function useConnected(name: string): boolean;
-function usePeers<Presence = unknown>(name: string): readonly Peer<Presence>[];
-function useMe<Presence = unknown>(name: string): Peer<Presence> | null;
-function useViewId(name: string): string | null;
-function useSetPresence<Presence = unknown>(name: string): (presence: Presence | null) => void;
 ```
 
-### `joinRoom(name)`
+- `peers` has one entry per person in the room, except you. Someone with your app open on 2 devices
+  appears once, with both views in `views`. It's in no fixed order, so sort it yourself.
+- `me` is you, with every view you have open in the room, this one included.
+- A peer who hasn't changed keeps the same object, so you can skip them with `===`.
+- A view that drops stays listed for 5 seconds. If it reconnects in that time, it comes back as the
+  same view, and nobody sees it leave.
+- `activeAt` is by the server's clock. Compare it only with other `activeAt` values.
+- `status` is `"connected"` while the view is in the room. It's `"connecting"` while it joins or
+  reconnects, `"offline"` once the server has been out of reach for 10 seconds, and `"refused"` when
+  the person can't use the app or the room turned them away. Use it to tell "nobody else is here"
+  from "you are offline".
 
-- Rejects if the manifest does not have the `multiplayer` permission.
-- Rejects if `name` is empty or longer than 256 characters.
-- Works when the person is offline, signed out, or the app has not synced yet. The room is not
-  connected and has no peers until Lightfern can reach the server.
-- Has no peers in the public share viewer, or in screenshots Lightfern's assistant takes.
-- Joining the same name twice in one view gives you the same room and the same presence.
+## Presence
 
-### `peers`
+- `setPresence(value)` replaces this view's presence. It reaches everyone else within a fraction of
+  a second, at most 20 times a second, always ending with the latest.
+- It goes through `JSON.stringify`, so a `Date` arrives as a string and `undefined` fields are
+  dropped. It throws if the JSON is over 8 KiB.
+- Presence set before the view is in is sent once it is, and again after a reconnect.
+- Presence runs no server code and never waits for a call.
 
-- One entry per person in the room, except you. Someone with your app open on 2 devices, or in 2
-  tabs, appears once, with both views in `views`.
-- In no fixed order. Sort it yourself, for example by name.
-- A peer's `presence` is the presence of their most recently active view.
-- Keeps a view for 5 seconds after it leaves, and for up to 30 seconds if it loses its connection
-  without leaving. A person goes only once all their views have.
-- Does not include you, even your other views. Use `me` for those.
+Describe where things are, not what happened. `{ dragging: "card-3", over: "done" }` works, but
+`{ event: "dropped" }` can be skipped. Positions must mean the same on every screen: use positions
+relative to your content, like a fraction of the board's width, not pixels in the window. Keep
+presence to IDs, positions and short labels; never put file contents in it.
 
-### `me`, `viewId` and `onMeChange(listener)`
+## Server code in a room
 
-- `me` is you, with every view you have open in the room in `me.views`, this one included.
-- `viewId` is this view's ID, so you can find it in `me.views`.
-- `onMeChange` runs when one of your views joins, leaves or changes its presence, and returns a
-  function that stops it.
-- While you're signed out, `me.user.id` is `""` and `me.views` holds only this view.
+```ts
+interface RoomContext {
+  readonly files: Files;
+  readonly roomName: string;
+  /** Everyone in the room, once each with all their views, including the caller. */
+  readonly participants: readonly Peer[];
+  send(data: unknown): Promise<void>;
+  sendTo(viewId: string, data: unknown): Promise<void>;
+}
+```
 
-### `views` and `activeAt`
+- `this.ctx.roomName` is the name the room was joined with. Find the room's files from it, never
+  from an argument a view passes, or a view in one room could change another's.
+- `this.ctx.participants` lists everyone in the room with their presence: in a call, the caller
+  included; in `onJoin`, everyone already there; in `onLeave`, everyone who's still there.
+- `this.ctx.send(data)` reaches every view in the room; `this.ctx.sendTo(viewId, data)` reaches one
+  view, for something only one person should get on that screen.
+- `onJoin(caller)` runs before each view is in the room, once per view: a person on 3 devices joins
+  3 times. Check `this.ctx.participants` to see whether they were already here. Messages it sends
+  reach everyone already in the room, not the view that's joining; that view reads the room's state
+  from a query once it's in.
+- `onLeave(caller)` runs once a view has left, 5 seconds after it closed or dropped. The person has
+  left entirely when they're no longer in `this.ctx.participants`.
 
-- A view is most recently active when it joined or set its presence last. Lightfern's server keeps
-  the time, so devices with wrong clocks still sort correctly.
-- `activeAt` is in milliseconds by the server's clock. Compare it only with other `activeAt` values,
-  never with `Date.now()`.
-- This view's own `activeAt` is `0` until the server has seen it.
+## Who's allowed in
 
-### `connected` and `onConnectedChange(listener)`
+Views choose room names, and a modified view can join any name. So a room whose members matter
+checks them in `onJoin`, and throws to keep someone out:
 
-- `connected` is `true` while this view is connected to the room, so it gets peers and sends your
-  presence.
-- It is `false` while the person is offline or signed out, before the app has synced, and while
-  Lightfern reconnects.
-- It is always `false` in the public share viewer and in screenshots Lightfern's assistant takes.
-- Use it to tell "nobody else is here" from "you are offline".
-- `onConnectedChange` runs when it changes, and returns a function that stops it.
+```ts
+async onJoin(caller: Caller) {
+  const players = JSON.parse(await this.ctx.files.read(`games/${this.ctx.roomName}.json`)).players;
+  if (!players.includes(caller.user.id)) throw new UserError("You're not in this game");
+}
+```
 
-### `onPeersChange(listener)`
+A view that's turned away gets nothing from the room, its status becomes `"refused"`, and its calls
+fail with the message. It stays refused: to try again, call `client.close()` and join again. A city
+in a game can do the same, so nobody hears about players in other cities.
 
-- Runs when someone joins, leaves or changes their presence.
-- Runs at most 60 times a second, and not at all if nothing changed.
-- Gives you the same object for a peer who has not changed, so you can skip them with `===`.
-- Returns a function that stops it.
+## Choosing room names
 
-### `setPresence(value)`
-
-- Replaces your presence. Only the latest value is sure to reach your peers.
-- Is sent at most 60 times a second.
-- Goes through `JSON.stringify`, so a `Date` arrives as a string and `undefined` fields are dropped.
-- Throws if the JSON is over 8 KiB.
-- Is kept if you set it before the room connects, and sent again after a reconnect.
-- Cannot be read back. Keep your own copy if you need it.
-
-### `leave()`
-
-- Takes this view out of the room straight away.
-- Happens automatically for every room when the view closes.
-
-### React hooks
-
-- Every hook in a view that uses the same name shares one room. The room is joined when the first of
-  them mounts and left when the last one unmounts.
-- A component can use as many room names as it needs, like `"board"` and a file's ID.
-- `useConnected(name)` re-renders only when the connection changes. It is `false` until the room is
-  joined and connected.
-- `usePeers(name)` re-renders only when a peer joins, leaves or changes. It is empty until the room
-  is joined. Wrap each peer's component in `React.memo` so only the peer who changed re-renders.
-- `useMe(name)` re-renders only when one of your views joins, leaves or changes. It is `null` until
-  the room is joined.
-- `useViewId(name)` is this view's ID in the room, or `null` until the room is joined.
-- `useSetPresence(name)` never re-renders. It returns the same function on every render, and
-  presence you set before the room is joined is sent once it is.
+- Use one name, like `"main"`, to put everyone in the app together.
+- Use a file's ID to give each file its own room. `ctx.fileId` (or `useFileId()`) is the opened
+  file's ID: the same for everyone with access to the file, and the same when the file is renamed or
+  moved. A new file's ID can change once, when it first syncs; `useFileId()` re-renders when it
+  does.
+- Rooms belong to one copy of the app. If someone copies the app's folder, or installs the same app
+  themselves, they are in different rooms from the original, even with the same name.
 
 ## People and their views
 
 `peers` and `me` group views by person, so showing each person once is the easy default. Each view
 still has its own presence, so your app can give one person's devices different jobs.
 
-- **Show each person once.** Draw one avatar or cursor for each peer, from `peer.presence`. That's
-  the presence of their most recently active view.
-- **Give each device its own job.** Have each view say what it's for in its presence, and read every
-  view in `views`. A card game can show its table on a TV everyone can see, while each player sees
-  their own hand on their phone, signed in to the same account:
-
-  ```ts
-  type Presence = { screen: "table" | "hand" };
-
-  const room = await ctx.multiplayer.joinRoom<Presence>("game");
-  // Let the person choose, for example with a "Use as the table" button.
-  room.setPresence({ screen: isTable ? "table" : "hand" });
-
-  // On the table: everyone holding their hand on another screen, you included.
-  const holding = [...room.peers, room.me].filter((person) =>
-    person.views.some((view) => view.presence?.screen === "hand")
-  );
-  ```
-
-  The table never draws anyone's cards, and a phone draws only the cards of `room.me.user.id`. This
-  hides cards from the screen, not from a determined player: everyone with access can read your
-  app's files and every view's presence.
-
-- **Seats and anything else that lasts.** Key them on `user.id`, never on a view's ID. Then someone
-  who reopens a tab, or reconnects, is back in their own seat, and their TV and phone are the same
-  player.
-- **The view they're using now.** It's `me.views[0]`. A view can check
-  `room.me.views[0]?.viewId === room.viewId`, for example to show "Active in another window" in a
-  forgotten tab. This is a hint, not a lock: never stop a view working because it isn't first.
+- **Show each person once.** Draw one avatar or cursor for each peer, from `peer.presence`.
+- **Give each device its own job.** Have each view say what it's for in its presence. A card game
+  can show its table on a TV, while each player sees their own hand on their phone, signed in to the
+  same account. Send each hand only to the views that should show it, with `sendTo` or a query that
+  checks the caller.
+- **Seats and anything else that lasts.** Key them on `user.id`, never on a view's ID, so someone
+  who reopens a tab is back in their own seat.
+- **The view they're using now** is `me.views[0]`. A view can check
+  `me.views[0]?.viewId === client.viewId`, for example to show "Active in another window" in a
+  forgotten tab. This is a hint, not a lock.
 - **Testing a game alone in two windows.** `peers` is empty, because both windows are you. Treat
-  every view as a player while you test:
-
-  ```ts
-  const players = [...room.peers, room.me].flatMap((person) => person.views);
-  ```
-
-## Writing good presence
-
-Describe where things are, not what happened. `{ dragging: "card-3", over: "done" }` works, but
-`{ event: "dropped" }` can be skipped. Save events that matter to a file.
-
-Positions must mean the same thing on every screen. Use positions relative to your content, like a
-fraction of the board's width and height, not pixels in the window.
-
-Keep presence to IDs, positions and short labels. Never put file contents in it.
-
-## Choosing room names
-
-- Use one name, like `"board"`, to put everyone in the app together.
-- Use a file's ID to give each file its own room. `ctx.fileId` (or `useFileId()`) is the opened
-  file's ID. It is the same for everyone with access to the file, and stays the same when the file
-  is renamed or moved.
-- A new file's ID can change once, when it first syncs. `useFileId()` re-renders when it does, so a
-  room named by it follows.
-- Rooms belong to one copy of the app. If someone copies the app's folder, or installs the same app
-  themselves, they are in different rooms from the original, even with the same name.
+  every view as a player while you test: `[...peers, me].flatMap((person) => person.views)`.
 
 ## What you can trust
 
-- `peer.user` is the name and picture on the person's Lightfern account.
-- `peer.presence` is whatever their copy of your app sent. Check its shape before you use it.
+- `peer.user` is the name and picture on the person's Lightfern account, and the room's `caller` is
+  who really made a call.
+- `peer.presence` is whatever their copy of your app sent. Check its shape before you use it, in
+  views and in server code.
 - Never render presence as HTML.
+- Everyone who can use the app can read its files, so a room can't hide anything in them: a hidden
+  hand of cards in a file is only hidden from the screen. See [Server code](server.md).
 - To show `profilePictureUrl`, add its origin to `network_permissions`.
-
-## Presence and files together
-
-Most features use both. While Bob drags a card, his presence says which card and where it is, so
-Alice sees it move. When he drops it, his view saves the board file. Alice's view hears about the
-save through `ctx.files.watch` once it syncs, usually a few seconds later. Until then, keep showing
-the card where Bob's presence last put it.
-
-If 2 people save the same file at the same time, Lightfern merges JSON and CSV by structure. Keep
-each item under its own key or in its own row, and changes to different items are both kept. If 2
-people change the same value, the last save to sync wins.
