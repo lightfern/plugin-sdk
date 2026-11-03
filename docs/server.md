@@ -81,9 +81,12 @@ read that file, and the list re-renders. Nothing in the view watches files or re
 - Lightfern builds the server modules when someone who can edit the app saves them, and keeps the
   build itself; nothing is added to the app's folder. A build error shows on every view that imports
   the module.
-- New server code reaches a running server or room once it's built and the server or room starts
-  again, about 10 seconds after its last event. Until then, a view built from the new code can get
-  "Cards has no method deal" for a method it just added; reopen the view to retry.
+- A view always reaches server code built from the same version of the app's code as the view. When
+  the code changes, views running the new version get servers and rooms of their own, while views
+  still on the old one stay where they are: a device that hasn't synced the change yet, or people
+  using the app's published version until an editor publishes again. Until everyone is on one
+  version, a room is split in two: both halves share the app's files, but not presence, messages or
+  fields.
 
 ## `Server` or `Room`
 
