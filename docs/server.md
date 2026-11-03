@@ -82,8 +82,8 @@ read that file, and the list re-renders. Nothing in the view watches files or re
   build itself; nothing is added to the app's folder. A build error shows on every view that imports
   the module.
 - New server code reaches a running server or room once it's built and the server or room starts
-  again, about 10 seconds after its last event. Until then, a view built from the new code
-  can get "Cards has no method deal" for a method it just added; reopen the view to retry.
+  again, about 10 seconds after its last event. Until then, a view built from the new code can get
+  "Cards has no method deal" for a method it just added; reopen the view to retry.
 
 ## `Server` or `Room`
 
@@ -127,8 +127,8 @@ interface Caller {
   the app, and `admin` and `edit_code_and_data` people can also edit the app's files and code
   directly. People with `read_code_and_data` can read every file, since the files sync to their
   devices. `use_only` people use the app as fully as anyone, changes included, but only through its
-  views: they can't read its files or code. It's for sharing a usable app without the data under
-  it, and isn't given yet.
+  views: they can't read its files or code. It's for sharing a usable app without the data under it,
+  and isn't given yet.
 - Arguments and results go through JSON: a `Date` arrives as a string, `NaN` and `Infinity` as
   `null`, and `undefined` fields are dropped. A left-out argument arrives as `null`, and an optional
   parameter whose type doesn't include `null` gets `undefined` instead, so its default applies.
@@ -178,7 +178,10 @@ interface Files {
 - A call can write the same file more than once; the last write is saved. It can't move a file it
   changed, or change a file it moved: do that in another call.
 - A write you forget to `await` still saves: the call ends only once its file requests have.
-- `write` refuses a path already taken, unless you pass `{ overwrite: true }`.
+- `write` refuses a path already taken, unless you pass `{ overwrite: true }`. That holds for what
+  this server or room can see. If another server, room or device creates the same path first, the
+  library refuses the save a moment later and the whole call's changes are lost, after the call
+  replied. Name new files so that can't happen, for example with `crypto.randomUUID()`.
 - Save data as compact JSON (`JSON.stringify(data)`, no indent).
 - People who can edit the app's files can still change them directly, as Lightfern's assistant does.
   Don't assume a file is exactly as your code last left it; parse it defensively.
@@ -213,12 +216,12 @@ What that means for your code:
 - Within one server or room, calls run one at a time on the files as that object last saw them, so
   read, check, write is safe there.
 - Across servers, rooms and other writers, nothing checks again what a call read. Two private
-  servers can each check a rule and both save, breaking it: two people each taking the last seat,
-  or prices that must add up to 100. Keep a rule like that inside one room.
+  servers can each check a rule and both save, breaking it: two people each taking the last seat, or
+  prices that must add up to 100. Keep a rule like that inside one room.
 - Store one record per file, like `contacts/ada.json`, not every record in one file, so unrelated
   edits never touch the same values.
-- Keep lists as arrays of objects with `id`s, or as objects keyed by ID, so items added in two places
-  both survive. An array of plain values is replaced whole.
+- Keep lists as arrays of objects with `id`s, or as objects keyed by ID, so items added in two
+  places both survive. An array of plain values is replaced whole.
 - Compute totals and counts in queries rather than storing them: a stored total goes wrong when two
   saves merge.
 - Use a counter for a number many people change at once, like votes or a score.
