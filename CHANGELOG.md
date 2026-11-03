@@ -7,6 +7,15 @@ implements.
 
 ## [Unreleased]
 
+- The guide says a file view opens for any path its pattern matches, whether or not a file is there,
+  and shows a `play/*` view whose path names a game session, linked to with `ctx.linkTo`.
+- `ctx.fileId` is `null` on share links.
+- The multiplayer guide covers rooms named from a path, one per session, and phones as controllers
+  that send their input as presence to a room with no methods.
+- The sandbox guide says to call `DeviceMotionEvent.requestPermission()` before anything in the tap
+  handler waits, that the desktop app defines `DeviceMotionEvent` without sensors, and how to read
+  tilt from `accelerationIncludingGravity`.
+
 ## [3.1.0] - 2026-11-04
 
 `manifestVersion: "3.1"`.

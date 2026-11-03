@@ -35,9 +35,33 @@ the view is hidden or power is low, so request it again if the view still needs 
 Listen for `devicemotion` and `deviceorientation` events to follow how the device moves. Safari has
 no `Accelerometer` or `Gyroscope` classes, so the events are the way that works everywhere. On an
 iPhone or iPad, call `DeviceMotionEvent.requestPermission()` from a tap first, or no events arrive.
+Call it in the tap's handler before any `await`: once the handler has waited on something, Safari no
+longer counts the call as coming from the tap. The tap can be any button the person presses anyway,
+such as one that picks what the device is for, so the view needn't add a separate "Allow motion"
+step.
 
-Macs have no motion sensors a view can read, so in the desktop app no events arrive. Phones and
-tablets that open a shared view do have them. Keep the view usable without them.
+```ts
+button.onclick = () => {
+  const motion = DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> };
+  // Ask first, before anything else in the handler waits.
+  void (motion.requestPermission?.() ?? Promise.resolve("granted")).then(() =>
+    window.addEventListener("devicemotion", onMotion)
+  );
+};
+```
+
+Macs have no motion sensors a view can read, so in the desktop app no events arrive. The desktop app
+still defines `DeviceMotionEvent`, so finding the class doesn't tell you there's a sensor. To tell
+whether a device can steer by tilting, check for a touch screen
+(`navigator.maxTouchPoints > 0 && matchMedia("(pointer: coarse)").matches`) or wait for the first
+event. Phones and tablets that open a shared view do have sensors. Keep the view usable without
+them.
+
+To read tilt, use `accelerationIncludingGravity` from `devicemotion`: at rest it points along
+gravity in the device's own axes. Browsers haven't always agreed on its sign, so measure tilt as a
+change from a reading taken when the person starts, such as the angle of `atan2(x, y)` for turning a
+phone held like a steering wheel. Flipping both signs turns that angle by half a turn, which the
+difference cancels out.
 
 ## Camera and microphone
 

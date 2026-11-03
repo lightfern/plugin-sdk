@@ -219,6 +219,21 @@ Folders don't open views; clicking the app opens its `home`.
 Prefer one view whose pattern covers every file it should open (`"*.md"`) over one view per file.
 Several views may point at the same `entry`; they are one mounted view either way.
 
+A file view opens for any path its pattern matches, whether or not a file is there. Lightfern routes
+by path and leaves it to the view, through its server code, to decide what a missing file means. So
+a path can name something that isn't a file at all, like a game session:
+
+```json
+"views": [{ "match": "play/*", "entry": "src/home.tsx" }]
+```
+
+`ctx.open("play/k7f2")` opens that view with `ctx.path` set to `play/k7f2`, and the view reads the
+session's code from it. An app on a public link has an address of its own, like
+`https://<share>.lightfern.app`, and the same view opens at that address followed by the path.
+`ctx.linkTo("play/k7f2")` gives it, so another device can open it from a QR code; it's `null` while
+the app isn't on a public link, so show the code instead. See
+[Choosing room names](multiplayer.md#choosing-room-names) for the room that goes with it.
+
 The matcher is exported from this package as `matchesPattern` (`@lightfern/plugin-sdk/match`) so
 tooling can evaluate patterns exactly as the host does.
 
@@ -299,13 +314,16 @@ resolved.
 - `ctx.open(path, newTab?)` → `Promise<void>` opens another node exactly as a click in the library
   would: routing to a file's view, opening the home view for `""`, or revealing an ordinary folder
   in the tree. The path may not reach beyond the app folder; `newTab: true` opens beside the current
-  tab. A file view returns to its home with `ctx.open("")`.
+  tab. A file view returns to its home with `ctx.open("")`, in the desktop app and on share links
+  alike. A path a file view matches opens that view even when no file is there (see
+  [File views](#file-views)).
 - `ctx.linkTo(path)` → `string | null` is the web address that opens `path` in the app, for a link
   or QR code to give someone; `ctx.linkTo("")` is the home view. It's `null` while the app isn't on
   a public link, in the desktop app as much as anywhere, so hide the link or show something else.
 - `ctx.fileId` is the opened node's file ID: the same for everyone with access to the file, and kept
   through renames and moves. A new file's ID can change once, when it first syncs; `onPathChange`
-  (or `useFileId()`) tells you when it does.
+  (or `useFileId()`) tells you when it does. On a share link it is `null`, so key anything that must
+  work there on `ctx.path` instead.
 
 The full `ViewContext` type, with its documentation comments, lives in
 [`src/context.ts`](../src/context.ts). Its `files` and `multiplayer`, and the hooks built on them
