@@ -7,7 +7,7 @@ implements.
 
 ## [Unreleased]
 
-## [3.0.1] - 2026-11-02
+## [3.0.1] - 2026-11-03
 
 - The server code guide says how saves work: a call replies once its changes are kept, they reach
   the library a moment later, and they merge with changes made elsewhere, the last write winning,
