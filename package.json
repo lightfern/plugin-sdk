@@ -24,7 +24,6 @@
     "./testing": "./src/testing.ts",
     "./protocol": "./src/protocol.ts",
     "./theme.css": "./src/theme.css",
-    "./fonts/*": "./src/fonts/*",
     "./docs/*": "./docs/*",
     "./examples/*": "./examples/*",
     "./package.json": "./package.json"
