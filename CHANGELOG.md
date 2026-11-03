@@ -11,11 +11,16 @@ implements.
 
 - The server code guide says how saves work: a call replies once its changes are kept, they reach
   the library a moment later, and they merge with changes made elsewhere, the last write winning,
-  instead of a call running again when a file changed. It covers how JSON, arrays, counters, CSV
-  and text merge, and how to design files for it.
-- Lightfern no longer writes `server.bundle.js` into the app's code folder; it keeps the build itself.
-- `use_only` is for using an app fully, changes included, without reading its files. The examples
-  no longer refuse changes from it.
+  instead of a call running again when a file changed. It covers how JSON, arrays, counters, CSV and
+  text merge, and how to design files for it.
+- Lightfern no longer writes `server.bundle.js` into the app's code folder; it keeps the build
+  itself.
+- `use_only` is for using an app fully, changes included, without reading its files. The examples no
+  longer refuse changes from it.
+- `write`'s check for a path that's already taken holds only within one server or room. Across them,
+  a collision loses the later call's changes after it replied.
+- A view always reaches server code built from the same version of the app's code. Views on a newer
+  version get servers and rooms of their own.
 
 ## [3.0.0] - 2026-11-02
 
