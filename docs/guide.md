@@ -146,9 +146,9 @@ to write them. Concretely:
 - `network_permissions`: optional; allowed network origins for views, empty by default. An entry is
   an `https://` origin, optionally with a `*.` subdomain wildcard: `https://api.example.com`,
   `https://*.example.com` (matches subdomains only, not `example.com` itself). No paths, no
-  `http://`, no `ws(s)://`. A declared origin can serve fetch/XHR data and non-code image, font, and
-  media assets. It does not permit remote JavaScript or worker URLs. A view can run code from a blob
-  worker, so never turn fetched content into worker code; see
+  `http://`, no `ws(s)://`. A declared origin can serve fetch/XHR data, stylesheets, and image,
+  font, and media assets. It does not permit remote JavaScript or worker URLs. A view can run code
+  from a blob worker, so never turn fetched content into worker code; see
   [The sandbox](sandbox.md#background-workers).
 - `contributes.home`: the app's home view (see below). Optional, but it's the usual reason to build
   an app.

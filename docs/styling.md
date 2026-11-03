@@ -129,8 +129,7 @@ matching the control height, `padding: 0`, and `display: grid; place-items: cent
 
 Geist is loaded and already applied to `body` at 14px. Never `@font-face` or `@import` a font to get
 the app's face. Plain `font-weight: 600` works (Geist is a variable font over 100..900). For another
-family, `@import` it from Google Fonts (see
-[Giving a view its own look](#giving-a-view-its-own-look)).
+family, load it yourself (see [Giving a view its own look](#giving-a-view-its-own-look)).
 
 ## Giving a view its own look
 
@@ -142,5 +141,7 @@ host theme puts it on `--lf-surface`.
 Theme every state: hover, selected, empty and error, and native inputs and selects, which otherwise
 keep the system look. Keep body text at 4.5:1 contrast however atmospheric the palette.
 
-Load a font by `@import`ing it from Google Fonts at the top of `styles.css`, or from a file in the
-code folder. Other font CDNs won't load.
+Load a font from a file in the code folder, or `@import` it from a font service at the top of
+`styles.css`. A font service needs its origins in `network_permissions`: the one that serves the
+stylesheet and the one that serves the font files. For Google Fonts, that's
+`https://fonts.googleapis.com` and `https://fonts.gstatic.com`.

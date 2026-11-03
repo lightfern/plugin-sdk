@@ -7,6 +7,14 @@ implements.
 
 ## [Unreleased]
 
+## [3.0.2] - 2026-11-03
+
+- `theme.css` loads Geist itself, from `fonts/Geist-Variable.woff2` beside it, so a host serves the
+  font with the sheet instead of linking Google Fonts.
+- Google Fonts is no longer allowed without being declared. An app that `@import`s it lists
+  `https://fonts.googleapis.com` and `https://fonts.gstatic.com` in `network_permissions`, as it
+  would for any other font service, and a declared origin can now serve stylesheets.
+
 ## [3.0.1] - 2026-11-03
 
 - The server code guide says how saves work: a call replies once its changes are kept, they reach

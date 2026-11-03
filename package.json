@@ -1,6 +1,6 @@
 {
   "name": "@lightfern/plugin-sdk",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "The contract between Lightfern plugins and the Lightfern desktop host: manifest schema, view context, React bindings, wire protocol and theme tokens.",
   "license": "MIT",
   "private": true,
@@ -24,6 +24,7 @@
     "./testing": "./src/testing.ts",
     "./protocol": "./src/protocol.ts",
     "./theme.css": "./src/theme.css",
+    "./fonts/*": "./src/fonts/*",
     "./docs/*": "./docs/*",
     "./examples/*": "./examples/*",
     "./package.json": "./package.json"
