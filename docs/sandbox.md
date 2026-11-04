@@ -12,6 +12,9 @@ APIs work as in any web page, except for what's below.
 - **WebSockets.** Share live state through server code; see [Multiplayer](multiplayer.md).
 - **Files and rooms.** A view reaches them only through [server code](server.md).
 - **Geolocation.**
+- **On a link that isn't public:** reading the clipboard, the camera and the microphone. Those apps
+  share one site, so a grant to one would reach them all. An app on a public link has its own
+  address, and gets them.
 
 ## Network
 

@@ -18,8 +18,9 @@ implements.
   3.0 still get their code folder.
 - The guide says files in the code folder load from `/` in views, in the desktop app and on links
   alike, so `<img src="/art/mars.webp">` works everywhere.
-- Views on a link can use the clipboard, and the camera and microphone when the manifest declares
-  them, as on desktop.
+- Views on a public link, at the app's own address, can read the clipboard and use the camera and
+  microphone when the manifest declares them, as on desktop. Other links can't, because their apps
+  share one site.
 
 ## [3.0.3] - 2026-11-04
 
