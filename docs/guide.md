@@ -113,7 +113,7 @@ to write them. Concretely:
 
 ```json
 {
-  "manifestVersion": "3.0",
+  "manifestVersion": "3.1",
   "id": "recruiting-ats",
   "name": "Recruiting ATS",
   "version": "1.0.0",
@@ -128,7 +128,7 @@ to write them. Concretely:
 
 - `manifestVersion`: required. This is the SDK version your app is built against, and it covers the
   manifest format, the view and server APIs, the `lightfern:host` and `lightfern:server` imports,
-  and the `--lf-*` theme tokens. Use "3.0".
+  and the `--lf-*` theme tokens. Use "3.1".
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every app in the library** (two apps
   sharing an `id` serve one bundle), a human-readable name, and a semver string (display metadata
@@ -183,8 +183,8 @@ writes down.
 A home-only app declares just `home` and omits `views` entirely. The view is written exactly like
 any other.
 
-An app works with the files in its app folder and below, through its server code. `ctx.path` is the
-code folder within it for a home view, and `ctx.open(...)` navigates anywhere in range. An app
+An app works with the files in its app folder and below, through its server code. `ctx.path` is `""`
+for a home view, the app folder itself, and `ctx.open(...)` navigates anywhere in range. An app
 without a `home` has nothing to open, so its app folder shows as a plain folder.
 
 Because a home-only app claims no `views`, its files still open in Lightfern's own viewer when
@@ -286,22 +286,23 @@ view comes from its context, `ctx`, which `await connect()` resolves. Call it at
 entry module, before rendering: `usePath()`, `useFileId()` and `useCurrentUser()` throw if it hasn't
 resolved.
 
-- `ctx.path` is the opened node's path relative to the app folder: the code folder for a home view,
-  the opened file for a file view. Pass it to server code when a query or method is about the open
-  file, like `useQuery(candidates.steps, path)`. Never build data paths from it in a home view,
-  which points into the code.
-- `ctx.homePath` is the code folder relative to that same root. It never moves as `ctx.path` does,
-  so a file view can reach its home without hardcoding the folder name. `ctx.pluginId` is also
-  available.
+- `ctx.path` is the opened node's path relative to the app folder: `""` for a home view, the opened
+  file for a file view. Pass it to server code when a query or method is about the open file, like
+  `useQuery(candidates.steps, path)`.
+- `ctx.homePath` is `""`, the path that opens the home view. Apps before 3.0 get their code folder
+  instead. `ctx.pluginId` is also available.
 - `ctx.currentUser` is the signed-in Lightfern user, or `null` when signed out. It has `id`,
   `email`, `name` (nullable), and `profilePictureUrl` (nullable). Use it to draw the person; server
   code gets the same person as its caller and should decide who may do what from that. Subscribe
   with `ctx.onCurrentUserChange(listener)`, or use `useCurrentUser()` in React. Rendering a remote
   `profilePictureUrl` requires its origin in the app's `network_permissions`.
 - `ctx.open(path, newTab?)` → `Promise<void>` opens another node exactly as a click in the library
-  would: routing to a file's view, opening the home view when `path` is `ctx.homePath`, or revealing
-  an ordinary folder in the tree. The path may not reach beyond the app folder; `newTab: true` opens
-  beside the current tab. A file view returns to its home with `ctx.open(ctx.homePath)`.
+  would: routing to a file's view, opening the home view for `""`, or revealing an ordinary folder
+  in the tree. The path may not reach beyond the app folder; `newTab: true` opens beside the current
+  tab. A file view returns to its home with `ctx.open("")`.
+- `ctx.linkTo(path)` → `string | null` is the web address that opens `path` in the app, for a link
+  or QR code to give someone; `ctx.linkTo("")` is the home view. It's `null` while the app isn't on
+  a public link, in the desktop app as much as anywhere, so hide the link or show something else.
 - `ctx.fileId` is the opened node's file ID: the same for everyone with access to the file, and kept
   through renames and moves. A new file's ID can change once, when it first syncs; `onPathChange`
   (or `useFileId()`) tells you when it does.
@@ -344,6 +345,14 @@ Lightfern and follows dark mode for free. A view whose look is part of its conte
 game board, an invoice or slide deck, a client's brand, a photo gallery) should get its own.
 [Styling](styling.md) covers how to choose, the token table, the recipes for cards, controls, hover
 washes and elevation, and how to build a look of your own.
+
+### Images, sounds and fonts
+
+Files in the code folder load from `/`, which is the code folder, in the desktop app and on links
+alike: `<img src="/art/mars.webp">`, `new Audio("/sounds/win.mp3")`, or `url(/fonts/title.woff2)` in
+`styles.css`. Keep them in the code folder beside the code. The paths views open, in `ctx.path` and
+in links, are routes to views and never files, so the two can't clash. The app folder's data isn't
+served this way: a view gets it from server code.
 
 **TypeScript and JSX just work.** Lightfern bundles the import graph on save. You never run a
 compiler.

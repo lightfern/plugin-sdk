@@ -21,6 +21,8 @@ export interface SerializableContext {
   fileId: string | null;
   homePath: string;
   user: CurrentUser | null;
+  /** The app's web address, which `ctx.linkTo` builds on, or null while it has none. */
+  appUrl?: string | null;
 }
 
 export interface CurrentUser {

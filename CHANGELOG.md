@@ -7,6 +7,18 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-11-04
+
+`manifestVersion: "3.1"`.
+
+- `ctx.linkTo(path)` gives the web address that opens a path in the app, for a link or QR code, or
+  `null` while the app isn't on a public link. An app on one has its own address,
+  `https://<share>.lightfern.app`, and opens a view at that address followed by its path.
+- From version 3, `ctx.homePath` and a home view's `ctx.path` are `""`, the app folder, so
+  `ctx.open("")` returns home. Apps before 3.0 still get their code folder.
+- The guide says files in the code folder load from `/` in views, in the desktop app and on links
+  alike, so `<img src="/art/mars.webp">` works everywhere.
+
 ## [3.0.2] - 2026-11-03
 
 - The sandbox guide shows the view's iframe granting each feature to any origin (`accelerometer *`)

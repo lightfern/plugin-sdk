@@ -18,7 +18,7 @@ export type PluginPermission = FilePermission | DevicePermission | "multiplayer"
 export type ManifestVersion = `${number}.${number}`;
 
 /** The contract version this SDK implements. See {@link PluginManifest.manifestVersion}. */
-export const MANIFEST_VERSION: ManifestVersion = "3.0";
+export const MANIFEST_VERSION: ManifestVersion = "3.1";
 
 /** A host on `supported` can run a plugin on the same major and the same or an older minor. */
 export function supportsManifestVersion(
