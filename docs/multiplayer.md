@@ -217,13 +217,13 @@ in a game can do the same, so nobody hears about players in other cities.
 - Use a file's ID to give each file its own room. `ctx.fileId` (or `useFileId()`) is the opened
   file's ID: the same for everyone with access to the file, and the same when the file is renamed or
   moved. A new file's ID can change once, when it first syncs; `useFileId()` re-renders when it
-  does. Share links give views no file ID, so use the path there instead.
-- Use a path to give each session its own room, such as a game on each TV. Declare a file view for
-  `play/*`, start a session by making up a code and calling `ctx.open("play/k7f2")`, and join the
-  room `session-k7f2`, read from `ctx.path`. No file needs to exist at that path. Share the app so
-  people can only use it, put the session's link, `https://share.lightfern.com/<share>/play/k7f2`,
-  in a QR code, and every phone that scans it opens the same view and joins the same room. See
-  [File views](guide.md#file-views).
+  does. On a [link](guide.md#on-a-link) `ctx.fileId` is `null`, so use the path there instead.
+- Use a path to give each session its own room, such as a game on each TV. Declare a view that
+  matches `play/*`, start a session by making up a code and calling `ctx.open("play/k7f2")`, and
+  join the room `session-k7f2`, read from `ctx.path`. No file needs to exist at that path. Share the
+  app on a link, put the session's address, `https://share.lightfern.com/<share>/play/k7f2`, in a QR
+  code, and every phone that scans it opens the same view and joins the same room. See
+  [Routing paths to views](guide.md#routing-paths-to-views).
 - Rooms belong to one copy of the app. If someone copies the app's folder, or installs the same app
   themselves, they are in different rooms from the original, even with the same name.
 
@@ -259,6 +259,7 @@ still has its own presence, so your app can give one person's devices different 
 - `peer.presence` is whatever their copy of your app sent. Check its shape before you use it, in
   views and in server code.
 - Never render presence as HTML.
-- Everyone who can use the app can read its files, so a room can't hide anything in them: a hidden
-  hand of cards in a file is only hidden from the screen. See [Server code](server.md).
+- People who can read the app's files can read everything in them, so a room can't hide anything
+  from them there: a hidden hand of cards in a file is only hidden from the screen. See
+  [What you can't hide](server.md#what-you-cant-hide).
 - To show `profilePictureUrl`, add its origin to `network_permissions`.

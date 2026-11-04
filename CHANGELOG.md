@@ -7,19 +7,33 @@ implements.
 
 ## [Unreleased]
 
+## [3.0.3] - 2026-11-04
+
+- The guide describes `contributes.views` as routing: a view opens for any path its `match` fits,
+  whether or not a file is there, such as a `play/*` view for a game session. It says what opens for
+  a path no view matches: on desktop a built-in viewer or a folder in the library tree, and on a
+  link "Nothing here". It tells you to build a view for everything the app shows.
+- The guide has a section on links (`https://share.lightfern.com/<share>`): only the app runs, there
+  are no built-in viewers, `ctx.fileId` is `null`, and `ctx.currentUser` is `null` for a visitor.
+  The guides now call them "a link" throughout.
+- The guide says before the folder layout that an app is never created inside another app's folder,
+  and how to check the destination.
 - The server code guide says where server code runs: on Lightfern's servers for a shared app in
-  sync, and otherwise on the device of someone who can edit the app, against their local files.
-- `use_only` is given now, by a "Can use" invitation or an app's use link, and the guide describes
-  visitors on a link who aren't signed in.
-- The guide says a file view opens for any path its pattern matches, whether or not a file is there,
-  and shows a `play/*` view whose path names a game session. A share link opens the same view at
-  `https://share.lightfern.com/<share>/play/<code>`.
-- `ctx.fileId` is `null` on share links.
+  sync, and otherwise on the device of someone who can edit the app, against their local files. The
+  guide's intro now says the same.
+- `use_only` is given now, by a "Can use" invitation or a link. The server code and multiplayer
+  guides say that only `use_only` people can't read an app's files, and describe visitors on a link
+  who aren't signed in.
 - The multiplayer guide covers rooms named from a path, one per session, and phones as controllers
   that send their input as presence to a room with no methods.
-- The sandbox guide says to call `DeviceMotionEvent.requestPermission()` before anything in the tap
-  handler waits, that the desktop app defines `DeviceMotionEvent` without sensors, and how to read
-  tilt from `accelerationIncludingGravity`.
+- The sandbox guide is shorter. It drops what any browser page already does, groups what's blocked,
+  and says what differs on a link: clipboard, camera, microphone and geolocation are blocked, motion
+  sensors work, and `window.open` opens a new tab. It says to call
+  `DeviceMotionEvent.requestPermission()` before anything in the tap handler waits, that the desktop
+  app defines `DeviceMotionEvent` without sensors, and how to read tilt from
+  `accelerationIncludingGravity`.
+- The guide gives exact types for `ctx.path`, `ctx.homePath`, `ctx.currentUser`, `ctx.open` and
+  `ctx.fileId`, and drops its repeats of the styling and reference app guides.
 
 ## [3.0.2] - 2026-11-03
 

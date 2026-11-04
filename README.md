@@ -32,11 +32,12 @@ The host imports the same types to drive the other end of the bridge.
 
 ## Start here
 
-- [Building a Lightfern app](docs/guide.md): the complete contract, from the manifest to views and
-  keeping them in sync.
+- [Building a Lightfern app](docs/guide.md): the complete contract, from where to create the app and
+  the manifest to routing paths to views and keeping them in sync.
 - [Styling](docs/styling.md): when to match the app or give a view its own look, the `--lf-*` design
   tokens, and CSS recipes.
-- [The sandbox](docs/sandbox.md): what the iframe allows, CORS, keyboard shortcuts, text selection.
+- [The sandbox](docs/sandbox.md): what the iframe blocks and allows, CORS, motion sensors, and what
+  differs on a link.
 - [Server code](docs/server.md): the classes that read and change an app's files, which views call
   like ordinary methods, and live queries.
 - [Multiplayer](docs/multiplayer.md): rooms people share, with everyone's presence.

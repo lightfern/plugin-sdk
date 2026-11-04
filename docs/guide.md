@@ -13,26 +13,28 @@ Companion documents:
   ordinary methods. Every app that keeps data needs it.
 - [Styling](styling.md): when a view should look like part of Lightfern and when it should have its
   own look, the `--lf-*` design tokens, and CSS recipes for both.
-- [The sandbox](sandbox.md): what a view can and cannot do inside its iframe, including network
-  requests, screen wake lock, background workers, keyboard shortcuts and text selection.
-- [Multiplayer](multiplayer.md): rooms that people share, with everyone's presence, and how they fit
-  with server code.
+- [The sandbox](sandbox.md): what a view can and can't do inside its iframe, and what differs on a
+  link.
+- [Multiplayer](multiplayer.md): rooms that people share, with everyone's presence.
 - [Reference app](example.md): a walkthrough of the Recruiting ATS example.
 
 ## What an app is
 
-An app lives as a folder in the library. It contributes UI in two ways, and can use either or both:
+An app is a folder in the library. Its manifest routes paths to **views**, the screens the app
+shows:
 
-- A **home view**: the UI that opens when you click the app in the library. Think dashboard, tool,
-  or custom workspace: something you open and use, not just a file.
-- **File views**: custom UIs that replace the default viewer for particular files you already have
-  (a `.csv` that renders as an editable table, a note that renders as a checklist).
+- The **home view** (`contributes.home`) is the app's own screen. It opens when you click the app in
+  the library. Think dashboard, tool, or custom workspace.
+- **Views** (`contributes.views`) are the other screens. Each has a `match` pattern, and opens for
+  the paths it matches: a record or file the view shows (`candidates/ada.md`), or something that
+  isn't a file at all (`play/k7f2`, a game session). See
+  [Routing paths to views](#routing-paths-to-views).
 
-Most apps center on a home view, but an app that only contributes file views (a CSV viewer, say) is
-just as valid.
+Most apps center on a home view, but an app made only of views (a CSV viewer, say) is just as valid.
 
 Views show things. **Server code** reads and changes the app's files: small classes that run on
-Lightfern's servers, which views call like ordinary methods. See [Server code](server.md).
+Lightfern's servers, or on the device of someone who can edit the app, which views call like
+ordinary methods. See [Server code](server.md).
 
 An app is made of two folders:
 
@@ -43,11 +45,24 @@ An app is made of two folders:
 There is **no** `package.json`, `node_modules`, bundler config, or compiled output. The source files
 are the artifact. Lightfern transpiles and bundles them in-process on save.
 
+## On a link
+
+People use an app in two places: in the desktop app, and on a **link**,
+`https://share.lightfern.com/<share>`. A link is for people who can only use the app, including
+visitors who aren't signed in. The guides say "on a link" for everything below.
+
+- Only the app runs, filling the page. There is no library, no file list and no built-in viewers.
+- The link's address, `https://share.lightfern.com/<share>`, opens the home view, and
+  `https://share.lightfern.com/<share>/<path>` opens the view whose `match` fits `<path>`. See
+  [Routing paths to views](#routing-paths-to-views).
+- `ctx.fileId` is `null`, and `ctx.currentUser` is `null` for a visitor. Server code gets a visitor
+  as its [caller](server.md#methods).
+- The browser blocks some features there. See [The sandbox](sandbox.md#on-a-link).
+
 ## How you build one
 
 Any folder that holds a `manifest.json` is a code folder, and the folder that holds it is its app
-folder. The app works on the files in its app folder, and any file views it declares apply to the
-files there and in its subfolders. An app always looks like this:
+folder. An app always looks like this:
 
 ```
 Recruiting/              ← the app folder: the library shows this name, and the app's data lives here
@@ -61,40 +76,40 @@ Recruiting/              ← the app folder: the library shows this name, and th
         └── candidates.server.ts
 ```
 
-So the code folder always goes **inside** an app folder:
+**Never create an app inside another app's folder, at any depth.** That includes its code folder. An
+app inside another app doesn't run: its code folder says which app it's inside, and its files belong
+to the outer app. Before you create an app, look at the destination folder and every folder above
+it. If any of them is a code folder (it holds a `manifest.json`) or an app folder (it has a
+subfolder that holds one), create the new app somewhere else, such as beside the outer app.
+
+The code folder always goes **inside** an app folder:
 
 - **For a new app,** create the app folder first, named for people (`Habit Tracker`), then create
   the code folder inside it (`Habit Tracker/code`). Write the app's data into the app folder, never
   into the code folder.
 - **For an app over files someone already has,** put the code folder in the folder the app works on,
   beside the files and folders it uses: `Hiring/code` next to `Hiring/candidates`, or `Finance/code`
-  for CSVs in `Finance/2025`.
+  for CSVs in `Finance/2025`. That folder must not already be inside another app.
 
 The code folder can have any name; `code` is just the convention for new apps. An existing app is
 already laid out this way, so don't rename or move its code folder.
 
-Never put `manifest.json` directly in a folder at the top of the library, such as
-`Habit Tracker/manifest.json`. That folder is then the code folder with no app folder around it, so
-the app works on the whole library.
-
-The library shows an app as one row. Clicking it opens the home view. The app's files stay hidden
-until the user chooses "Show contents", and the code folder shows as one more row with a code icon.
-The code folder can't be moved out of its app folder, so moving the app keeps its code and data
-together.
+The app works on the files in its app folder and its subfolders. The library shows an app as one
+row. Clicking it opens the home view. The app's files stay hidden until the person chooses "Show
+contents", and the code folder shows as one more row with a code icon. The code folder can't be
+moved out of its app folder, so moving the app keeps its code and data together.
 
 **Name the app folder for people.** The library and the home view's tab show its name, so give it a
 real name: `Recruiting`, not `recruiting-data`. The manifest's `id` stays a stable slug for the
 host.
 
-A few rules keep apps predictable and safe:
+A few more rules keep apps predictable and safe:
 
 - An app folder runs one app. If it holds more than one code folder, only the first alphabetically
   runs, and the others say the folder already has an app.
-- Apps don't nest. An app folder anywhere inside another app folder, at any depth, doesn't run: its
-  code folder says which app it's inside, and its files belong to the outer app. Only the outermost
-  app runs.
-- A code folder at the top of the library has no app folder. It shows as its own row and works on
-  the whole library.
+- Never put `manifest.json` directly in a folder at the top of the library, such as
+  `Habit Tracker/manifest.json`. That folder is then a code folder with no app folder around it, so
+  the app works on the whole library.
 - A code folder never runs at the top of a shared folder, because there it could read the folder
   each member places the share in. Lightfern won't share a code folder on its own, and won't put a
   `manifest.json` at the top of a shared folder. Share the app folder instead.
@@ -104,8 +119,7 @@ inside Lightfern, with any editor pointed at the library folder, or by asking Li
 to write them. Concretely:
 
 1. Create the app folder, then the code folder inside it with its files (`manifest.json`, `src/…`).
-2. Lightfern builds on save. Click the app to see its home view; open a matching file to see a file
-   view.
+2. Lightfern builds on save. Click the app to see its home view.
 3. Iterate: edit a file, the view hot-reloads. If it does not compile, the view slot shows a
    structured build error (file, line, column, message). Read it, fix the file, re-save.
 
@@ -150,9 +164,10 @@ to write them. Concretely:
   media assets. It does not permit remote JavaScript or worker URLs. A view can run code from a blob
   worker, so never turn fetched content into worker code; see
   [The sandbox](sandbox.md#background-workers).
-- `contributes.home`: the app's home view (see below). Optional, but it's the usual reason to build
-  an app.
-- `contributes.views`: file views (see **File views**). Optional; omit it for a home-only app.
+- `contributes.home`: the app's home view (see [Home views](#home-views)). Optional, but it's the
+  usual reason to build an app.
+- `contributes.views`: the other views, each routed by a `match` pattern (see
+  [Routing paths to views](#routing-paths-to-views)). Optional; omit it for a home-only app.
 - `contributes.servers`: the app's server modules, as paths ending in their extension. See
   [Server code](server.md).
 
@@ -162,8 +177,8 @@ The schema is enforced by the host and is exported from this package as `manifes
 ## Home views
 
 The home view is the app itself: the UI that opens when you click the app in the library. Use it for
-a home screen, dashboard, tool, or settings: anything that is about the app rather than one file in
-it. Most apps are built for their home view; file views are the add-on.
+a home screen, dashboard, tool, or settings: anything that is about the app rather than one path in
+it.
 
 Declare it as `contributes.home`. It has **no `match`**: it is bound to the app, which the manifest
 can't name anyway. That is wherever the app folder sits in the library, not something the author
@@ -183,27 +198,52 @@ writes down.
 A home-only app declares just `home` and omits `views` entirely. The view is written exactly like
 any other.
 
-An app works with the files in its app folder and below, through its server code. `ctx.path` is the
-code folder within it for a home view, and `ctx.open(...)` navigates anywhere in range. An app
-without a `home` has nothing to open, so its app folder shows as a plain folder.
+`ctx.path` is the code folder within the app folder for a home view. An app without a `home` has
+nothing to open, so its app folder shows as a plain folder.
 
-Because a home-only app claims no `views`, its files still open in Lightfern's own viewer when
-clicked; the home view only renders them when the app is opened. To present the same files in two
-ways, give each app a folder of its own.
+## Routing paths to views
 
-## File views
-
-A file view replaces the default viewer for particular files. Each entry has:
+`contributes.views` is how an app routes paths to its screens. Each entry has:
 
 | Field   | Required | Meaning                                                       |
 | ------- | -------- | ------------------------------------------------------------- |
-| `match` | yes      | Path pattern for the files it opens.                          |
+| `match` | yes      | Path pattern for the paths it opens.                          |
 | `entry` | yes      | The source module Lightfern builds, e.g. `src/candidate.tsx`. |
-| `title` | no       | Label for the view; defaults to the opened file's name.       |
+| `title` | no       | Label for the view; defaults to the opened path's name.       |
 
-Patterns are matched against file paths in the app folder and its subfolders; they cannot reach
-siblings or parents of that folder. A pattern only ever names files; a trailing `/` is rejected.
-Folders don't open views; clicking the app opens its `home`.
+`ctx.open(path)` opens the view whose `match` fits `path`. On a link, so does the address
+`https://share.lightfern.com/<share>/<path>`. A path usually names a file or record the view shows,
+but needn't: `play/k7f2` can be a game session.
+
+Lightfern never checks whether a file exists at the path. A view opens for any path its `match`
+fits, and the view, through its server code, decides what the path means, including a missing file.
+
+```json
+"views": [{ "match": "play/*", "entry": "src/home.tsx" }]
+```
+
+`ctx.open("play/k7f2")` opens that view with `ctx.path` set to `play/k7f2`, and the view reads the
+session's code from it. On a link, the address `https://share.lightfern.com/<share>/play/k7f2` opens
+the same view, so another device can open it from a QR code. See
+[Choosing room names](multiplayer.md#choosing-room-names) for the room that goes with it.
+
+### When no view matches
+
+| Where   | A path no view matches                                                                                                                              |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Desktop | Opens in Lightfern's own viewer (markdown editor, images, video, PDF, CSV and so on) if a file is there, or reveals the folder in the library tree. |
+| A link  | Shows "Nothing here", and `ctx.open` fails. A link has no built-in viewers.                                                                         |
+
+So build a view for everything the app shows, and the app works the same in both places. A home-only
+app has no views, so on a link nothing but the home view opens.
+
+On desktop, someone who chooses "Show contents" and clicks a data file directly opens the matching
+view, or the built-in viewer if none matches. That's rare; route people with `ctx.open`.
+
+### Patterns
+
+Patterns are matched against paths in the app folder and its subfolders; they can't reach siblings
+or parents of that folder. A trailing `/` is rejected.
 
 - `*`: zero or more characters within one segment (never matches `/`).
 - `?`: exactly one character within one segment.
@@ -215,23 +255,10 @@ Folders don't open views; clicking the app opens its `home`.
 | `**/*.md`            | markdown files at any depth                         |
 | `candidates/*.md`    | markdown files directly inside `candidates/`        |
 | `**/candidates/*.md` | markdown files inside any folder named `candidates` |
+| `play/*`             | `play/k7f2`, with nothing needing to exist there    |
 
-Prefer one view whose pattern covers every file it should open (`"*.md"`) over one view per file.
+Prefer one view whose pattern covers every path it should open (`"*.md"`) over one view per path.
 Several views may point at the same `entry`; they are one mounted view either way.
-
-A file view opens for any path its pattern matches, whether or not a file is there. Lightfern routes
-by path and leaves it to the view, through its server code, to decide what a missing file means. So
-a path can name something that isn't a file at all, like a game session:
-
-```json
-"views": [{ "match": "play/*", "entry": "src/home.tsx" }]
-```
-
-`ctx.open("play/k7f2")` opens that view with `ctx.path` set to `play/k7f2`, and the view reads the
-session's code from it. On a share link that can only use the app, the same view opens at the link's
-address followed by the path, `https://share.lightfern.com/<share>/play/k7f2`, so another device can
-open it from a QR code. See [Choosing room names](multiplayer.md#choosing-room-names) for the room
-that goes with it.
 
 The matcher is exported from this package as `matchesPattern` (`@lightfern/plugin-sdk/match`) so
 tooling can evaluate patterns exactly as the host does.
@@ -300,27 +327,28 @@ view comes from its context, `ctx`, which `await connect()` resolves. Call it at
 entry module, before rendering: `usePath()`, `useFileId()` and `useCurrentUser()` throw if it hasn't
 resolved.
 
-- `ctx.path` is the opened node's path relative to the app folder: the code folder for a home view,
-  the opened file for a file view. Pass it to server code when a query or method is about the open
-  file, like `useQuery(candidates.steps, path)`. Never build data paths from it in a home view,
-  which points into the code.
-- `ctx.homePath` is the code folder relative to that same root. It never moves as `ctx.path` does,
-  so a file view can reach its home without hardcoding the folder name. `ctx.pluginId` is also
-  available.
-- `ctx.currentUser` is the signed-in Lightfern user, or `null` when signed out. It has `id`,
-  `email`, `name` (nullable), and `profilePictureUrl` (nullable). Use it to draw the person; server
-  code gets the same person as its caller and should decide who may do what from that. Subscribe
-  with `ctx.onCurrentUserChange(listener)`, or use `useCurrentUser()` in React. Rendering a remote
-  `profilePictureUrl` requires its origin in the app's `network_permissions`.
-- `ctx.open(path, newTab?)` → `Promise<void>` opens another node exactly as a click in the library
-  would: routing to a file's view, opening the home view when `path` is `ctx.homePath`, or revealing
-  an ordinary folder in the tree. The path may not reach beyond the app folder; `newTab: true` opens
-  beside the current tab. A file view returns to its home with `ctx.open(ctx.homePath)`. A path a
-  file view matches opens that view even when no file is there (see [File views](#file-views)).
-- `ctx.fileId` is the opened node's file ID: the same for everyone with access to the file, and kept
-  through renames and moves. A new file's ID can change once, when it first syncs; `onPathChange`
-  (or `useFileId()`) tells you when it does. On a share link it is `null`, so key anything that must
-  work there on `ctx.path` instead.
+- `ctx.path: string` is the opened path relative to the app folder: the code folder for a home view,
+  and the path that was opened for any other view. Pass it to server code when a query or method is
+  about the open path, like `useQuery(candidates.steps, path)`. Never build data paths from it in a
+  home view, which points into the code.
+- `ctx.homePath: string` is the code folder relative to that same root. `ctx.pluginId: string` is
+  also available.
+- `ctx.currentUser` is the signed-in Lightfern user, or `null` for a visitor on a link who isn't
+  signed in. Its type is
+  `{ id: string; email: string; name: string | null; profilePictureUrl: string | null } | null`. Use
+  it to draw the person; server code gets the same person as its caller and should decide who may do
+  what from that. Subscribe with `ctx.onCurrentUserChange(listener)`, or use `useCurrentUser()` in
+  React. Rendering a remote `profilePictureUrl` requires its origin in the app's
+  `network_permissions`.
+- `ctx.open(path: string, newTab?: boolean): Promise<void>` opens the view whose `match` fits
+  `path`, or the home view for `""`. Return home with `ctx.open("")`. The path may not reach beyond
+  the app folder; `newTab: true` opens beside the current tab. A path no view matches opens a
+  built-in viewer or a folder on desktop, and fails on a link (see
+  [When no view matches](#when-no-view-matches)).
+- `ctx.fileId: string | null` is the opened file's ID: the same for everyone with access to the
+  file, and kept through renames and moves. A new file's ID can change once, when it first syncs;
+  `onPathChange` (or `useFileId()`) tells you when it does. On a link it is `null`, so key anything
+  that must work there on `ctx.path` instead.
 
 The full `ViewContext` type, with its documentation comments, lives in
 [`src/context.ts`](../src/context.ts). Its `files` and `multiplayer`, and the hooks built on them
@@ -349,37 +377,20 @@ was showing in the meantime, like a dragged card.
 
 ### Styling
 
-Styling is a plain `styles.css` at the top of the code folder, linked into the view document by
-convention. Do **not** use Tailwind classes: there is no Tailwind in the app's frame, so they render
-unstyled. Write real CSS.
+Styling is a plain `styles.css` at the top of the code folder. Do **not** use Tailwind classes:
+there is no Tailwind in the app's frame, so they render unstyled. Write real CSS.
 
-Decide first whether the view should look like Lightfern or like its subject. A tool for working
-with files (a tracker, a dashboard, a form) should match Lightfern: Lightfern serves its design
-tokens into the frame as `--lf-*` CSS variables, and a view built from them reads as part of
-Lightfern and follows dark mode for free. A view whose look is part of its content (a D&D map, a
-game board, an invoice or slide deck, a client's brand, a photo gallery) should get its own.
-[Styling](styling.md) covers how to choose, the token table, the recipes for cards, controls, hover
-washes and elevation, and how to build a look of your own.
-
-**TypeScript and JSX just work.** Lightfern bundles the import graph on save. You never run a
-compiler.
+Decide first whether the view should look like Lightfern or like its subject. [Styling](styling.md)
+covers how to choose, the `--lf-*` design tokens (which follow dark mode for free), and the CSS
+recipes for both.
 
 ## What is not available
 
-- **npm installation or arbitrary URLs.** Use exact versions in `dependencies`; do not add a
-  `package.json`, lockfile, CDN script tag, or URL import. Lightfern owns package preparation and
-  caching so the running frame stays local-only.
-- **Custom build config** (Vite, tsconfig). The build is fixed and unconfigurable.
 - **Showing an image from the app folder** in a view. Server code can read it, but can't send its
   bytes to a view yet.
-- **Browser capabilities the sandbox does not grant.** See [The sandbox](sandbox.md) for the exact
-  iframe attributes and what they imply (no `<form>` submission, no native dialogs, CORS applies to
-  every request).
+- **Browser capabilities the sandbox doesn't grant,** such as `<form>` submission and native
+  dialogs. See [The sandbox](sandbox.md).
 
-## Reference app
-
-[`examples/recruiting-ats/`](../examples/recruiting-ats/) is the code folder of a complete app that
-shows the whole shape: server code that lists and changes candidate files, a home view and a file
-view that subscribe to its queries and call its methods, and navigation between them. Copy it into
-an app folder such as `Recruiting`, as `Recruiting/code` (the app folder's name is what the library
-shows), and it runs as-is. [Reference app](example.md) walks through it.
+[Reference app](example.md) walks through [`examples/recruiting-ats/`](../examples/recruiting-ats/),
+the code folder of a complete app. Copy it into an app folder such as `Recruiting`, as
+`Recruiting/code`, and it runs as-is.
