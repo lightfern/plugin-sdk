@@ -217,7 +217,13 @@ in a game can do the same, so nobody hears about players in other cities.
 - Use a file's ID to give each file its own room. `ctx.fileId` (or `useFileId()`) is the opened
   file's ID: the same for everyone with access to the file, and the same when the file is renamed or
   moved. A new file's ID can change once, when it first syncs; `useFileId()` re-renders when it
-  does.
+  does. On a [link](guide.md#on-a-link) `ctx.fileId` is `null`, so use the path there instead.
+- Use a path to give each session its own room, such as a game on each TV. Declare a view that
+  matches `play/*`, start a session by making up a code and calling `ctx.open("play/k7f2")`, and
+  join the room `session-k7f2`, read from `ctx.path`. No file needs to exist at that path. Share the
+  app on a link, put the session's address, `https://share.lightfern.com/<share>/play/k7f2`, in a QR
+  code, and every phone that scans it opens the same view and joins the same room. See
+  [Routing paths to views](guide.md#routing-paths-to-views).
 - Rooms belong to one copy of the app. If someone copies the app's folder, or installs the same app
   themselves, they are in different rooms from the original, even with the same name.
 
@@ -231,6 +237,13 @@ still has its own presence, so your app can give one person's devices different 
   can show its table on a TV, while each player sees their own hand on their phone, signed in to the
   same account. Send each hand only to the views that should show it, with `sendTo` or a query that
   checks the caller.
+- **Use a phone as a controller.** A racing game can run on the big screen while a phone steers it.
+  The phone sets its controls as presence, like `{ role: "wheel", steer: -0.4, gas: 1 }`, and the
+  big screen reads them from `peers` on every frame. The big screen sends back what the phone shows,
+  like the speed, in its own presence. Presence reaches the other views at up to 20 updates a second
+  and runs no server code, so a room for this needs no methods: an empty
+  `class Drive extends Room {}` is enough. Run the game itself in the big screen's view, since
+  server code has no timers to step it.
 - **Seats and anything else that lasts.** Key them on `user.id`, never on a view's ID, so someone
   who reopens a tab is back in their own seat.
 - **The view they're using now** is `me.views[0]`. A view can check
@@ -246,6 +259,7 @@ still has its own presence, so your app can give one person's devices different 
 - `peer.presence` is whatever their copy of your app sent. Check its shape before you use it, in
   views and in server code.
 - Never render presence as HTML.
-- Everyone who can use the app can read its files, so a room can't hide anything in them: a hidden
-  hand of cards in a file is only hidden from the screen. See [Server code](server.md).
+- People who can read the app's files can read everything in them, so a room can't hide anything
+  from them there: a hidden hand of cards in a file is only hidden from the screen. See
+  [Keeping an app secure](server.md#keeping-an-app-secure).
 - To show `profilePictureUrl`, add its origin to `network_permissions`.

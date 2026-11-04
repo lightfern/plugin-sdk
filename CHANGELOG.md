@@ -7,6 +7,34 @@ implements.
 
 ## [Unreleased]
 
+## [3.0.3] - 2026-11-04
+
+- The server code guide has a section on keeping an app secure: everyone who uses an app gets its
+  code folder except server code, so it never holds secrets or access lists; decisions go in server
+  code from the caller; and views never render content as HTML.
+- The guide describes `contributes.views` as routing: a view opens for any path its `match` fits,
+  whether or not a file is there, such as a `play/*` view for a game session. It says what opens for
+  a path no view matches: on desktop a built-in viewer or a folder in the library tree, and on a
+  link "Nothing here". It tells you to build a view for everything the app shows.
+- The guide has a section on links (`https://share.lightfern.com/<share>`): only the app runs, there
+  are no built-in viewers, `ctx.fileId` is `null`, and `ctx.currentUser` is `null` for a visitor.
+  The guides now call them "a link" throughout.
+- The guide says before the folder layout that an app is never created inside another app's folder,
+  and how to check the destination.
+- The server code guide says where server code runs: on Lightfern's servers for a shared app in
+  sync, and otherwise on the device of someone who can edit the app, against their local files. The
+  guide's intro now says the same.
+- `use_only` is given now, by a "Can use" invitation or a link. The server code and multiplayer
+  guides say that only `use_only` people can't read an app's files, and describe visitors on a link
+  who aren't signed in.
+- The multiplayer guide covers rooms named from a path, one per session, and phones as controllers
+  that send their input as presence to a room with no methods.
+- The sandbox guide covers only what differs from a normal web page: what's blocked, the network and
+  workers under an opaque origin, permissions, Safari's motion permission, and what's different on a
+  link.
+- The guide gives exact types for `ctx.path`, `ctx.homePath`, `ctx.currentUser`, `ctx.open` and
+  `ctx.fileId`, and drops its repeats of the styling and reference app guides.
+
 ## [3.0.2] - 2026-11-03
 
 - The sandbox guide shows the view's iframe granting each feature to any origin (`accelerometer *`)

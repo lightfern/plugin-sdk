@@ -1,115 +1,57 @@
-# The sandboxed iframe
+# The sandbox
 
-Your view runs in this iframe:
+A view runs in a sandboxed iframe, in the desktop app and on a [link](guide.md#on-a-link). Browser
+APIs work as in any web page, except for what's below.
 
-```html
-<iframe
-  sandbox="allow-scripts allow-popups allow-pointer-lock"
-  allow="clipboard-read *; clipboard-write *; screen-wake-lock *; fullscreen *; accelerometer *; gyroscope *; magnetometer *"
-></iframe>
-```
+## What's blocked
 
-The iframe allows scripts, popups, pointer lock, fullscreen, clipboard access, screen wake lock and
-motion sensors. The camera and microphone are added to `allow` when your `permissions` declare them.
-The sandbox and content security policy still restrict other browser APIs. Files go through the
-app's server code, navigation through `ctx.open`, and network through the origins in
-`network_permissions`. Render dialogs as React UI in your own tree; native
-`alert`/`confirm`/`prompt` are off.
+- **Native dialogs.** `alert`, `confirm` and `prompt` do nothing. Draw dialogs yourself.
+- **Forms.** A `<form>` doesn't submit. Act on a button's `onClick` instead.
+- **Remote and inline scripts.** Only the app's bundled code and its declared `dependencies` run.
+  Inline styles are fine, so CSS-in-JS libraries work.
+- **WebSockets.** Share live state through server code; see [Multiplayer](multiplayer.md).
+- **Files and rooms.** A view reaches them only through [server code](server.md).
+- **Geolocation.**
+- **On a link only:** clipboard, camera and microphone.
 
-**Network requests are subject to CORS.** Declaring an origin lets your `fetch` leave the frame, but
-the server still decides whether you can read the response, and the frame sends `Origin: null` with
-no cookies. In practice: APIs built for browser use (GitHub, OpenAI, Slack, Airtable, …) work; APIs
-that never send `Access-Control-Allow-Origin` (for example Notion) do not, and no manifest entry
-changes that. WebSockets are not supported. Authenticate by sending a token the app obtained itself
-(e.g. an `Authorization` header from a key the user pasted into your settings UI); there is no
-cookie jar.
+## Network
 
-## Screen wake lock
-
-Call `navigator.wakeLock.request("screen")` when a view needs to keep the display awake, and release
-the returned lock when it no longer does. The browser or operating system can release the lock when
-the view is hidden or power is low, so request it again if the view still needs it.
-
-## Motion sensors
-
-Listen for `devicemotion` and `deviceorientation` events to follow how the device moves. Safari has
-no `Accelerometer` or `Gyroscope` classes, so the events are the way that works everywhere. On an
-iPhone or iPad, call `DeviceMotionEvent.requestPermission()` from a tap first, or no events arrive.
-
-Macs have no motion sensors a view can read, so in the desktop app no events arrive. Phones and
-tablets that open a shared view do have them. Keep the view usable without them.
-
-## Camera and microphone
-
-Declare `camera` or `microphone` in `permissions`, then call
-`navigator.mediaDevices.getUserMedia({ video: true })` or `getUserMedia({ audio: true })`. Without
-the permission, the call rejects.
-
-The first time a view uses the camera or microphone, macOS asks the user to allow Lightfern. If they
-refuse, `getUserMedia` rejects with `NotAllowedError`, so show what went wrong. Call `stop()` on
-every track when you finish, so the camera light turns off. Shared views can't use the camera or
-microphone.
-
-## Fullscreen
-
-`element.requestFullscreen()` works from a user gesture such as a click, and the user leaves with
-Esc. Use it for viewers and games.
-
-## Inline styles
-
-Styles injected at runtime are allowed, so CSS-in-JS libraries (emotion, styled-components, and the
-component libraries built on them) work as they do in a browser. Scripts are different: only the
-app's own bundled code and declared dependencies run, and nothing inline.
+`fetch` reaches only the origins in `network_permissions`. The frame has an opaque origin, so its
+requests send `Origin: null` and no cookies. An API must allow cross-origin requests: most built for
+browsers do, and some, like Notion's, don't. Authenticate with a token the app holds, such as a key
+the person pasted into its settings.
 
 ## Background workers
 
-Use a web worker for CPU-heavy work that would freeze the view. Ordinary `async` code is enough for
-waiting on network requests. The sandbox gives the view an opaque origin, so
-`new Worker("worker.js")` cannot load a worker file from the app's URL. Create a worker from a blob
-URL instead:
+The opaque origin also means `new Worker("worker.js")` can't load a file. Create a worker from a
+blob URL of code bundled with the app, and never from a network response:
 
 ```ts
-const workerUrl = URL.createObjectURL(
-  new Blob(["self.onmessage = ({ data }) => self.postMessage(data * 2)"], {
-    type: "text/javascript",
-  })
-);
-const worker = new Worker(workerUrl);
+const worker = new Worker(URL.createObjectURL(new Blob([source], { type: "text/javascript" })));
 ```
 
-Workers cannot access the view's DOM or `ctx`; exchange data with them through `postMessage`. They
-inherit the view's content security policy. Call `worker.terminate()` and
-`URL.revokeObjectURL(workerUrl)` when done. A blob worker runs whatever JavaScript you put in the
-blob, so use code bundled with the app. Never turn a network response into worker code.
+## Camera and microphone
 
-Don't use `<form>`. The sandbox has no `allow-forms`, so submission does nothing (no navigation, no
-request), and you never need it. Hold input in React state and act on a button `onClick`.
+Declare `camera` or `microphone` in the manifest's `permissions`. Without it, `getUserMedia`
+rejects. In the desktop app, macOS asks the person to allow Lightfern the first time.
 
-`window.open(url)` and an `<a href>` to an `http`/`https`/`mailto` URL open in the user's default
-browser (where their real sessions live), not a window inside Lightfern.
+## Motion sensors
 
-## How the host talks to the view
+`devicemotion` and `deviceorientation` events work. On an iPhone or iPad, call
+`DeviceMotionEvent.requestPermission()` from a tap's handler, before it awaits anything. Macs have
+no motion sensors, so keep the view usable without them.
 
-A sandboxed iframe has an opaque origin, so the host cannot authenticate the view by `event.origin`.
-Instead, on load the view posts a ready message to its parent and the host replies with a
-transferred `MessagePort`; every later call (`ctx.open`, and every call to server code) is an RPC
-over that port, and holding the port is what proves the channel. Each RPC is checked on the host
-side against the manifest. Calls to server code go through the port too: Lightfern holds the
-connection to its servers, so a view never opens a socket of its own and never sees a ticket.
-`connect()` performs this handshake for you; the message shapes are in
-[`src/protocol.ts`](../src/protocol.ts) for anyone building tooling on either side.
+## Opening links
+
+On desktop, `window.open(url)` and links to `http`, `https` and `mailto` URLs open in the person's
+default browser. On a link, they open a new tab.
 
 ## Keyboard shortcuts
 
-A keydown your view does not handle bubbles up to Lightfern, so the app's own shortcuts (switch tab,
-quick open, find, …) keep working while your view holds focus. To claim a chord for yourself, call
-`event.preventDefault()` in your handler; that is the signal that stops the key from reaching the
-host. A key you leave alone is passed through; you never need to re-implement or forward app
-shortcuts yourself.
+On desktop, a key your view doesn't handle reaches Lightfern, so its shortcuts keep working. Call
+`event.preventDefault()` to keep a key for your view.
 
 ## Text selection
 
-Text a user selects in your view is offered to Lightfern's assistant as context, the same way a
-selection in a note is. Nothing to wire: Lightfern reads the document selection once it settles and
-clears it when the selection collapses or the user opens another node. Chrome that should never be
-quoted (labels, toolbars) is what `user-select: none` is for; leave content selectable.
+On desktop, text selected in a view is offered to Lightfern's assistant as context. Use
+`user-select: none` on labels and toolbars.

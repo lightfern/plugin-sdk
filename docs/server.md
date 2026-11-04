@@ -1,9 +1,10 @@
 # Server code
 
 From `manifestVersion` "3.0", an app's views never touch its files. Its **server code** does: small
-TypeScript classes that run on Lightfern's servers, which views call like ordinary methods. Server
-code decides every change the app makes to its files, so a view someone has modified can't save a
-move, a score or a permission it isn't allowed to.
+TypeScript classes that run on Lightfern's servers, or on the device of someone who can edit the app
+when the servers aren't needed (see [Where it runs](#where-it-runs)), which views call like ordinary
+methods. Server code decides every change the app makes to its files, so a view someone has modified
+can't save a move, a score or a permission it isn't allowed to.
 
 Use server code for anything that reads or changes the app's files: listing candidates, moving a
 card, recording a vote. Views keep everything about showing them: layout, what's selected, what's
@@ -98,7 +99,7 @@ read that file, and the list re-renders. Nothing in the view watches files or re
 
 Both run one event at a time: two calls never interleave, even while one waits for a file. So "read
 the board, check the move, write the board" is safe without any locking within one server or room.
-Different servers and rooms run side by side, though: an app's home view and file view each have
+Different servers and rooms run side by side, though: an app's home view and another view each have
 their own private server, and so does each person using a `Server` app. Their saves merge with each
 other's, and with every other change to the files; see
 [Saves merge, and the last write wins](#saves-merge-and-the-last-write-wins).
@@ -124,14 +125,19 @@ interface Caller {
 - The first parameter must be written `caller: Caller` (or `_caller: Caller`), with `Caller`
   imported by name from `lightfern:server`. Lightfern's build refuses a public method without it.
 - Lightfern sets the caller from the person's sign-in. A view can't change it.
+- Someone using the app on a [link](guide.md#on-a-link) without signing in is a visitor. Their
+  `user.id` starts with `visitor-`, stays the same while they use the same browser, and is different
+  in every app, so apps can't follow a visitor between them. They have no name or picture. Anyone
+  with the link can be one, and a private window makes a new one, so never treat it as proof of who
+  they are.
 - Decide in every method who may do it. Server code is the only thing that checks; the manifest
   declares no roles.
 - `access` says what someone can do outside server code. `owner` is the person whose library holds
   the app, and `admin` and `edit_code_and_data` people can also edit the app's files and code
   directly. People with `read_code_and_data` can read every file, since the files sync to their
   devices. `use_only` people use the app as fully as anyone, changes included, but only through its
-  views: they can't read its files or code. It's for sharing a usable app without the data under it,
-  and isn't given yet.
+  views: they can't read its files or code. It's for sharing a usable app without the data under it:
+  people get it from a "Can use" invitation or a link.
 - Arguments and results go through JSON: a `Date` arrives as a string, `NaN` and `Infinity` as
   `null`, and `undefined` fields are dropped. A left-out argument arrives as `null`, and an optional
   parameter whose type doesn't include `null` gets `undefined` instead, so its default applies.
@@ -298,18 +304,50 @@ keep anyone's data there.
   other calls, but it starts again: fields are lost and `onStart` runs again.
 - Calls, results and messages are JSON, and should stay well under 1 MiB.
 
-## What you can't hide
+## Keeping an app secure
 
-Everyone who can use an app today can read its files, because they sync to their devices. So files
-can't hold secrets from the people using the app: a poker deck's order, sealed bids, quiz answers
-before a round, or one person's private notes in a shared app. Server code decides what changes, not
-what can be read.
+Who can see what:
 
-## Offline
+- **Everyone who opens the app gets the code folder, except its server code.** Views run in the
+  person's browser, so their code, `styles.css`, images and any other file in the code folder reach
+  everyone who uses the app, including visitors on a public link. Server classes never do, but a
+  helper module that a view imports does, even if server code imports it too.
+- **People with `read_code_and_data` access or more can read every file**, server code included,
+  because the files sync to their devices.
+- **`use_only` people, including visitors on a link, see only what server code returns to them.**
 
-Server code runs on Lightfern's servers. While a view can't reach them, its calls wait, then fail
-with code `"offline"` after 10 seconds, and its queries keep their last result. Show that the app is
-offline with `client.status`.
+So:
+
+- Never put secrets, keys, private data or lists of who may do what in the code folder. Keep data in
+  the app folder, where only server code reads it for people who can only use the app.
+- Files can't hold secrets from people with read access: a poker deck's order, sealed bids, quiz
+  answers before a round, or one person's private notes in a shared app.
+- Decide who may do what in server code, from the `caller`, in every method and query. Hiding a
+  button in a view protects nothing: a modified view can call any method.
+- A visitor's ID isn't proof of who they are. See [Methods](#methods).
+- Never render file contents or other people's input as HTML, with `innerHTML` or
+  `dangerouslySetInnerHTML`. A script that gets into a view runs as the person viewing it, and can
+  call server code as them.
+
+## Where it runs
+
+Server code runs on Lightfern's servers when the app is shared and the person's copy of its code has
+synced, so everyone using the app shares its rooms. People on a link get the app's published
+version, and the server code built from that version. For someone who can edit the app's files, it
+runs on their own device instead whenever the servers aren't needed: offline, in an app that isn't
+shared, or while their changes to its code are still syncing. It works on their local files, and
+sync carries the changes like any edit. It's the same code with the same rules, except that:
+
+- A room on the device holds only that person's views.
+- A save there replaces the file as the call left it. Sync merges it with edits made elsewhere when
+  it sends it.
+
+Once the app is shared and in sync again, its views reconnect to the servers. The files carry over;
+presence and fields start again.
+
+For anyone else, while a view can't reach the servers, its calls wait, then fail with code
+`"offline"` after 10 seconds, and its queries keep their last result. Show that the app is offline
+with `client.status`.
 
 A handle whose status is `"refused"` stays refused: the person has no access to the app, app servers
 aren't turned on for them yet, or a room turned them away. Calls fail with code `"refused"` and the
@@ -350,10 +388,7 @@ class UserError extends Error {}
 
 // From "lightfern:host"
 function server<T extends Server>(cls: new () => T): ServerHandle<T>;
-function room<T extends Room, Presence = unknown>(
-  cls: new () => T,
-  name: string
-): RoomHandle<T, Presence>;
+// `room()` and `useRoom()` are in Multiplayer.
 
 // A handle has the class's methods and queries, without the caller, and the connection as `client`.
 interface ServerClient {
@@ -370,9 +405,9 @@ function useQuery<Args extends unknown[], Result>(
 ): Result | undefined;
 ```
 
-- `server(Cls)` and `room(Cls, name)` are synchronous: they connect in the background, and calls
-  wait for the connection. They, `useQuery` and `useRoom` need no `connect()` first. Calling them
-  again with the same class (and name) returns the same handle.
+- `server(Cls)` is synchronous: it connects in the background, and calls wait for the connection. It
+  and `useQuery` need no `connect()` first. Calling it again with the same class returns the same
+  handle. [`room()`](multiplayer.md#joining-a-room) works the same way.
 - A failed call rejects with a `PluginRpcError`. Its `code` is `"offline"` when the server can't be
   reached and `"refused"` when the person can't use the app; otherwise its `message` is the server's
   error.

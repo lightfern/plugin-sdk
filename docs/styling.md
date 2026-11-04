@@ -1,17 +1,15 @@
 # Styling an app's views
 
 Styling is a plain `styles.css` at the top of the code folder, linked into the view document by
-convention. Target its class names from your JSX. Do **not** use Tailwind or Lightfern's own
-classes: neither exists in the app's frame, so they render unstyled. Write real CSS.
+convention. Target its class names from your JSX.
 
 ## Choosing a look
 
 Before writing any CSS, decide whether the view should look like Lightfern or like its subject.
 
 **Match Lightfern when the app is a tool:** a tracker, a dashboard, a CRM or applicant tracker, a
-file browser, a form, a settings screen, a viewer for notes or tables. These sit beside the rest of
-the library and should read as part of it, so build them from the `--lf-*` tokens below. Most work
-tools belong here.
+file browser, a form, a settings screen, a viewer for notes or tables. These should read as part of
+Lightfern, so build them from the `--lf-*` tokens below. Most work tools belong here.
 
 **Give it its own look when the look is part of the content.** The usual cases:
 
