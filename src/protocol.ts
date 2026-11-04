@@ -26,9 +26,11 @@ export interface SerializableContext {
 }
 
 export interface CurrentUser {
+  /** From version 3, the ID only this app gets for the person, as `caller.user.id` is. */
   id: string;
   name: string | null;
-  email: string;
+  /** Only apps before 3.0 get an email. */
+  email?: string;
   profilePictureUrl: string | null;
 }
 

@@ -92,7 +92,11 @@ export interface MultiplayerApi {
 
 export interface ViewContext {
   readonly pluginId: string;
-  /** The signed-in Lightfern user, or `null` while signed out. Updates with the host's auth state. */
+  /**
+   * The person using the view, as the app knows them, the same as `caller.user` in server code:
+   * `null` until the view first reaches its server code. Before version 3, the signed-in Lightfern
+   * account, or `null` while signed out.
+   */
   readonly currentUser: CurrentUser | null;
   /** Subscribe to sign-in, sign-out, or user changes. Returns an unsubscribe. */
   onCurrentUserChange(listener: (user: CurrentUser | null) => void): () => void;
