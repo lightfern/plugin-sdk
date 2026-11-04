@@ -304,13 +304,30 @@ keep anyone's data there.
   other calls, but it starts again: fields are lost and `onStart` runs again.
 - Calls, results and messages are JSON, and should stay well under 1 MiB.
 
-## What you can't hide
+## Keeping an app secure
 
-People with `read_code_and_data` access or more can read every file, because the files sync to their
-devices. So files can't hold secrets from them: a poker deck's order, sealed bids, quiz answers
-before a round, or one person's private notes in a shared app. Server code decides what changes, and
-what its queries return, but not what someone with read access finds in the files. Only `use_only`
-people, including visitors on a link, can't read them.
+Who can see what:
+
+- **Everyone who opens the app gets the code folder, except its server code.** Views run in the
+  person's browser, so their code, `styles.css`, images and any other file in the code folder reach
+  everyone who uses the app, including visitors on a public link. Server classes never do, but a
+  helper module that a view imports does, even if server code imports it too.
+- **People with `read_code_and_data` access or more can read every file**, server code included,
+  because the files sync to their devices.
+- **`use_only` people, including visitors on a link, see only what server code returns to them.**
+
+So:
+
+- Never put secrets, keys, private data or lists of who may do what in the code folder. Keep data in
+  the app folder, where only server code reads it for people who can only use the app.
+- Files can't hold secrets from people with read access: a poker deck's order, sealed bids, quiz
+  answers before a round, or one person's private notes in a shared app.
+- Decide who may do what in server code, from the `caller`, in every method and query. Hiding a
+  button in a view protects nothing: a modified view can call any method.
+- A visitor's ID isn't proof of who they are. See [Methods](#methods).
+- Never render file contents or other people's input as HTML, with `innerHTML` or
+  `dangerouslySetInnerHTML`. A script that gets into a view runs as the person viewing it, and can
+  call server code as them.
 
 ## Where it runs
 

@@ -261,5 +261,5 @@ still has its own presence, so your app can give one person's devices different 
 - Never render presence as HTML.
 - People who can read the app's files can read everything in them, so a room can't hide anything
   from them there: a hidden hand of cards in a file is only hidden from the screen. See
-  [What you can't hide](server.md#what-you-cant-hide).
+  [Keeping an app secure](server.md#keeping-an-app-secure).
 - To show `profilePictureUrl`, add its origin to `network_permissions`.

@@ -320,7 +320,9 @@ function Pipeline() {
 [Server code](server.md) covers the classes, queries, calls and errors in full.
 
 **Keep code and data separate.** Server code can never write into the code folder; such writes are
-refused. Keep the app's data in the app folder or a subfolder of it.
+refused. Keep the app's data in the app folder or a subfolder of it. Everything in the code folder
+except server code reaches everyone who uses the app; see
+[Keeping an app secure](server.md#keeping-an-app-secure).
 
 `server()`, `room()`, `useQuery()` and `useRoom()` connect by themselves. Everything else about the
 view comes from its context, `ctx`, which `await connect()` resolves. Call it at the top of the

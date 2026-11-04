@@ -9,6 +9,9 @@ implements.
 
 ## [3.0.3] - 2026-11-04
 
+- The server code guide has a section on keeping an app secure: everyone who uses an app gets its
+  code folder except server code, so it never holds secrets or access lists; decisions go in server
+  code from the caller; and views never render content as HTML.
 - The guide describes `contributes.views` as routing: a view opens for any path its `match` fits,
   whether or not a file is there, such as a `play/*` view for a game session. It says what opens for
   a path no view matches: on desktop a built-in viewer or a folder in the library tree, and on a
