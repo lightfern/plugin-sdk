@@ -221,8 +221,8 @@ in a game can do the same, so nobody hears about players in other cities.
 - Use a path to give each session its own room, such as a game on each TV. Declare a view that
   matches `play/*`, start a session by making up a code and calling `ctx.open("play/k7f2")`, and
   join the room `session-k7f2`, read from `ctx.path`. No file needs to exist at that path. Share the
-  app on a link, put the session's address, `https://share.lightfern.com/<share>/play/k7f2`, in a QR
-  code, and every phone that scans it opens the same view and joins the same room. See
+  app on a public link, put `ctx.linkTo("play/k7f2")` in a QR code, and every phone that scans it
+  opens the same view and joins the same room. See
   [Routing paths to views](guide.md#routing-paths-to-views).
 - Rooms belong to one copy of the app. If someone copies the app's folder, or installs the same app
   themselves, they are in different rooms from the original, even with the same name.

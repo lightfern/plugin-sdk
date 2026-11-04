@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { FileChange, HostPushMessage, RpcRequest, RpcResponse } from "./protocol";
+import type {
+  FileChange,
+  HostPushMessage,
+  RpcRequest,
+  RpcResponse,
+  SerializableContext,
+} from "./protocol";
 
 // `connect()` memoizes its handshake in module scope, so each test loads a fresh copy.
 beforeEach(() => {
@@ -27,7 +33,10 @@ function createFakeHostPort(respond: (request: RpcRequest) => RpcResponse) {
   return port;
 }
 
-async function connectWithHost(port: ReturnType<typeof createFakeHostPort>) {
+async function connectWithHost(
+  port: ReturnType<typeof createFakeHostPort>,
+  context: Partial<SerializableContext> = {}
+) {
   const { connect } = await import("./client");
 
   const ready = new Promise<void>((resolve) => {
@@ -57,6 +66,7 @@ async function connectWithHost(port: ReturnType<typeof createFakeHostPort>) {
           email: "ada@example.com",
           profilePictureUrl: "https://example.com/ada.png",
         },
+        ...context,
       },
     },
   });
@@ -169,6 +179,22 @@ describe("connect", () => {
 
     await ctx.open("notes/b.md");
     expect(opens[1].params).toEqual({ path: "notes/b.md", newTab: undefined });
+  });
+
+  it("links to a path at the app's address, and to nothing without one", async () => {
+    const appUrl = "https://share-1.lightfern.app";
+    const ctx = await connectWithHost(createFakeHostPort(noopRespond), { appUrl });
+
+    expect(ctx.linkTo("")).toBe(appUrl);
+    expect(ctx.linkTo("play/k7 f2")).toBe(`${appUrl}/play/k7%20f2`);
+    expect(ctx.linkTo("play/../games/./a.json")).toBe(`${appUrl}/games/a.json`);
+    expect(ctx.linkTo("../elsewhere")).toBeNull();
+  });
+
+  it("links to nothing when the host gives the app no address", async () => {
+    const ctx = await connectWithHost(createFakeHostPort(noopRespond));
+
+    expect(ctx.linkTo("play/k7f2")).toBeNull();
   });
 
   it("updates path and notifies onPathChange on a host path push", async () => {
