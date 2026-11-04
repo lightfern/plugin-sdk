@@ -36,8 +36,7 @@ The host imports the same types to drive the other end of the bridge.
   the manifest to routing paths to views and keeping them in sync.
 - [Styling](docs/styling.md): when to match the app or give a view its own look, the `--lf-*` design
   tokens, and CSS recipes.
-- [The sandbox](docs/sandbox.md): what the iframe blocks and allows, CORS, motion sensors, and what
-  differs on a link.
+- [The sandbox](docs/sandbox.md): what differs from a normal web page in an app's frame.
 - [Server code](docs/server.md): the classes that read and change an app's files, which views call
   like ordinary methods, and live queries.
 - [Multiplayer](docs/multiplayer.md): rooms people share, with everyone's presence.

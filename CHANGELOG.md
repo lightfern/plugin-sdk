@@ -26,12 +26,9 @@ implements.
   who aren't signed in.
 - The multiplayer guide covers rooms named from a path, one per session, and phones as controllers
   that send their input as presence to a room with no methods.
-- The sandbox guide is shorter. It drops what any browser page already does, groups what's blocked,
-  and says what differs on a link: clipboard, camera, microphone and geolocation are blocked, motion
-  sensors work, and `window.open` opens a new tab. It says to call
-  `DeviceMotionEvent.requestPermission()` before anything in the tap handler waits, that the desktop
-  app defines `DeviceMotionEvent` without sensors, and how to read tilt from
-  `accelerationIncludingGravity`.
+- The sandbox guide covers only what differs from a normal web page: what's blocked, the network and
+  workers under an opaque origin, permissions, Safari's motion permission, and what's different on a
+  link.
 - The guide gives exact types for `ctx.path`, `ctx.homePath`, `ctx.currentUser`, `ctx.open` and
   `ctx.fileId`, and drops its repeats of the styling and reference app guides.
 

@@ -57,7 +57,7 @@ visitors who aren't signed in. The guides say "on a link" for everything below.
   [Routing paths to views](#routing-paths-to-views).
 - `ctx.fileId` is `null`, and `ctx.currentUser` is `null` for a visitor. Server code gets a visitor
   as its [caller](server.md#methods).
-- The browser blocks some features there. See [The sandbox](sandbox.md#on-a-link).
+- The browser blocks some features there. See [The sandbox](sandbox.md#whats-blocked).
 
 ## How you build one
 
@@ -377,8 +377,7 @@ was showing in the meantime, like a dragged card.
 
 ### Styling
 
-Styling is a plain `styles.css` at the top of the code folder. Do **not** use Tailwind classes:
-there is no Tailwind in the app's frame, so they render unstyled. Write real CSS.
+Styling is a plain `styles.css` at the top of the code folder.
 
 Decide first whether the view should look like Lightfern or like its subject. [Styling](styling.md)
 covers how to choose, the `--lf-*` design tokens (which follow dark mode for free), and the CSS

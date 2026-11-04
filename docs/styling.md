@@ -1,8 +1,7 @@
 # Styling an app's views
 
 Styling is a plain `styles.css` at the top of the code folder, linked into the view document by
-convention. Target its class names from your JSX. Do **not** use Tailwind or Lightfern's own
-classes: neither exists in the app's frame, so they render unstyled. Write real CSS.
+convention. Target its class names from your JSX.
 
 ## Choosing a look
 
