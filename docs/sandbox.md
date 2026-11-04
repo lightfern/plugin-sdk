@@ -5,7 +5,7 @@ Your view runs in this iframe:
 ```html
 <iframe
   sandbox="allow-scripts allow-popups allow-pointer-lock"
-  allow="clipboard-read; clipboard-write; screen-wake-lock; fullscreen; accelerometer; gyroscope"
+  allow="clipboard-read *; clipboard-write *; screen-wake-lock *; fullscreen *; accelerometer *; gyroscope *; magnetometer *"
 ></iframe>
 ```
 

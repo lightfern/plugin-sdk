@@ -7,6 +7,11 @@ implements.
 
 ## [Unreleased]
 
+## [3.0.2] - 2026-11-03
+
+- The sandbox guide shows the view's iframe granting each feature to any origin (`accelerometer *`)
+  and granting `magnetometer`, as Lightfern now does, so motion events reach views in Safari.
+
 ## [3.0.1] - 2026-11-03
 
 - The server code guide says how saves work: a call replies once its changes are kept, they reach
