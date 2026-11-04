@@ -18,10 +18,10 @@ implements.
   3.0 still get their code folder.
 - The guide says files in the code folder load from `/` in views, in the desktop app and on links
   alike, so `<img src="/art/mars.webp">` works everywhere.
-- `caller.user.id` is an ID only that app gets, the same on desktop and on links. Names and pictures
-  come only for people the share names, and no app gets anyone's email. From version 3,
-  `ctx.currentUser` is that same person, `{ id, name, profilePictureUrl }`, once the view first
-  reaches its server code.
+- `caller.user.id` is an ID only that app gets, the same on desktop and on links. For now an app
+  gets nothing else about a person: `name` and `profilePictureUrl` are `null`, and no app gets an
+  email. From version 3, `ctx.currentUser` is that same person once the view first reaches its
+  server code.
 - Views on a public link, at the app's own address, can read the clipboard and use the camera and
   microphone when the manifest declares them, as on desktop. Other links can't, because their apps
   share one site.
