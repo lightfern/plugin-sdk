@@ -7,6 +7,20 @@ implements.
 
 ## [Unreleased]
 
+- The server code guide says where server code runs: on Lightfern's servers for a shared app in
+  sync, and otherwise on the device of someone who can edit the app, against their local files.
+- `use_only` is given now, by a "Can use" invitation or an app's use link, and the guide describes
+  visitors on a link who aren't signed in.
+- The guide says a file view opens for any path its pattern matches, whether or not a file is there,
+  and shows a `play/*` view whose path names a game session. A share link opens the same view at
+  `https://share.lightfern.com/<share>/play/<code>`.
+- `ctx.fileId` is `null` on share links.
+- The multiplayer guide covers rooms named from a path, one per session, and phones as controllers
+  that send their input as presence to a room with no methods.
+- The sandbox guide says to call `DeviceMotionEvent.requestPermission()` before anything in the tap
+  handler waits, that the desktop app defines `DeviceMotionEvent` without sensors, and how to read
+  tilt from `accelerationIncludingGravity`.
+
 ## [3.0.2] - 2026-11-03
 
 - The sandbox guide shows the view's iframe granting each feature to any origin (`accelerometer *`)
