@@ -254,8 +254,9 @@ still has its own presence, so your app can give one person's devices different 
 
 ## What you can trust
 
-- `peer.user` is the name and picture on the person's Lightfern account, and the room's `caller` is
-  who really made a call.
+- `peer.user` is the person as the app knows them: its own ID for them, and their name and picture
+  only if the share names them (see [Methods](server.md#methods)). The room's `caller` is who really
+  made a call.
 - `peer.presence` is whatever their copy of your app sent. Check its shape before you use it, in
   views and in server code.
 - Never render presence as HTML.

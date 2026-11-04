@@ -57,8 +57,7 @@ below.
 - An app on a public link has an address of its own, `https://<share>.lightfern.app`. Any other link
   is `https://share.lightfern.com/<share>`. `ctx.linkTo(path)` gives the address for a path, so
   never build one yourself.
-- `ctx.fileId` is `null`, and `ctx.currentUser` is `null` for a visitor. Server code gets a visitor
-  as its [caller](server.md#methods).
+- `ctx.fileId` is `null`. Server code gets a visitor as its [caller](server.md#methods).
 - The browser blocks some features there. See [The sandbox](sandbox.md#whats-blocked).
 
 ## How you build one
@@ -337,13 +336,9 @@ resolved.
   the open path, like `useQuery(candidates.steps, path)`.
 - `ctx.homePath: string` is `""`, the path that opens the home view. Apps before 3.0 get their code
   folder instead. `ctx.pluginId: string` is also available.
-- `ctx.currentUser` is the signed-in Lightfern user, or `null` for a visitor on a link who isn't
-  signed in. Its type is
-  `{ id: string; email: string; name: string | null; profilePictureUrl: string | null } | null`. Use
-  it to draw the person; server code gets the same person as its caller and should decide who may do
-  what from that. Subscribe with `ctx.onCurrentUserChange(listener)`, or use `useCurrentUser()` in
-  React. Rendering a remote `profilePictureUrl` requires its origin in the app's
-  `network_permissions`.
+- `ctx.currentUser` is `null` from version 3. An app learns who someone is from server code, as
+  [`caller.user`](server.md#methods), and in a room from `client.me`. Apps before 3.0 get the
+  signed-in Lightfern user here instead.
 - `ctx.open(path: string, newTab?: boolean): Promise<void>` opens the view whose `match` fits
   `path`, or the home view for `""`. Return home with `ctx.open("")`. The path may not reach beyond
   the app folder; `newTab: true` opens beside the current tab. A path no view matches opens a
