@@ -127,8 +127,9 @@ interface Caller {
 - Lightfern sets the caller from the person's sign-in. A view can't change it.
 - `user.id` is an ID only this app gets. It's the same for someone in the desktop app and on a link,
   and different in every app, so apps can't follow a person between them.
-- `user.name` and `user.profilePictureUrl` are `null` for everyone, for now: an app gets only the
-  ID. No app gets anyone's email. If an app needs a name, ask the person for one.
+- Lightfern doesn't give apps a person's name, picture or email yet. `user.name` and
+  `user.profilePictureUrl` are always `null`, and there's no email. If an app needs a name, ask the
+  person for one.
 - Someone using the app on a [link](guide.md#on-a-link) without signing in is a visitor. Their
   `user.id` starts with `visitor-`, stays the same while they use the same browser, and is different
   in every app, so apps can't follow a visitor between them. Anyone with the link can be one, and a

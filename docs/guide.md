@@ -338,10 +338,11 @@ resolved.
   folder instead. `ctx.pluginId: string` is also available.
 - `ctx.currentUser` is the person using the view, as the app knows them:
   `{ id: string; name: null; profilePictureUrl: null } | null`, the same as
-  [`caller.user`](server.md#methods) in server code. For now an app gets only the ID. It's `null`
-  until the view first reaches its server code, then kept current. Subscribe with
-  `ctx.onCurrentUserChange(listener)`, or use `useCurrentUser()` in React. Apps before 3.0 get the
-  signed-in Lightfern account here, email included.
+  [`caller.user`](server.md#methods) in server code. Lightfern doesn't give apps a person's name,
+  picture or email yet, so only the `id` is set. It's `null` until the view first reaches its server
+  code, then kept current. Subscribe with `ctx.onCurrentUserChange(listener)`, or use
+  `useCurrentUser()` in React. Apps before 3.0 get the signed-in Lightfern account here, email
+  included.
 - `ctx.open(path: string, newTab?: boolean): Promise<void>` opens the view whose `match` fits
   `path`, or the home view for `""`. Return home with `ctx.open("")`. The path may not reach beyond
   the app folder; `newTab: true` opens beside the current tab. A path no view matches opens a

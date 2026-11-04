@@ -28,6 +28,7 @@ export interface SerializableContext {
 export interface CurrentUser {
   /** From version 3, the ID only this app gets for the person, as `caller.user.id` is. */
   id: string;
+  /** From version 3, Lightfern doesn't give apps a person's name or picture yet: `null`. */
   name: string | null;
   /** Only apps before 3.0 get an email. */
   email?: string;
@@ -115,7 +116,9 @@ export interface RoomChangedMessage {
 }
 
 export interface PeerUser {
+  /** From version 3, the ID only this app gets for the person. */
   id: string;
+  /** Lightfern doesn't give apps a person's name or picture yet, so both are `null`. */
   name: string | null;
   profilePictureUrl: string | null;
 }
