@@ -26,9 +26,8 @@ shows:
 - The **home view** (`contributes.home`) is the app's own screen. It opens when you click the app in
   the library. Think dashboard, tool, or custom workspace.
 - **Views** (`contributes.views`) are the other screens. Each has a `match` pattern, and opens for
-  the paths it matches: a record or file the view shows (`candidates/ada.md`), or something that
-  isn't a file at all (`play/k7f2`, a game session). See
-  [Routing paths to views](#routing-paths-to-views).
+  the paths it matches: a record the view shows (`candidates/ada`), or something that isn't a file
+  at all (`play/k7f2`, a game session). See [Routing paths to views](#routing-paths-to-views).
 
 Most apps center on a home view, but an app made only of views (a CSV viewer, say) is just as valid.
 
@@ -135,7 +134,7 @@ to write them. Concretely:
   "dependencies": { "react": "19.2.0", "react-dom": "19.2.0" },
   "contributes": {
     "home": { "entry": "src/home.tsx" },
-    "views": [{ "match": "candidates/*.md", "entry": "src/candidate.tsx" }],
+    "views": [{ "match": "candidates/*", "entry": "src/candidate.tsx" }],
     "servers": ["src/candidates.server.ts"]
   }
 }
@@ -213,14 +212,19 @@ open, so its app folder shows as a plain folder.
 | `title` | no       | Label for the view; defaults to the opened path's name.       |
 
 `ctx.open(path)` opens the view whose `match` fits `path`. On a link, so does the link's address
-followed by `/<path>`, which `ctx.linkTo(path)` gives. A path usually names a file or record the
-view shows, but needn't: `play/k7f2` can be a game session.
+followed by `/<path>`, which `ctx.linkTo(path)` gives. A path names what the view shows: a record
+such as `candidates/ada`, or something like a game session, `play/k7f2`.
 
 These paths are **routes**. A route names a screen of the app, never a file a view loads.
 `ctx.path`, `ctx.open` and `ctx.linkTo` take routes, and `match` patterns are matched against them.
 A route always starts from the app folder, never from the current view, so `""` is home. A leading
 `/` changes nothing: `ctx.open("/")` is `ctx.open("")`, and `/play/k7f2` is `play/k7f2`. The files a
 view loads use [asset URLs](#images-sounds-and-fonts), which start from the code folder instead.
+
+Name a route for what it shows, not for a file: `candidates/ada`, not `candidates/ada.md`. The view
+takes the name from the route and passes it to server code, which decides which file it means. On
+desktop, opening `candidates/ada.md` from the library opens the view whose `match` fits it too, so a
+view for `candidates/*` drops a `.md` from the name.
 
 Lightfern never checks whether a file exists at the path. A view opens for any path its `match`
 fits, and the view, through its server code, decides what the path means, including a missing file.
@@ -321,7 +325,7 @@ const candidates = server(Candidates);
 function Pipeline() {
   const all = useQuery(candidates.all); // undefined until the first result, then kept current
   // …
-  const tick = (path: string, line: number) => void candidates.toggleStep(path, line);
+  const tick = (name: string, line: number) => void candidates.toggleStep(name, line);
 }
 ```
 
@@ -337,9 +341,10 @@ view comes from its context, `ctx`, which `await connect()` resolves. Call it at
 entry module, before rendering: `usePath()`, `useFileId()` and `useCurrentUser()` throw if it hasn't
 resolved.
 
-- `ctx.path: string` is the opened path relative to the app folder: `""` for a home view, and the
-  path that was opened for any other view. Pass it to server code when a query or method is about
-  the open path, like `useQuery(candidates.steps, path)`.
+- `ctx.path: string` is the opened route, relative to the app folder: `""` for a home view, and the
+  route that was opened for any other view. Take what the view shows from it, such as a candidate's
+  name from `candidates/ada`, and pass that to server code, like `useQuery(candidates.steps, name)`.
+  Never pass the route as a file path: see [Keeping an app secure](server.md#keeping-an-app-secure).
 - `ctx.homePath: string` is `""`, the path that opens the home view. Apps before 3.0 get their code
   folder instead. `ctx.pluginId: string` is also available.
 - `ctx.currentUser` is the person using the view, as the app knows them:
@@ -381,8 +386,9 @@ current:
 ```tsx
 import { usePath, useQuery } from "lightfern:host/react";
 
-const path = usePath(); // needs `await connect()` first
-const steps = useQuery(candidates.steps, path); // follows navigation and edits
+const path = usePath(); // "candidates/ada"; needs `await connect()` first
+const name = path.slice("candidates/".length).replace(/\.md$/, "");
+const steps = useQuery(candidates.steps, name); // follows navigation and edits
 ```
 
 When a call returns, the queries it affected have already re-rendered, so a view can clear what it

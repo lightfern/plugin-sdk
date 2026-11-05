@@ -3,7 +3,6 @@ import { type Caller, query, Server, UserError } from "lightfern:server";
 import { STAGES } from "./stages";
 
 export interface Candidate {
-  path: string;
   name: string;
   stage: string;
 }
@@ -28,7 +27,6 @@ export class Candidates extends Server {
       entries
         .filter((e) => e.kind === "file" && e.name.endsWith(".md"))
         .map(async (e) => ({
-          path: e.path,
           name: e.name.replace(/\.md$/, ""),
           stage: stageOf(await this.ctx.files.read(e.path)),
         }))
@@ -36,16 +34,17 @@ export class Candidates extends Server {
   });
 
   // One candidate's `- [ ]` interview steps.
-  steps = query(async (_caller: Caller, path: string): Promise<Step[]> => {
-    const lines = (await this.#read(path)).split("\n");
+  steps = query(async (_caller: Caller, name: string): Promise<Step[]> => {
+    const lines = (await this.ctx.files.read(this.#path(name))).split("\n");
     return lines.flatMap((text, line) => {
       const step = /^- \[( |x)\] (.*)/.exec(text);
       return step ? [{ line, label: step[2], done: step[1] === "x" }] : [];
     });
   });
 
-  async toggleStep(_caller: Caller, path: string, line: number) {
-    const lines = (await this.#read(path)).split("\n");
+  async toggleStep(_caller: Caller, name: string, line: number) {
+    const path = this.#path(name);
+    const lines = (await this.ctx.files.read(path)).split("\n");
     if (!/^- \[( |x)\]/.test(lines[line] ?? ""))
       throw new UserError("That step has changed");
     lines[line] = lines[line].replace(
@@ -55,10 +54,9 @@ export class Candidates extends Server {
     await this.ctx.files.write(path, lines.join("\n"), { overwrite: true });
   }
 
-  // A view chooses the path, so check it's a candidate before reading or writing it.
-  async #read(path: string): Promise<string> {
-    if (!/^candidates\/[^/]+\.md$/.test(path))
-      throw new UserError("That isn't a candidate");
-    return this.ctx.files.read(path);
+  // A view sends any name it likes, so only a plain name becomes a path, and only in `candidates/`.
+  #path(name: string): string {
+    if (!/^[^/.][^/]*$/.test(name)) throw new UserError("That isn't a candidate");
+    return `candidates/${name}.md`;
   }
 }

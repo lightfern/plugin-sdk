@@ -328,6 +328,9 @@ So:
   answers before a round, or one person's private notes in a shared app.
 - Decide who may do what in server code, from the `caller`, in every method and query. Hiding a
   button in a view protects nothing: a modified view can call any method.
+- Never take a file path from a view. A view can send any path, so a method that reads or writes the
+  path it's given reaches every file in the app folder. Take a name or ID, check it, and build the
+  path in server code: `candidates/${name}.md`.
 - A visitor's ID isn't proof of who they are. See [Methods](#methods).
 - Never render file contents or other people's input as HTML, with `innerHTML` or
   `dangerouslySetInnerHTML`. A script that gets into a view runs as the person viewing it, and can

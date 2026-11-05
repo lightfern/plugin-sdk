@@ -16,6 +16,9 @@ implements.
   desktop app and on links, so a relative asset URL starts there too. Before, it started from the
   entry's folder: in a view built from `src/home.tsx`, `<img src="logo.png">` loaded `src/logo.png`
   and now loads `logo.png`. Write asset URLs from `/`. An HTML entry still loads from its own path.
+- The guide and the reference app name a route for what a view shows, not for its file:
+  `candidates/ada`, not `candidates/ada.md`. Views pass server code a name, never a file path, and
+  server code builds the path. The server code guide says why: a view can send any path.
 
 ## [3.1.0] - 2026-11-04
 
