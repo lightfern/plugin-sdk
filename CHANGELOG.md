@@ -7,6 +7,12 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-11-05
+
+- The guide names the two kinds of path. **Routes** (`ctx.path`, `ctx.open` and `ctx.linkTo`) start
+  from the app folder, where a leading `/` changes nothing, so `ctx.open("/")` goes home. **Asset
+  URLs** (`src`, a stylesheet's `href`, and `url()` in CSS) start from the code folder at `/`.
+
 ## [3.1.0] - 2026-11-04
 
 `manifestVersion: "3.1"`.

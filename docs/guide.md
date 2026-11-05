@@ -216,6 +216,12 @@ open, so its app folder shows as a plain folder.
 followed by `/<path>`, which `ctx.linkTo(path)` gives. A path usually names a file or record the
 view shows, but needn't: `play/k7f2` can be a game session.
 
+These paths are **routes**. A route names a screen of the app, never a file a view loads.
+`ctx.path`, `ctx.open` and `ctx.linkTo` take routes, and `match` patterns are matched against them.
+A route always starts from the app folder, never from the current view, so `""` is home. A leading
+`/` changes nothing: `ctx.open("/")` is `ctx.open("")`, and `/play/k7f2` is `play/k7f2`. The files a
+view loads use [asset URLs](#images-sounds-and-fonts), which start from the code folder instead.
+
 Lightfern never checks whether a file exists at the path. A view opens for any path its `match`
 fits, and the view, through its server code, decides what the path means, including a missing file.
 
@@ -343,10 +349,10 @@ resolved.
   code, then kept current. Subscribe with `ctx.onCurrentUserChange(listener)`, or use
   `useCurrentUser()` in React. Apps before 3.0 get the signed-in Lightfern account here, email
   included.
-- `ctx.open(path: string, newTab?: boolean): Promise<void>` opens the view whose `match` fits
-  `path`, or the home view for `""`. Return home with `ctx.open("")`. The path may not reach beyond
-  the app folder; `newTab: true` opens beside the current tab. A path no view matches opens a
-  built-in viewer or a folder on desktop, and fails on a link (see
+- `ctx.open(path: string, newTab?: boolean): Promise<void>` opens the view whose `match` fits the
+  route `path`, or the home view for `""` or `"/"`. Return home with `ctx.open("")`. The path may
+  not reach beyond the app folder; `newTab: true` opens beside the current tab. A path no view
+  matches opens a built-in viewer or a folder on desktop, and fails on a link (see
   [When no view matches](#when-no-view-matches)).
 - `ctx.linkTo(path: string): string | null` is the web address that opens `path` in the app, for a
   link or QR code to give someone; `ctx.linkTo("")` is the home view. It's `null` while the app
@@ -392,11 +398,15 @@ recipes for both.
 
 ### Images, sounds and fonts
 
-Files in the code folder load from `/`, which is the code folder, in the desktop app and on links
-alike: `<img src="/art/mars.webp">`, `new Audio("/sounds/win.mp3")`, or `url(/fonts/title.woff2)` in
-`styles.css`. Keep them in the code folder beside the code. The paths views open, in `ctx.path` and
-in links, are routes to views and never files, so the two can't clash. The app folder's data isn't
-served this way: a view gets it from server code.
+A view loads files through **asset URLs**: `src`, a stylesheet's `href`, and `url()` in CSS. An
+asset URL starts from the code folder, which is `/`, in the desktop app and on links alike:
+`<img src="/art/mars.webp">`, `new Audio("/sounds/win.mp3")`, or `url(/fonts/title.woff2)` in
+`styles.css`. Keep these files in the code folder beside the code.
+
+Asset URLs and [routes](#routing-paths-to-views) are separate. `<img src="/art/mars.webp">` loads
+`art/mars.webp` from the code folder. `ctx.open("/art/mars.webp")` opens the view whose `match` fits
+`art/mars.webp` in the app folder. The app folder's data isn't served as asset URLs: a view gets it
+from server code.
 
 ## What is not available
 
