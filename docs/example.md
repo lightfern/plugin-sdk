@@ -26,7 +26,7 @@ give it its own `id`, since two apps with the same `id` run one copy of the code
 
 ## `manifest.json`
 
-The manifest uses `manifestVersion` `"3.0"` and pins exact React versions in `dependencies`. It has
+The manifest uses `manifestVersion` `"3.1"` and pins exact React versions in `dependencies`. It has
 a home view, one view that opens any path matching `candidates/*.md`, and one server module. It asks
 for no permissions, because views reach the files through the server code. There's no `package.json`
 and no build config.

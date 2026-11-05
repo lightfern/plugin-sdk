@@ -222,6 +222,19 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
     open: async (openPath, newTab) => {
       await call("open", { path: openPath, newTab });
     },
+    linkTo: (linkPath) => {
+      if (!context.appUrl) return null;
+      const segments: string[] = [];
+      for (const part of linkPath.split("/")) {
+        if (part === "" || part === ".") continue;
+        if (part !== "..") segments.push(part);
+        else if (segments.pop() === undefined) return null;
+      }
+      return [
+        context.appUrl.replace(/\/+$/, ""),
+        ...segments.map(encodeURIComponent),
+      ].join("/");
+    },
     onPathChange: (listener) => {
       pathListeners.add(listener);
       return () => {

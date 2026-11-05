@@ -92,7 +92,11 @@ export interface MultiplayerApi {
 
 export interface ViewContext {
   readonly pluginId: string;
-  /** The signed-in Lightfern user, or `null` while signed out. Updates with the host's auth state. */
+  /**
+   * The person using the view, as the app knows them, the same as `caller.user` in server code:
+   * `null` until the view first reaches its server code. Before version 3, the signed-in Lightfern
+   * account, or `null` while signed out.
+   */
   readonly currentUser: CurrentUser | null;
   /** Subscribe to sign-in, sign-out, or user changes. Returns an unsubscribe. */
   onCurrentUserChange(listener: (user: CurrentUser | null) => void): () => void;
@@ -104,10 +108,9 @@ export interface ViewContext {
    */
   readonly path: string;
   /**
-   * The plugin's own folder — where its `manifest.json` lives — relative to the activation
-   * root, and the target that opens its `home` view. Constant for the life of the view (it
-   * does not move as `path` does), so `ctx.open(ctx.homePath)` navigates back to the home
-   * from any file view without the plugin having to know its own folder name.
+   * The path that opens the app's `home` view: `""` from manifest version 3, the app folder
+   * itself. Earlier versions get the code folder, relative to the activation root. Constant for
+   * the life of the view, so `ctx.open(ctx.homePath)` returns home from any file view.
    */
   readonly homePath: string;
   /**
@@ -126,6 +129,12 @@ export interface ViewContext {
    * one. The path may not escape the activation root. Needs no permission.
    */
   open(path: string, newTab?: boolean): Promise<void>;
+  /**
+   * The web address that opens `path` in this app, for a link or QR code to give someone; `""`
+   * is the home view. `null` while the app has no address of its own, because it isn't on a
+   * public link, or when the path leaves the app folder. Fixed for the life of the view.
+   */
+  linkTo(path: string): string | null;
   /**
    * Call `listener` with the new `path` when the user opens another node that routes to
    * this view — including one matched by a different contribution, as long as it is the

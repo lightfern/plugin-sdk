@@ -221,8 +221,8 @@ in a game can do the same, so nobody hears about players in other cities.
 - Use a path to give each session its own room, such as a game on each TV. Declare a view that
   matches `play/*`, start a session by making up a code and calling `ctx.open("play/k7f2")`, and
   join the room `session-k7f2`, read from `ctx.path`. No file needs to exist at that path. Share the
-  app on a link, put the session's address, `https://share.lightfern.com/<share>/play/k7f2`, in a QR
-  code, and every phone that scans it opens the same view and joins the same room. See
+  app on a public link, put `ctx.linkTo("play/k7f2")` in a QR code, and every phone that scans it
+  opens the same view and joins the same room. See
   [Routing paths to views](guide.md#routing-paths-to-views).
 - Rooms belong to one copy of the app. If someone copies the app's folder, or installs the same app
   themselves, they are in different rooms from the original, even with the same name.
@@ -254,7 +254,8 @@ still has its own presence, so your app can give one person's devices different 
 
 ## What you can trust
 
-- `peer.user` is the name and picture on the person's Lightfern account, and the room's `caller` is
+- `peer.user` is the person as the app knows them: its own ID for them. Lightfern doesn't give apps
+  a person's name, picture or email yet (see [Methods](server.md#methods)). The room's `caller` is
   who really made a call.
 - `peer.presence` is whatever their copy of your app sent. Check its shape before you use it, in
   views and in server code.
@@ -262,4 +263,3 @@ still has its own presence, so your app can give one person's devices different 
 - People who can read the app's files can read everything in them, so a room can't hide anything
   from them there: a hidden hand of cards in a file is only hidden from the screen. See
   [Keeping an app secure](server.md#keeping-an-app-secure).
-- To show `profilePictureUrl`, add its origin to `network_permissions`.

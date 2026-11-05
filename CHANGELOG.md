@@ -7,6 +7,27 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-11-04
+
+`manifestVersion: "3.1"`.
+
+- `ctx.linkTo(path)` gives the web address that opens a path in the app, for a link or QR code, or
+  `null` while the app isn't on a public link. An app on a public link has its own address,
+  `https://<share>.lightfern.app`.
+- From version 3, `ctx.homePath` and a home view's `ctx.path` are `""`, the app folder. Apps before
+  3.0 still get their code folder.
+- The guide says files in the code folder load from `/` in views, in the desktop app and on links
+  alike, so `<img src="/art/mars.webp">` works everywhere.
+- `caller.user.id` is an ID only that app gets, the same on desktop and on links. Lightfern doesn't
+  give apps a person's name, picture or email yet: `name` and `profilePictureUrl` are `null`. From
+  version 3, `ctx.currentUser` is that same person once the view first reaches its server code.
+- `CurrentUser.email` is optional, since apps don't get it from version 3. Apps before 3.0 still get
+  the email, but updating the package makes `ctx.currentUser.email` a type error where it's used as
+  a string. Check it isn't `undefined` first.
+- Views on a public link, at the app's own address, can read the clipboard and use the camera and
+  microphone when the manifest declares them, as on desktop. Other links can't, because their apps
+  share one site.
+
 ## [3.0.3] - 2026-11-04
 
 - The server code guide has a section on keeping an app secure: everyone who uses an app gets its

@@ -12,7 +12,9 @@ APIs work as in any web page, except for what's below.
 - **WebSockets.** Share live state through server code; see [Multiplayer](multiplayer.md).
 - **Files and rooms.** A view reaches them only through [server code](server.md).
 - **Geolocation.**
-- **On a link only:** clipboard, camera and microphone.
+- **On a link that isn't public:** reading the clipboard, the camera and the microphone. Those apps
+  share one site, so a grant to one would reach them all. An app on a public link has its own
+  address, and gets them.
 
 ## Network
 
@@ -33,7 +35,8 @@ const worker = new Worker(URL.createObjectURL(new Blob([source], { type: "text/j
 ## Camera and microphone
 
 Declare `camera` or `microphone` in the manifest's `permissions`. Without it, `getUserMedia`
-rejects. In the desktop app, macOS asks the person to allow Lightfern the first time.
+rejects. The first time, macOS asks the person to allow Lightfern in the desktop app, and the
+browser asks on a link.
 
 ## Motion sensors
 

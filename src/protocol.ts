@@ -21,12 +21,17 @@ export interface SerializableContext {
   fileId: string | null;
   homePath: string;
   user: CurrentUser | null;
+  /** The app's web address, which `ctx.linkTo` builds on, or null while it has none. */
+  appUrl?: string | null;
 }
 
 export interface CurrentUser {
+  /** From version 3, the ID only this app gets for the person, as `caller.user.id` is. */
   id: string;
+  /** From version 3, Lightfern doesn't give apps a person's name or picture yet: `null`. */
   name: string | null;
-  email: string;
+  /** Only apps before 3.0 get an email. */
+  email?: string;
   profilePictureUrl: string | null;
 }
 
@@ -111,7 +116,9 @@ export interface RoomChangedMessage {
 }
 
 export interface PeerUser {
+  /** From version 3, the ID only this app gets for the person. */
   id: string;
+  /** Lightfern doesn't give apps a person's name or picture yet, so both are `null`. */
   name: string | null;
   profilePictureUrl: string | null;
 }

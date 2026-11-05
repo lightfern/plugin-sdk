@@ -47,16 +47,17 @@ are the artifact. Lightfern transpiles and bundles them in-process on save.
 
 ## On a link
 
-People use an app in two places: in the desktop app, and on a **link**,
-`https://share.lightfern.com/<share>`. A link is for people who can only use the app, including
-visitors who aren't signed in. The guides say "on a link" for everything below.
+People use an app in two places: in the desktop app, and on a **link**. A link is for people who can
+only use the app, including visitors who aren't signed in. The guides say "on a link" for everything
+below.
 
 - Only the app runs, filling the page. There is no library, no file list and no built-in viewers.
-- The link's address, `https://share.lightfern.com/<share>`, opens the home view, and
-  `https://share.lightfern.com/<share>/<path>` opens the view whose `match` fits `<path>`. See
-  [Routing paths to views](#routing-paths-to-views).
-- `ctx.fileId` is `null`, and `ctx.currentUser` is `null` for a visitor. Server code gets a visitor
-  as its [caller](server.md#methods).
+- The link's address opens the home view, and the address followed by `/<path>` opens the view whose
+  `match` fits `<path>`. See [Routing paths to views](#routing-paths-to-views).
+- An app on a public link has an address of its own, `https://<share>.lightfern.app`. Any other link
+  is `https://share.lightfern.com/<share>`. `ctx.linkTo(path)` gives the address for a path, so
+  never build one yourself.
+- `ctx.fileId` is `null`. Server code gets a visitor as its [caller](server.md#methods).
 - The browser blocks some features there. See [The sandbox](sandbox.md#whats-blocked).
 
 ## How you build one
@@ -127,7 +128,7 @@ to write them. Concretely:
 
 ```json
 {
-  "manifestVersion": "3.0",
+  "manifestVersion": "3.1",
   "id": "recruiting-ats",
   "name": "Recruiting ATS",
   "version": "1.0.0",
@@ -142,7 +143,7 @@ to write them. Concretely:
 
 - `manifestVersion`: required. This is the SDK version your app is built against, and it covers the
   manifest format, the view and server APIs, the `lightfern:host` and `lightfern:server` imports,
-  and the `--lf-*` theme tokens. Use "3.0".
+  and the `--lf-*` theme tokens. Use "3.1".
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every app in the library** (two apps
   sharing an `id` serve one bundle), a human-readable name, and a semver string (display metadata
@@ -198,8 +199,8 @@ writes down.
 A home-only app declares just `home` and omits `views` entirely. The view is written exactly like
 any other.
 
-`ctx.path` is the code folder within the app folder for a home view. An app without a `home` has
-nothing to open, so its app folder shows as a plain folder.
+`ctx.path` is `""` for a home view, the app folder itself. An app without a `home` has nothing to
+open, so its app folder shows as a plain folder.
 
 ## Routing paths to views
 
@@ -211,9 +212,9 @@ nothing to open, so its app folder shows as a plain folder.
 | `entry` | yes      | The source module Lightfern builds, e.g. `src/candidate.tsx`. |
 | `title` | no       | Label for the view; defaults to the opened path's name.       |
 
-`ctx.open(path)` opens the view whose `match` fits `path`. On a link, so does the address
-`https://share.lightfern.com/<share>/<path>`. A path usually names a file or record the view shows,
-but needn't: `play/k7f2` can be a game session.
+`ctx.open(path)` opens the view whose `match` fits `path`. On a link, so does the link's address
+followed by `/<path>`, which `ctx.linkTo(path)` gives. A path usually names a file or record the
+view shows, but needn't: `play/k7f2` can be a game session.
 
 Lightfern never checks whether a file exists at the path. A view opens for any path its `match`
 fits, and the view, through its server code, decides what the path means, including a missing file.
@@ -223,8 +224,9 @@ fits, and the view, through its server code, decides what the path means, includ
 ```
 
 `ctx.open("play/k7f2")` opens that view with `ctx.path` set to `play/k7f2`, and the view reads the
-session's code from it. On a link, the address `https://share.lightfern.com/<share>/play/k7f2` opens
-the same view, so another device can open it from a QR code. See
+session's code from it. `ctx.linkTo("play/k7f2")` gives the address that opens the same view on a
+link, so another device can open it from a QR code. It's `null` while the app isn't on a public
+link, so show the session's code instead. See
 [Choosing room names](multiplayer.md#choosing-room-names) for the room that goes with it.
 
 ### When no view matches
@@ -329,24 +331,27 @@ view comes from its context, `ctx`, which `await connect()` resolves. Call it at
 entry module, before rendering: `usePath()`, `useFileId()` and `useCurrentUser()` throw if it hasn't
 resolved.
 
-- `ctx.path: string` is the opened path relative to the app folder: the code folder for a home view,
-  and the path that was opened for any other view. Pass it to server code when a query or method is
-  about the open path, like `useQuery(candidates.steps, path)`. Never build data paths from it in a
-  home view, which points into the code.
-- `ctx.homePath: string` is the code folder relative to that same root. `ctx.pluginId: string` is
-  also available.
-- `ctx.currentUser` is the signed-in Lightfern user, or `null` for a visitor on a link who isn't
-  signed in. Its type is
-  `{ id: string; email: string; name: string | null; profilePictureUrl: string | null } | null`. Use
-  it to draw the person; server code gets the same person as its caller and should decide who may do
-  what from that. Subscribe with `ctx.onCurrentUserChange(listener)`, or use `useCurrentUser()` in
-  React. Rendering a remote `profilePictureUrl` requires its origin in the app's
-  `network_permissions`.
+- `ctx.path: string` is the opened path relative to the app folder: `""` for a home view, and the
+  path that was opened for any other view. Pass it to server code when a query or method is about
+  the open path, like `useQuery(candidates.steps, path)`.
+- `ctx.homePath: string` is `""`, the path that opens the home view. Apps before 3.0 get their code
+  folder instead. `ctx.pluginId: string` is also available.
+- `ctx.currentUser` is the person using the view, as the app knows them:
+  `{ id: string; name: null; profilePictureUrl: null } | null`, the same as
+  [`caller.user`](server.md#methods) in server code. Lightfern doesn't give apps a person's name,
+  picture or email yet, so only the `id` is set. It's `null` until the view first reaches its server
+  code, then kept current. Subscribe with `ctx.onCurrentUserChange(listener)`, or use
+  `useCurrentUser()` in React. Apps before 3.0 get the signed-in Lightfern account here, email
+  included.
 - `ctx.open(path: string, newTab?: boolean): Promise<void>` opens the view whose `match` fits
   `path`, or the home view for `""`. Return home with `ctx.open("")`. The path may not reach beyond
   the app folder; `newTab: true` opens beside the current tab. A path no view matches opens a
   built-in viewer or a folder on desktop, and fails on a link (see
   [When no view matches](#when-no-view-matches)).
+- `ctx.linkTo(path: string): string | null` is the web address that opens `path` in the app, for a
+  link or QR code to give someone; `ctx.linkTo("")` is the home view. It's `null` while the app
+  isn't on a public link, in the desktop app as much as anywhere, and for a path that leaves the app
+  folder. Hide the link or show something else then.
 - `ctx.fileId: string | null` is the opened file's ID: the same for everyone with access to the
   file, and kept through renames and moves. A new file's ID can change once, when it first syncs;
   `onPathChange` (or `useFileId()`) tells you when it does. On a link it is `null`, so key anything
@@ -384,6 +389,14 @@ Styling is a plain `styles.css` at the top of the code folder.
 Decide first whether the view should look like Lightfern or like its subject. [Styling](styling.md)
 covers how to choose, the `--lf-*` design tokens (which follow dark mode for free), and the CSS
 recipes for both.
+
+### Images, sounds and fonts
+
+Files in the code folder load from `/`, which is the code folder, in the desktop app and on links
+alike: `<img src="/art/mars.webp">`, `new Audio("/sounds/win.mp3")`, or `url(/fonts/title.woff2)` in
+`styles.css`. Keep them in the code folder beside the code. The paths views open, in `ctx.path` and
+in links, are routes to views and never files, so the two can't clash. The app folder's data isn't
+served this way: a view gets it from server code.
 
 ## What is not available
 
