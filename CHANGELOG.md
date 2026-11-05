@@ -21,6 +21,9 @@ implements.
 - `caller.user.id` is an ID only that app gets, the same on desktop and on links. Lightfern doesn't
   give apps a person's name, picture or email yet: `name` and `profilePictureUrl` are `null`. From
   version 3, `ctx.currentUser` is that same person once the view first reaches its server code.
+- `CurrentUser.email` is optional, since apps don't get it from version 3. Apps before 3.0 still
+  get the email, but updating the package makes `ctx.currentUser.email` a type error where it's used
+  as a string. Check it isn't `undefined` first.
 - Views on a public link, at the app's own address, can read the clipboard and use the camera and
   microphone when the manifest declares them, as on desktop. Other links can't, because their apps
   share one site.
