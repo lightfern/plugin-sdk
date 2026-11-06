@@ -16,7 +16,7 @@ Recruiting/                         ← the app folder: name it for people; the 
         ├── candidates.server.ts    ← server code: reads and changes the candidate files
         ├── stages.ts               ← shared by the views and the server code
         ├── home.tsx                ← home view: the hiring pipeline
-        └── candidate.tsx           ← view for candidates/*.md
+        └── candidate.tsx           ← view for candidates/*
 ```
 
 To run it, create a `Recruiting` folder in your library, copy `examples/recruiting-ats/` into it as
@@ -27,7 +27,7 @@ give it its own `id`, since two apps with the same `id` run one copy of the code
 ## `manifest.json`
 
 The manifest uses `manifestVersion` `"3.1"` and pins exact React versions in `dependencies`. It has
-a home view, one view that opens any path matching `candidates/*.md`, and one server module. It asks
+a home view, one view that opens any route matching `candidates/*`, and one server module. It asks
 for no permissions, because views reach the files through the server code. There's no `package.json`
 and no build config.
 
@@ -40,10 +40,11 @@ and no build config.
 - `steps`, a query that returns one candidate's `- [ ]` lines.
 - `toggleStep`, a method that ticks or unticks one step and saves the file.
 
-Each takes the caller first, as every method and query must. A view chooses which path to pass, so
-the private `#read` checks it's a file in `candidates/` before reading or writing it. `toggleStep`
-also checks the line is still a step, and throws a `UserError` if it isn't, which the view gets as a
-failed call with that message.
+Each takes the caller first, as every method and query must. `steps` and `toggleStep` take a
+candidate's name, never a file path. A view can send any name, so the private `#path` accepts only a
+plain name and builds the path in `candidates/` from it. `toggleStep` also checks the line is still
+a step, and throws a `UserError` if it isn't, which the view gets as a failed call with that
+message.
 
 Nothing here watches files. Lightfern records what each query read, and runs it again when one of
 those files changes: after `toggleStep` saves, and when someone edits a candidate anywhere else.
@@ -58,15 +59,17 @@ a view's import of a server module gets only its classes, not anything else it e
 Connects with `await connect()` for `ctx.open`, makes the handle with `server(Candidates)` at module
 top level, and mounts a `Pipeline` component with `createRoot`. `useQuery(candidates.all)` gives the
 candidates, kept current, and the component lays them out as columns by stage. Clicking a card calls
-`ctx.open(path)`, which routes to the view below.
+`ctx.open("candidates/ada")`, a route for the candidate rather than their file, which opens the view
+below.
 
-## `src/candidate.tsx`: a view for `candidates/*.md`
+## `src/candidate.tsx`: a view for `candidates/*`
 
-This view mounts the same way but follows the open path. `usePath()` gives the opened candidate's
-path, and `useQuery(candidates.steps, path)` its steps: both live, so navigating to another
-candidate or editing the file re-renders without a reload.
+This view mounts the same way but follows the route. It takes the candidate's name from `usePath()`,
+dropping `.md` too, since on desktop opening the file from the library gives `candidates/ada.md`.
+`useQuery(candidates.steps, name)` gives their steps: both live, so navigating to another candidate
+or editing the file re-renders without a reload.
 
-Toggling a checkbox calls `candidates.toggleStep(path, line)`. The view keeps no state of its own:
+Toggling a checkbox calls `candidates.toggleStep(name, line)`. The view keeps no state of its own:
 once the file is saved, `steps` runs again and the box follows the file.
 
 ## `styles.css`

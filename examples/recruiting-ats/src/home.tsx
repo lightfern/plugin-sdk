@@ -21,9 +21,9 @@ function Pipeline() {
             .filter((c) => c.stage === stage)
             .map((c) => (
               <button
-                key={c.path}
+                key={c.name}
                 className="card"
-                onClick={() => void ctx.open(c.path)}
+                onClick={() => void ctx.open(`candidates/${c.name}`)}
               >
                 {c.name}
               </button>

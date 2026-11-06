@@ -7,6 +7,19 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-11-05
+
+- The guide names the two kinds of path. **Routes** (`ctx.path`, `ctx.open` and `ctx.linkTo`) start
+  from the app folder, where a leading `/` changes nothing, so `ctx.open("/")` goes home. **Asset
+  URLs** (`src`, a stylesheet's `href`, and `url()` in CSS) start from the code folder at `/`.
+- A view Lightfern builds from a source entry now loads at the root of the code folder, in the
+  desktop app and on links, so a relative asset URL starts there too. Before, it started from the
+  entry's folder: in a view built from `src/home.tsx`, `<img src="logo.png">` loaded `src/logo.png`
+  and now loads `logo.png`. Write asset URLs from `/`. An HTML entry still loads from its own path.
+- The guide and the reference app name a route for what a view shows, not for its file:
+  `candidates/ada`, not `candidates/ada.md`. Views pass server code a name, never a file path, and
+  server code builds the path. The server code guide says why: a view can send any path.
+
 ## [3.1.0] - 2026-11-04
 
 `manifestVersion: "3.1"`.
