@@ -131,8 +131,8 @@ export interface ViewContext {
   open(path: string, newTab?: boolean): Promise<void>;
   /**
    * The web address that opens `path` in this app, for a link or QR code to give someone; `""`
-   * is the home view. `null` while the app has no address of its own, because it isn't on a
-   * public link, or when the path leaves the app folder. Fixed for the life of the view.
+   * is the home view. `null` while the app has no address of its own, because it isn't
+   * shared, or when the path leaves the app folder. Fixed for the life of the view.
    */
   linkTo(path: string): string | null;
   /**
