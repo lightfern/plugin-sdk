@@ -33,7 +33,7 @@ and no build config.
 
 ## `src/candidates.server.ts`: the server code
 
-`Candidates` extends `Server`, so each view gets its own private server. It has:
+`Candidates` extends `Server`, so each person gets their own private server. It has:
 
 - `all`, a query that lists `candidates/`, reads each markdown file and returns every candidate with
   the stage from its `Stage:` line.

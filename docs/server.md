@@ -91,17 +91,19 @@ read that file, and the list re-renders. Nothing in the view watches files or re
 
 ## `Server` or `Room`
 
-- **`Server`** is a private server: each view gets its own, and it knows nothing about anyone else
-  using the app. Use it for tools, trackers and dashboards. Reach it with `server(Cls)`.
+- **`Server`** is a private server: each person gets one, shared by every view they have open, and
+  it knows nothing about anyone else using the app. Use it for tools, trackers and dashboards. Reach
+  it with `server(Cls)`. Because one person's tabs and devices share it, keep state for one view in
+  that view, not in the server's memory.
 - **`Room`** is shared by everyone who joins it by name, and knows who's in it. Use it when people
   work or play together and need to see each other. Reach it with `room(Cls, name)`. See
   [Multiplayer](multiplayer.md).
 
 Both run one event at a time: two calls never interleave, even while one waits for a file. So "read
 the board, check the move, write the board" is safe without any locking within one server or room.
-Different servers and rooms run side by side, though: an app's home view and another view each have
-their own private server, and so does each person using a `Server` app. Their saves merge with each
-other's, and with every other change to the files; see
+Different servers and rooms run side by side, though: each person using a `Server` app has their own
+private server, and each room runs apart from them. Their saves merge with each other's, and with
+every other change to the files; see
 [Saves merge, and the last write wins](#saves-merge-and-the-last-write-wins).
 
 ## Methods

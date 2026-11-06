@@ -7,6 +7,12 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-11-06
+
+- A private server (`Server`) is one per person, shared by every view they have open, instead of one
+  per view. It stays warm as they move between the app's views, so their queries answer sooner. Keep
+  state for one view in that view, not in the server's memory.
+
 ## [3.1.0] - 2026-11-04
 
 `manifestVersion: "3.1"`.
