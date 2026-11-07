@@ -189,7 +189,8 @@ interface Files {
   half-saved.
 - Reads later in the same call see its own writes, deletes and moves.
 - Reads you start together, as with `Promise.all`, reach the library in one request. Prefer that to
-  awaiting reads one by one in a loop, which waits for each in turn.
+  awaiting reads one by one in a loop, which waits for each in turn. Only six requests to the
+  library can wait at once (see [Limits](#limits)).
 - A call can write the same file more than once; the last write is saved. It can't move a file it
   changed, or change a file it moved: do that in another call.
 - A write you forget to `await` still saves: the call ends only once its file requests have.
@@ -210,9 +211,9 @@ does. If the library is out of reach, they wait and go when it's back.
 A call saves its changes the way a device saves edits. Each write carries the version of the file
 the call read, and whatever changed in that file since then merges in, whoever changed it: another
 server or room of the app, someone editing the file directly, an agent or another device. A save
-never fails because a file changed, and the library never makes a call run again. It's the same
-rule as everywhere else in Lightfern, so a file means the same thing whoever wrote it. In the rare
-case the library refuses a change outright, it's dropped and the app's queries go back to what the
+never fails because a file changed, and the library never makes a call run again. It's the same rule
+as everywhere else in Lightfern, so a file means the same thing whoever wrote it. In the rare case
+the library refuses a change outright, it's dropped and the app's queries go back to what the
 library holds.
 
 How files merge:
@@ -311,6 +312,8 @@ keep anyone's data there.
 - About one second of CPU per call. A call that loops forever fails, and the server keeps handling
   other calls, but it starts again: fields are lost and `onStart` runs again.
 - Calls, results and messages are JSON, and should stay well under 1 MiB.
+- At most six requests to the library wait at once, and more queue until one answers. Reads started
+  together go as one request, and each `list` is its own.
 
 ## Keeping an app secure
 
