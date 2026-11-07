@@ -7,6 +7,17 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.2] - 2026-11-07
+
+`manifestVersion: "3.1"`.
+
+- Calls in one server or room run at the same time. A call whose changes build on a file another
+  call changed while it ran runs again on the new version, so read, check, write stays safe there,
+  but a field it changes may change twice.
+- A call replies as soon as its changes are kept, without waiting for everyone's queries to get the
+  new result.
+- Reads a call or query starts together, as with `Promise.all`, reach the library in one request.
+
 ## [3.1.1] - 2026-11-05
 
 - The guide names the two kinds of path. **Routes** (`ctx.path`, `ctx.open` and `ctx.linkTo`) start
