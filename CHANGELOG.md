@@ -17,6 +17,8 @@ implements.
 - A call replies as soon as its changes are kept, without waiting for everyone's queries to get the
   new result.
 - Reads a call or query starts together, as with `Promise.all`, reach the library in one request.
+- The guide says only six requests to the library can wait at once, so read files together rather
+  than one by one.
 
 ## [3.1.1] - 2026-11-05
 
