@@ -71,15 +71,15 @@ function Columns() {
 ```
 
 While Bob drags a card, his presence says which one, so Alice sees it move. When he drops it, `move`
-saves the board, the `cards` query runs again for everyone, and Bob clears his drag. Alice sees the
-card land, then Bob's drag end.
+saves the board, Bob clears his drag, and the `cards` query runs again for everyone. Alice sees
+Bob's drag end and the card land a moment apart.
 
 ## Presence and calls
 
-Clear the presence a call replaces only once the call has finished: `await` the method, then set
-presence, as `drop` does above. A call finishes only after everyone's queries have the new result,
-so others see the card land before the drag ends. Clearing first makes the card jump back for a
-moment for everyone else.
+Clear the presence a call replaces once the call has finished: `await` the method, then set
+presence, as `drop` does above. A call replies as soon as its changes are kept, and everyone's
+queries get the new result a moment later, so others may see the drag end just before the card
+lands.
 
 ## Joining a room
 
