@@ -1,0 +1,49 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "import"],
+  "jsPlugins": ["eslint-plugin-simple-import-sort"],
+  "options": {
+    "typeAware": true
+  },
+  "rules": {
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+
+    "typescript/no-floating-promises": "error",
+    "typescript/await-thenable": "off",
+    "typescript/unbound-method": "off",
+    "typescript/no-base-to-string": "off",
+    "typescript/consistent-type-imports": [
+      "error",
+      { "prefer": "type-imports", "disallowTypeAnnotations": false }
+    ],
+
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/static-components": "error",
+    "react/use-memo": "error",
+    "react/globals": "error",
+    "react/error-boundaries": "error",
+    "react/purity": "error",
+    "react/set-state-in-render": "error",
+    "react/preserve-manual-memoization": "warn",
+    "react/incompatible-library": "warn",
+    "react/immutability": "warn",
+    "react/refs": "warn",
+    "react/set-state-in-effect": "warn",
+    "react/unsupported-syntax": "warn",
+
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error",
+    "import/first": "error",
+    "import/newline-after-import": "error",
+    "import/no-duplicates": "error"
+  }
+}

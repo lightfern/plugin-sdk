@@ -22,7 +22,11 @@ export type { FileEntry, Peer, PeerUser, PeerView } from "./protocol";
  *   so server code can keep things from them. Not given yet.
  */
 export type Access =
-  "owner" | "admin" | "edit_code_and_data" | "read_code_and_data" | "use_only";
+  | "owner"
+  | "admin"
+  | "edit_code_and_data"
+  | "read_code_and_data"
+  | "use_only";
 
 /**
  * Who made a call: the first parameter of every public method and query, and of `onJoin` and

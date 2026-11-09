@@ -80,7 +80,10 @@ export interface ViewFixRequestMessage {
 
 // Everything the view posts up to the host window (not over the port).
 export type ViewMessage =
-  ViewReadyMessage | ViewKeyDownMessage | ViewSelectionMessage | ViewFixRequestMessage;
+  | ViewReadyMessage
+  | ViewKeyDownMessage
+  | ViewSelectionMessage
+  | ViewFixRequestMessage;
 
 // Selection commands the host posts to the view window (not over the port — they are
 // answered by the same host-authored script that forwards the selection up, which runs

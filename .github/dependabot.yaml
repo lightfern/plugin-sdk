@@ -32,9 +32,9 @@ updates:
           - "react-dom"
           - "@types/react"
           - "@types/react-dom"
-      eslint:
+      oxc:
         patterns:
-          - "eslint"
-          - "@eslint/js"
-          - "typescript-eslint"
+          - "oxlint"
+          - "oxlint-tsgolint"
+          - "oxfmt"
           - "eslint-plugin-*"
