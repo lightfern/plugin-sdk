@@ -7,6 +7,11 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.2] - 2026-11-06
+
+- Every shared app has an address of its own, `https://<share>.lightfern.app`, however it's shared,
+  so `ctx.linkTo(path)` gives an address whenever the app is shared, not only on a public link.
+
 ## [3.1.1] - 2026-11-05
 
 - The guide names the two kinds of path. **Routes** (`ctx.path`, `ctx.open` and `ctx.linkTo`) start

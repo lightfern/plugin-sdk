@@ -46,16 +46,16 @@ are the artifact. Lightfern transpiles and bundles them in-process on save.
 
 ## On a link
 
-People use an app in two places: in the desktop app, and on a **link**. A link is for people who can
-only use the app, including visitors who aren't signed in. The guides say "on a link" for everything
+People use an app in two places: in the desktop app, and on a **link**. Sharing an app's folder
+gives it a link, and everyone who opens it gets the app on its own: visitors who aren't signed in,
+people who can only use it, and people who can edit it. The guides say "on a link" for everything
 below.
 
 - Only the app runs, filling the page. There is no library, no file list and no built-in viewers.
 - The link's address opens the home view, and the address followed by `/<path>` opens the view whose
   `match` fits `<path>`. See [Routing paths to views](#routing-paths-to-views).
-- An app on a public link has an address of its own, `https://<share>.lightfern.app`. Any other link
-  is `https://share.lightfern.com/<share>`. `ctx.linkTo(path)` gives the address for a path, so
-  never build one yourself.
+- A shared app has an address of its own, `https://<share>.lightfern.app`, however it's shared.
+  `ctx.linkTo(path)` gives the address for a path, so never build one yourself.
 - `ctx.fileId` is `null`. Server code gets a visitor as its [caller](server.md#methods).
 - The browser blocks some features there. See [The sandbox](sandbox.md#whats-blocked).
 
@@ -235,9 +235,9 @@ fits, and the view, through its server code, decides what the path means, includ
 
 `ctx.open("play/k7f2")` opens that view with `ctx.path` set to `play/k7f2`, and the view reads the
 session's code from it. `ctx.linkTo("play/k7f2")` gives the address that opens the same view on a
-link, so another device can open it from a QR code. It's `null` while the app isn't on a public
-link, so show the session's code instead. See
-[Choosing room names](multiplayer.md#choosing-room-names) for the room that goes with it.
+link, so another device can open it from a QR code. It's `null` while the app isn't shared, so show
+the session's code instead. See [Choosing room names](multiplayer.md#choosing-room-names) for the
+room that goes with it.
 
 ### When no view matches
 
@@ -361,7 +361,7 @@ resolved.
   [When no view matches](#when-no-view-matches)).
 - `ctx.linkTo(path: string): string | null` is the web address that opens `path` in the app, for a
   link or QR code to give someone; `ctx.linkTo("")` is the home view. It's `null` while the app
-  isn't on a public link, in the desktop app as much as anywhere, and for a path that leaves the app
+  isn't shared, in the desktop app of someone it was shared with, and for a path that leaves the app
   folder. Hide the link or show something else then.
 - `ctx.fileId: string | null` is the opened file's ID: the same for everyone with access to the
   file, and kept through renames and moves. A new file's ID can change once, when it first syncs;
