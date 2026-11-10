@@ -188,6 +188,17 @@ interface Files {
   them apply if it throws. So check everything first, or throw after writing; either way nothing is
   half-saved.
 - Reads later in the same call see its own writes, deletes and moves.
+- Start every read a call or query needs at once, with `Promise.all`, and never `await` reads one by
+  one in a loop. Reads started together reach the library in one request, while a loop waits for
+  each in turn, and only six requests to the library can wait at once (see [Limits](#limits)). List
+  the folders you need together too, then read their files together:
+
+  ```ts
+  const entries = await this.ctx.files.list("candidates");
+  const files = entries.filter((e) => e.kind === "file");
+  const texts = await Promise.all(files.map((e) => this.ctx.files.read(e.path)));
+  ```
+
 - A call can write the same file more than once; the last write is saved. It can't move a file it
   changed, or change a file it moved: do that in another call.
 - A write you forget to `await` still saves: the call ends only once its file requests have.
@@ -208,9 +219,10 @@ does. If the library is out of reach, they wait and go when it's back.
 A call saves its changes the way a device saves edits. Each write carries the version of the file
 the call read, and whatever changed in that file since then merges in, whoever changed it: another
 server or room of the app, someone editing the file directly, an agent or another device. A save
-never fails because a file changed, and a call never runs again. It's the same rule as everywhere
-else in Lightfern, so a file means the same thing whoever wrote it. In the rare case the library
-refuses a change outright, it's dropped and the app's queries go back to what the library holds.
+never fails because a file changed, and the library never makes a call run again. It's the same rule
+as everywhere else in Lightfern, so a file means the same thing whoever wrote it. In the rare case
+the library refuses a change outright, it's dropped and the app's queries go back to what the
+library holds.
 
 How files merge:
 
@@ -226,8 +238,9 @@ How files merge:
 
 What that means for your code:
 
-- Within one server or room, calls run one at a time on the files as that object last saw them, so
-  read, check, write is safe there.
+- Within one server or room, calls run at the same time. A call whose changes build on a file
+  another call changed while it ran runs again on the new version, so read, check, write is safe
+  there. Since a call can run twice, don't count on a field it changes changing only once.
 - Across servers, rooms and other writers, nothing checks again what a call read. Two private
   servers can each check a rule and both save, breaking it: two people each taking the last seat, or
   prices that must add up to 100. Keep a rule like that inside one room.
@@ -307,6 +320,8 @@ keep anyone's data there.
 - About one second of CPU per call. A call that loops forever fails, and the server keeps handling
   other calls, but it starts again: fields are lost and `onStart` runs again.
 - Calls, results and messages are JSON, and should stay well under 1 MiB.
+- At most six requests to the library wait at once, and more queue until one answers. Reads started
+  together go as one request, and each `list` is its own.
 
 ## Keeping an app secure
 

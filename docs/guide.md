@@ -249,6 +249,11 @@ room that goes with it.
 So build a view for everything the app shows, and the app works the same in both places. A home-only
 app has no views, so on a link nothing but the home view opens.
 
+Keep people in the app's views, never in its files. Don't `ctx.open` a path no view matches to show
+a data file in Lightfern's own viewer, and don't ask people to open or edit the files behind the
+app. Whatever people need to see or change gets a view of its own. People who can only use the app
+can't read its files, and a link has none to show.
+
 On desktop, someone who chooses "Show contents" and clicks a data file directly opens the matching
 view, or the built-in viewer if none matches. That's rare; route people with `ctx.open`.
 
@@ -391,8 +396,9 @@ const name = path.slice("candidates/".length).replace(/\.md$/, "");
 const steps = useQuery(candidates.steps, name); // follows navigation and edits
 ```
 
-When a call returns, the queries it affected have already re-rendered, so a view can clear what it
-was showing in the meantime, like a dragged card.
+A call returns as soon as its changes are kept, and the queries it affected re-render a moment
+later. So a view showing a change while the call runs, like a dragged card, keeps showing it until
+the query's result has it, or the card jumps back for a moment.
 
 ### Styling
 

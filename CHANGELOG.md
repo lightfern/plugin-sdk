@@ -7,6 +7,19 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.3] - 2026-11-09
+
+- Calls in one server or room run at the same time. A call whose changes build on a file another
+  call changed while it ran runs again on the new version, so read, check, write stays safe there,
+  but a field it changes may change twice.
+- A call replies as soon as its changes are kept, without waiting for everyone's queries to get the
+  new result.
+- Reads a call or query starts together, as with `Promise.all`, reach the library in one request.
+  The guide says to start every read at once rather than one by one in a loop, since only six
+  requests to the library can wait at once.
+- The guide says to keep people in an app's views: never send them to the app's files to read or
+  edit them.
+
 ## [3.1.2] - 2026-11-06
 
 - Every shared app has an address of its own, `https://<share>.lightfern.app`, however it's shared,
