@@ -7,6 +7,13 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.4] - 2026-11-10
+
+- An app shared only with people invited to it, or not shared at all, gets each person's name, email
+  and picture in `caller.user`, `peer.user` and `ctx.currentUser`. Everyone who can open it was
+  invited by name. Once a public link reaches the app or any of its files, they're `null`, as
+  before.
+
 ## [3.1.3] - 2026-11-09
 
 - Calls in one server or room run at the same time. A call whose changes build on a file another
