@@ -7,6 +7,11 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.5] - 2026-11-11
+
+- A new guide, [Moving an app to version 3](docs/migrating.md), says what stays the same, what each
+  file and room API becomes, the steps to move an app, and what can't move yet.
+
 ## [3.1.4] - 2026-11-10
 
 - An app shared only with people invited to it, or not shared at all, gets each person's name, email

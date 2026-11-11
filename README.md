@@ -40,6 +40,8 @@ The host imports the same types to drive the other end of the bridge.
 - [Server code](docs/server.md): the classes that read and change an app's files, which views call
   like ordinary methods, and live queries.
 - [Multiplayer](docs/multiplayer.md): rooms people share, with everyone's presence.
+- [Moving an app to version 3](docs/migrating.md): how to move an app from before 3.0 to server
+  code.
 - [Reference app](docs/example.md) and its source in
   [`examples/recruiting-ats/`](examples/recruiting-ats/).
 
