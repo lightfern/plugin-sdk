@@ -7,6 +7,13 @@ implements.
 
 ## [Unreleased]
 
+## [3.1.5] - 2026-11-11
+
+- A new guide, [Moving an app to version 3](docs/migrating.md), says what stays the same, what each
+  file and room API becomes, the steps to move an app, and what can't move yet.
+- The server code guide no longer says calls in one server or room run one at a time. They run at
+  the same time, as 3.1.3 says, and a call that builds on a file another call changed runs again.
+
 ## [3.1.4] - 2026-11-10
 
 - An app shared only with people invited to it, or not shared at all, gets each person's name, email

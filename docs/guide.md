@@ -17,6 +17,8 @@ Companion documents:
   link.
 - [Multiplayer](multiplayer.md): rooms that people share, with everyone's presence.
 - [Reference app](example.md): a walkthrough of the Recruiting ATS example.
+- [Moving an app to version 3](migrating.md): for an app whose `manifestVersion` is before "3.0".
+  Move it before you do anything else with it.
 
 ## What an app is
 

@@ -97,8 +97,9 @@ read that file, and the list re-renders. Nothing in the view watches files or re
   work or play together and need to see each other. Reach it with `room(Cls, name)`. See
   [Multiplayer](multiplayer.md).
 
-Both run one event at a time: two calls never interleave, even while one waits for a file. So "read
-the board, check the move, write the board" is safe without any locking within one server or room.
+Within one server or room, a call whose changes build on a file another call changed while it ran
+runs again on the new version. So "read the board, check the move, write the board" is safe without
+any locking there; see [Saves merge, and the last write wins](#saves-merge-and-the-last-write-wins).
 Different servers and rooms run side by side, though: an app's home view and another view each have
 their own private server, and so does each person using a `Server` app. Their saves merge with each
 other's, and with every other change to the files; see
