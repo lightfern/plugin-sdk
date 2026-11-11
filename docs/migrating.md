@@ -11,7 +11,8 @@ older app to version 3 before you do anything else with it.
   versions, so `candidates/ada.md` stays where it is. Don't move, rename or reformat data files.
 - `id`, `name`, `version`, `dependencies`, `network_permissions`, `styles.css`, `contributes.home`,
   and `contributes.views` with their `match` patterns. Keeping the patterns keeps every file that
-  opened in a view opening there.
+  opened in a view opening there, so a moved app's routes stay file names like `candidates/ada.md`.
+  That's expected; only a new app names its routes for what they show.
 - `connect()`, `ctx.open`, `ctx.fileId`, `ctx.onPathChange`, `usePath()` and `useFileId()`. A view
   other than the home view gets the same `ctx.path` as before.
 - Views can still `fetch` from the origins in `network_permissions`. Server code can't.
@@ -32,24 +33,34 @@ older app to version 3 before you do anything else with it.
 
 1. **Read the whole app.** Read `manifest.json` and every view. List every `ctx.files` call, every
    file hook, every room, every use of `ctx.homePath` and `ctx.currentUser`, and every asset URL.
-2. **Write the server code.** Put it in `src/<name>.server.ts`, as a class that extends `Server`, or
-   `Room` if people share it. List the file in `contributes.servers`.
-   - Each read becomes a query that returns what the view shows, not whole files. A query runs again
-     by itself when a file it read changes, so nothing replaces `watch`.
+2. **Write the server code.** Put it in `src/<name>.server.ts`, as a class that extends `Server`.
+   Use `Room` instead only when people using the app see each other, as with presence. List the file
+   in `contributes.servers`.
+   - Each read becomes a query that returns what the view shows. A query runs again by itself when a
+     file it read changes, so nothing replaces `watch`.
+   - Catch reads of files that may not exist yet, as in `.catch(() => "[]")`. A query's error
+     reaches the view as a thrown error, and an older view has no error boundary to catch it.
    - Each write, move or delete becomes a method. Check its arguments, and decide in it who may make
-     the change.
-   - Build file paths in server code from names the view passes, such as `candidates/${name}.md`.
-     Never take a file path from a view: a modified view can send any path. A view over files
-     anywhere in the app folder, such as `**/*.csv`, passes its route; check that it ends in `.csv`
-     before you read or write it.
+     the change. Unless the person asks otherwise, keep it as it was: anyone using the app may.
+   - A view that read a file and then wrote it back, or chose something from its copy of the data (a
+     free file name, a record to copy), moves that whole sequence into one method.
+   - Build file paths in server code from names the view passes. Never take a file path from a view:
+     a modified view can send any path. For a view whose pattern is `candidates/*.md`, pass the file
+     name, check it's one segment ending in `.md`, and build `candidates/${file}`. A view over files
+     anywhere in the app folder, such as `**/*.csv`, passes its route; check that it ends in `.csv`.
+   - Server code may run on Lightfern's servers, in another time zone. A view that saved a local
+     date, such as today's, passes it to the method as an argument.
    - Types and parsing that views and server code both need go in a plain module that both import.
      Everything a view imports reaches everyone who uses the app.
 3. **Rewrite the views.** Make a handle with `server(Cls)` at the top of each view module. Replace
    reads with `useQuery(handle.query, ...args)` and writes with `await handle.method(...args)`.
-   Delete code that watched files or read them again after a write.
+   Delete code that watched files or read them again after a write. A view that showed a change at
+   once, like a dragged card, keeps showing it until the query's result has it, and drops it if the
+   call fails.
 4. **Fix the paths.** Anything built from `ctx.homePath`, or from a home view's `ctx.path`, now
    starts from the app folder rather than the code folder. Write asset URLs (`src`, `href`, `url()`)
-   from `/`, the code folder: `<img src="/logo.png">`.
+   from `/`, the code folder: `<img src="/logo.png">`. `ctx.open(ctx.homePath)` still opens the home
+   view.
 5. **Update the manifest.** Set `"manifestVersion": "3.1"`, remove the `files.read`, `files.write`
    and `multiplayer` permissions, and add `contributes.servers`.
 6. **Check it.** Render every view and read the console. Try each change the views make, and check
@@ -89,9 +100,26 @@ The room's API moves onto `client`:
 | `room.connected`, `onConnectedChange`        | `client.status === "connected"`, `onStatusChange` |
 | `room.leave()`                               | `client.close()`                                  |
 
+The React hooks map the same way, from one `useRoom(Board, "board")` handle:
+
+| Before 3.0                | From 3.0                        |
+| ------------------------- | ------------------------------- |
+| `usePeers("board")`       | `client.peers`                  |
+| `useMe("board")`          | `client.me`                     |
+| `useViewId("board")`      | `client.viewId`                 |
+| `useSetPresence("board")` | `client.setPresence`            |
+| `useConnected("board")`   | `client.status === "connected"` |
+
+The handle and its `client` stay the same object while the view uses the room, so they're safe in an
+effect's dependencies.
+
 When views saved the room's moves to files themselves, those writes become methods on the room
-class. Find the room's files from `this.ctx.roomName`, never from an argument. See
-[Multiplayer](multiplayer.md).
+class. Never take the room's file from an argument. Use a fixed path, like `board.json`, for a file
+every room shares. A room with files of its own builds their path from `this.ctx.roomName`, which a
+view chooses, so check it as you would any name a view sends. See [Multiplayer](multiplayer.md).
+
+Until everyone has the new code, people on the old version and the new don't see each other's
+presence.
 
 ## People
 
