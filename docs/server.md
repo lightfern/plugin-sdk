@@ -115,7 +115,12 @@ await board.moveCard("card-3", "done");                                 // view
 
 ```ts
 interface Caller {
-  user: { id: string; name: string | null; profilePictureUrl: string | null };
+  user: {
+    id: string;
+    name: string | null;
+    email?: string | null;
+    profilePictureUrl: string | null;
+  };
   /** The view the call came from. */
   viewId: string;
   access: "owner" | "admin" | "edit_code_and_data" | "read_code_and_data" | "use_only";
@@ -127,9 +132,14 @@ interface Caller {
 - Lightfern sets the caller from the person's sign-in. A view can't change it.
 - `user.id` is an ID only this app gets. It's the same for someone in the desktop app and on a link,
   and different in every app, so apps can't follow a person between them.
-- Lightfern doesn't give apps a person's name, picture or email yet. `user.name` and
-  `user.profilePictureUrl` are always `null`, and there's no email. If an app needs a name, ask the
-  person for one.
+- Lightfern gives an app a person's name, email and picture only when no public link reaches the app
+  or any of its files: the app isn't shared, or it's shared only with people invited to it. Everyone
+  who can open it then was invited by name, so they may know each other.
+- Otherwise `user.name`, `user.email` and `user.profilePictureUrl` are `null`. If an app needs a
+  name there, ask the person for one. Making a link public, for the app or a folder holding it,
+  turns them `null` from the next time each view connects.
+- `user.name` and `user.profilePictureUrl` can also be `null` in a private app, when the person's
+  account has none. Show `user.email` instead.
 - Someone using the app on a [link](guide.md#on-a-link) without signing in is a visitor. Their
   `user.id` starts with `visitor-`, stays the same while they use the same browser, and is different
   in every app, so apps can't follow a visitor between them. Anyone with the link can be one, and a

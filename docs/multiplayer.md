@@ -128,7 +128,12 @@ interface RoomClient<Presence> {
 interface Peer<Presence> {
   /** The person's user ID, the same as `user.id`. */
   peerId: string;
-  user: { id: string; name: string | null; profilePictureUrl: string | null };
+  user: {
+    id: string;
+    name: string | null;
+    email?: string | null;
+    profilePictureUrl: string | null;
+  };
   /** The presence of their most recently active view: `views[0].presence`. */
   presence: Presence | null;
   /** Every view they have open in this room, most recently active first. */
@@ -254,9 +259,9 @@ still has its own presence, so your app can give one person's devices different 
 
 ## What you can trust
 
-- `peer.user` is the person as the app knows them: its own ID for them. Lightfern doesn't give apps
-  a person's name, picture or email yet (see [Methods](server.md#methods)). The room's `caller` is
-  who really made a call.
+- `peer.user` is the person as the app knows them: its own ID for them, and their name, email and
+  picture only in an app shared with nobody but people invited to it (see
+  [Methods](server.md#methods)). The room's `caller` is who really made a call.
 - `peer.presence` is whatever their copy of your app sent. Check its shape before you use it, in
   views and in server code.
 - Never render presence as HTML.
