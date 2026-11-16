@@ -20,7 +20,7 @@ jobs:
           node-version: "22"
 
       # Reads the pnpm version from package.json's packageManager field.
-      - uses: pnpm/action-setup@v6.1.0
+      - uses: pnpm/action-setup@v6.1.1
 
       - name: Get pnpm store directory
         shell: bash
