@@ -32,6 +32,12 @@ describe("parseManifest", () => {
     );
   });
 
+  it("accepts an app built for 3.2, which ctx.setTitle needs", () => {
+    expect(parseManifest({ ...clone(), manifestVersion: "3.2" }).manifestVersion).toBe(
+      "3.2"
+    );
+  });
+
   it("defaults an omitted network_permissions to an empty array", () => {
     const { network_permissions: _omitted, ...bare } = clone();
     expect(parseManifest(bare).network_permissions).toEqual([]);
@@ -91,7 +97,7 @@ describe("safeParseManifest", () => {
   });
 
   it("rejects a minor newer than the SDK's", () => {
-    expectErrorContaining({ ...clone(), manifestVersion: "2.6" }, "manifestVersion");
+    expectErrorContaining({ ...clone(), manifestVersion: "3.3" }, "manifestVersion");
   });
 
   it("rejects a decimal number", () => {

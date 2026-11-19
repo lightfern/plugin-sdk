@@ -7,8 +7,11 @@ implements.
 
 ## [Unreleased]
 
+`manifestVersion: "3.2"`.
+
 - `ctx.setTitle(title)` names the page a view shows, for its tab in the desktop app and the browser
-  tab on a link. Hosts that predate it ignore it.
+  tab on a link. An app that uses it declares `"3.2"`, so an older Lightfern says it needs a newer
+  release instead of running it.
 
 ## [3.1.5] - 2026-11-11
 

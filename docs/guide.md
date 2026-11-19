@@ -129,7 +129,7 @@ to write them. Concretely:
 
 ```json
 {
-  "manifestVersion": "3.1",
+  "manifestVersion": "3.2",
   "id": "recruiting-ats",
   "name": "Recruiting ATS",
   "version": "1.0.0",
@@ -144,7 +144,7 @@ to write them. Concretely:
 
 - `manifestVersion`: required. This is the SDK version your app is built against, and it covers the
   manifest format, the view and server APIs, the `lightfern:host` and `lightfern:server` imports,
-  and the `--lf-*` theme tokens. Use "3.1".
+  and the `--lf-*` theme tokens. Use "3.2".
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every app in the library** (two apps
   sharing an `id` serve one bundle), a human-readable name, and a semver string (display metadata
