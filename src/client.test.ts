@@ -6,6 +6,7 @@ import type {
   RpcRequest,
   RpcResponse,
   SerializableContext,
+  ViewTitleMessage,
 } from "./protocol";
 
 // `connect()` memoizes its handshake in module scope, so each test loads a fresh copy.
@@ -74,6 +75,23 @@ async function connectWithHost(
   window.dispatchEvent(init);
 
   return contextPromise;
+}
+
+// The title messages `post` sends up. In jsdom the view's `window.parent` is the window itself.
+async function titlesPosted(post: () => void): Promise<ViewTitleMessage[]> {
+  const titles: ViewTitleMessage[] = [];
+  const listening = new AbortController();
+  window.addEventListener(
+    "message",
+    (event) => {
+      if (event.data?.type === "title") titles.push(event.data);
+    },
+    { signal: listening.signal }
+  );
+  post();
+  await new Promise((resolve) => setTimeout(resolve));
+  listening.abort();
+  return titles;
 }
 
 const noopRespond = (request: RpcRequest): RpcResponse => ({
@@ -183,24 +201,41 @@ describe("connect", () => {
 
   it("tells the host the page's title, and null to go back to the host's own", async () => {
     const ctx = await connectWithHost(createFakeHostPort(noopRespond));
-    const titles: unknown[] = [];
-    const listening = new AbortController();
-    window.addEventListener(
-      "message",
-      (event) => {
-        if (event.data?.type === "title") titles.push(event.data);
-      },
-      { signal: listening.signal }
-    );
 
-    ctx.setTitle("Q3 invoices");
-    ctx.setTitle(null);
-    await new Promise((resolve) => setTimeout(resolve));
-    listening.abort();
+    const titles = await titlesPosted(() => {
+      ctx.setTitle("Q3 invoices");
+      ctx.setTitle(null);
+    });
 
     expect(titles).toEqual([
-      { source: "lf-plugin-view", type: "title", title: "Q3 invoices" },
-      { source: "lf-plugin-view", type: "title", title: null },
+      {
+        source: "lf-plugin-view",
+        type: "title",
+        title: "Q3 invoices",
+        path: "data.csv",
+      },
+      { source: "lf-plugin-view", type: "title", title: null, path: "data.csv" },
+    ]);
+  });
+
+  it("stamps a title with the page it was set on, so the host can drop one for a page it left", async () => {
+    const port = createFakeHostPort(noopRespond);
+    const ctx = await connectWithHost(port, { path: "candidates/ada" });
+
+    const titles = await titlesPosted(() => {
+      ctx.setTitle("Ada");
+      port.push({
+        source: "lf-plugin-host",
+        type: "path",
+        path: "candidates/grace",
+        fileId: null,
+      });
+      ctx.setTitle("Grace");
+    });
+
+    expect(titles.map((title) => title.path)).toEqual([
+      "candidates/ada",
+      "candidates/grace",
     ]);
   });
 

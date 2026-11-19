@@ -11,7 +11,8 @@ implements.
 
 - `ctx.setTitle(title)` names the page a view shows, for its tab in the desktop app and the browser
   tab on a link. An app that uses it declares `"3.2"`, so an older Lightfern says it needs a newer
-  release instead of running it.
+  release instead of running it. The message carries the `ctx.path` it was set on
+  (`ViewTitleMessage.path`), so Lightfern ignores a title set after the user has left its page.
 - `useTitle(title)` from `lightfern:host/react` does the same in React, and names the page again
   after every navigation, since Lightfern resets the title then.
 

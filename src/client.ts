@@ -238,7 +238,8 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
         ...segments.map(encodeURIComponent),
       ].join("/");
     },
-    setTitle: (title) => postToHost({ source: "lf-plugin-view", type: "title", title }),
+    setTitle: (title) =>
+      postToHost({ source: "lf-plugin-view", type: "title", title, path }),
     onPathChange: (listener) => {
       pathListeners.add(listener);
       return () => {

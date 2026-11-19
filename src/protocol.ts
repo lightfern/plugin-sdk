@@ -80,11 +80,15 @@ export interface ViewFixRequestMessage {
   text: string;
 }
 
-// A plain window message rather than an RPC, so a host that predates it ignores it.
+// The page's name for its tab, sent as a window message beside the ready ping. The host resets the
+// title when it sends a new path, and drops a title whose `path` isn't the last one it sent, so a
+// title set late for a page the user has left can't land on the next one.
 export interface ViewTitleMessage {
   source: "lf-plugin-view";
   type: "title";
   title: string | null;
+  /** The `ctx.path` the title was set on. */
+  path: string;
 }
 
 // Everything the view posts up to the host window (not over the port).
