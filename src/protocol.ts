@@ -80,12 +80,20 @@ export interface ViewFixRequestMessage {
   text: string;
 }
 
+// A plain window message rather than an RPC, so a host that predates it ignores it.
+export interface ViewTitleMessage {
+  source: "lf-plugin-view";
+  type: "title";
+  title: string | null;
+}
+
 // Everything the view posts up to the host window (not over the port).
 export type ViewMessage =
   | ViewReadyMessage
   | ViewKeyDownMessage
   | ViewSelectionMessage
-  | ViewFixRequestMessage;
+  | ViewFixRequestMessage
+  | ViewTitleMessage;
 
 // Selection commands the host posts to the view window (not over the port — they are
 // answered by the same host-authored script that forwards the selection up, which runs

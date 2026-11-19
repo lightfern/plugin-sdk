@@ -181,6 +181,23 @@ describe("connect", () => {
     expect(opens[1].params).toEqual({ path: "notes/b.md", newTab: undefined });
   });
 
+  it("tells the host the page's title, and null to go back to the host's own", async () => {
+    const ctx = await connectWithHost(createFakeHostPort(noopRespond));
+    const titles: unknown[] = [];
+    window.addEventListener("message", (event) => {
+      if (event.data?.type === "title") titles.push(event.data);
+    });
+
+    ctx.setTitle("Q3 invoices");
+    ctx.setTitle(null);
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(titles).toEqual([
+      { source: "lf-plugin-view", type: "title", title: "Q3 invoices" },
+      { source: "lf-plugin-view", type: "title", title: null },
+    ]);
+  });
+
   it("links to a path at the app's address, and to nothing without one", async () => {
     const appUrl = "https://share-1.lightfern.app";
     const ctx = await connectWithHost(createFakeHostPort(noopRespond), { appUrl });

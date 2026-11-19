@@ -16,6 +16,7 @@ import type {
   SerializableContext,
   ServerPushMessage,
   ViewReadyMessage,
+  ViewTitleMessage,
 } from "./protocol";
 
 export class PluginRpcError extends Error {
@@ -55,11 +56,12 @@ export function connect(): Promise<ViewContext> {
     // (Chromium/Electron, our only host); fall back to any origin elsewhere. The ping
     // carries no secrets — the capability transfer is the host-sent MessagePort, which
     // the host only hands over after verifying the message came from this iframe.
-    const hostOrigin = window.location.ancestorOrigins?.[0] ?? "*";
-    window.parent.postMessage(ready, hostOrigin);
+    window.parent.postMessage(ready, hostOrigin());
   });
   return connectPromise;
 }
+
+const hostOrigin = () => window.location.ancestorOrigins?.[0] ?? "*";
 
 /** For `server` and `room`: connects, routes `server.*` pushes to `onPush`, and returns the port. */
 export async function serverChannel(
@@ -234,6 +236,14 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
         context.appUrl.replace(/\/+$/, ""),
         ...segments.map(encodeURIComponent),
       ].join("/");
+    },
+    setTitle: (title) => {
+      const message: ViewTitleMessage = {
+        source: "lf-plugin-view",
+        type: "title",
+        title,
+      };
+      window.parent.postMessage(message, hostOrigin());
     },
     onPathChange: (listener) => {
       pathListeners.add(listener);

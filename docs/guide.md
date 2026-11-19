@@ -370,6 +370,11 @@ resolved.
   link or QR code to give someone; `ctx.linkTo("")` is the home view. It's `null` while the app
   isn't shared, in the desktop app of someone it was shared with, and for a path that leaves the app
   folder. Hide the link or show something else then.
+- `ctx.setTitle(title: string | null): void` names the page for its tab, in the desktop app and in
+  the browser on a link. Without it, a tab shows the route's last part, such as `k7f2`. Call it on
+  every page with a name people know it by, taken from what the page shows (the candidate's name,
+  not their ID), and again when the path changes, since a new page goes back to the default until
+  you do, as does `null`.
 - `ctx.fileId: string | null` is the opened file's ID: the same for everyone with access to the
   file, and kept through renames and moves. A new file's ID can change once, when it first syncs;
   `onPathChange` (or `useFileId()`) tells you when it does. On a link it is `null`, so key anything

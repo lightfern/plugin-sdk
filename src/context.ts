@@ -136,6 +136,12 @@ export interface ViewContext {
    */
   linkTo(path: string): string | null;
   /**
+   * Name the page the view shows, for its tab in Lightfern and the browser tab on the app's
+   * address. Call it on every page: opening another page goes back to the route's or app's name
+   * until you do, as does `null`.
+   */
+  setTitle(title: string | null): void;
+  /**
    * Call `listener` with the new `path` when the user opens another node that routes to
    * this view — including one matched by a different contribution, as long as it is the
    * same entry module in the same activation folder. The view stays mounted and the

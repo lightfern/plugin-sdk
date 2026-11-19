@@ -1,10 +1,11 @@
 import { connect, server } from "lightfern:host";
 import { usePath, useQuery } from "lightfern:host/react";
+import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 
 import { Candidates } from "./candidates.server";
 
-await connect();
+const ctx = await connect();
 const candidates = server(Candidates);
 
 function Candidate() {
@@ -12,6 +13,7 @@ function Candidate() {
   // `candidates/ada.md`, so drop the extension too.
   const name = usePath().slice("candidates/".length).replace(/\.md$/, "");
   const steps = useQuery(candidates.steps, name) ?? [];
+  useEffect(() => ctx.setTitle(name), [name]);
 
   return (
     <ul className="steps">
