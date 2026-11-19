@@ -29,6 +29,12 @@ export function usePath(): string {
   return useSyncExternalStore(ctx.onPathChange, () => ctx.path);
 }
 
+/** Names the page for its tab, again after every navigation, since the host resets it then. */
+export function useTitle(title: string | null): void {
+  const path = usePath();
+  useEffect(() => hostContext().setTitle(title), [title, path]);
+}
+
 /** The opened node's server file ID, or `null` until it has synced. */
 export function useFileId(): string | null {
   const ctx = hostContext();
