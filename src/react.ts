@@ -29,7 +29,7 @@ export function usePath(): string {
   return useSyncExternalStore(ctx.onPathChange, () => ctx.path);
 }
 
-/** Names the page for its tab, again after every navigation, since the host resets it then. */
+/** Names the page for its tab, and each page the view navigates to. */
 export function useTitle(title: string | null): void {
   const path = usePath();
   useEffect(() => hostContext().setTitle(title), [title, path]);

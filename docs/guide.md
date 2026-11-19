@@ -373,8 +373,8 @@ throw if it hasn't resolved.
 - `ctx.setTitle(title: string | null): void` names the page for its tab, in the desktop app and in
   the browser on a link. Without it, a tab shows the route's last part, such as `k7f2`. Call it on
   every page with a name people know it by, taken from what the page shows (the candidate's name,
-  not their ID). A new page goes back to the default, as does `null`, so in React use
-  `useTitle(title)`, which names it again after every navigation; without React, call it again in
+  not their ID). A page you haven't named shows the default, as does `null`, so in React use
+  `useTitle(title)`, which names each page the view navigates to; without React, call it again in
   `onPathChange`. A title set after the user has left its page, such as once a slow query returns,
   is ignored, so it never lands on the next page.
 - `ctx.fileId: string | null` is the opened file's ID: the same for everyone with access to the
@@ -394,8 +394,7 @@ module state and transitions survive), and the files behind it change. These bin
 current:
 
 - `usePath()` turns navigation into state.
-- `useTitle(title)` names the page for its tab, and names it again after each navigation, since
-  Lightfern resets the title then.
+- `useTitle(title)` names the page for its tab, and each page the view navigates to.
 - `useQuery(query, ...args)` re-renders whenever the query's result changes, because Lightfern runs
   it again when a file it read changes, whoever changed it.
 

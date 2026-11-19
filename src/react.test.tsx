@@ -270,7 +270,7 @@ describe("the React bindings", () => {
     expect(screen.getByText("f-1")).toBeDefined();
   });
 
-  it("names the page again after navigating, since the host resets the title then", async () => {
+  it("names the page again after navigating, since a new page starts unnamed", async () => {
     const port = fakeHost({});
     await connectTo(port, "board/a");
     const { useTitle } = await import("./react");

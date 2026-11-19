@@ -137,8 +137,8 @@ export interface ViewContext {
   linkTo(path: string): string | null;
   /**
    * Name the page the view shows, for its tab in Lightfern and the browser tab on the app's
-   * address. Opening another page goes back to the route's or app's name, as does `null`, so
-   * call it again on every page; `useTitle` in React does that for you.
+   * address. A page you haven't named shows the route's or app's name, as does `null`, so call it
+   * on every page; `useTitle` in React does that for you.
    */
   setTitle(title: string | null): void;
   /**
