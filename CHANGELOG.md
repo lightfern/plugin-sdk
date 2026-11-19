@@ -7,6 +7,8 @@ implements.
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-11-19
+
 `manifestVersion: "3.2"`.
 
 - `ctx.setTitle(title)` names the page a view shows, for its tab in the desktop app and the browser
