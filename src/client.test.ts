@@ -184,13 +184,19 @@ describe("connect", () => {
   it("tells the host the page's title, and null to go back to the host's own", async () => {
     const ctx = await connectWithHost(createFakeHostPort(noopRespond));
     const titles: unknown[] = [];
-    window.addEventListener("message", (event) => {
-      if (event.data?.type === "title") titles.push(event.data);
-    });
+    const listening = new AbortController();
+    window.addEventListener(
+      "message",
+      (event) => {
+        if (event.data?.type === "title") titles.push(event.data);
+      },
+      { signal: listening.signal }
+    );
 
     ctx.setTitle("Q3 invoices");
     ctx.setTitle(null);
     await new Promise((resolve) => setTimeout(resolve));
+    listening.abort();
 
     expect(titles).toEqual([
       { source: "lf-plugin-view", type: "title", title: "Q3 invoices" },
