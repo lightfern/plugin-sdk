@@ -29,6 +29,12 @@ export function usePath(): string {
   return useSyncExternalStore(ctx.onPathChange, () => ctx.path);
 }
 
+/** Names the page for its tab, and each page the view navigates to. */
+export function useTitle(title: string | null): void {
+  const path = usePath();
+  useEffect(() => hostContext().setTitle(title), [title, path]);
+}
+
 /** The opened node's server file ID, or `null` until it has synced. */
 export function useFileId(): string | null {
   const ctx = hostContext();

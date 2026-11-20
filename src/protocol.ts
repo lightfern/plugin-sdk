@@ -80,12 +80,25 @@ export interface ViewFixRequestMessage {
   text: string;
 }
 
+// The page's name for its tab, sent as a window message beside the ready ping. A page the view
+// hasn't named shows the host's default, though a page the user returns to may keep its title. The
+// host drops a title whose `path` isn't the last one it sent, so a title set late for a page the
+// user has left can't land on the next one.
+export interface ViewTitleMessage {
+  source: "lf-plugin-view";
+  type: "title";
+  title: string | null;
+  /** The `ctx.path` the title was set on. */
+  path: string;
+}
+
 // Everything the view posts up to the host window (not over the port).
 export type ViewMessage =
   | ViewReadyMessage
   | ViewKeyDownMessage
   | ViewSelectionMessage
-  | ViewFixRequestMessage;
+  | ViewFixRequestMessage
+  | ViewTitleMessage;
 
 // Selection commands the host posts to the view window (not over the port — they are
 // answered by the same host-authored script that forwards the selection up, which runs

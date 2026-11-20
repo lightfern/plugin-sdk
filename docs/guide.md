@@ -129,7 +129,7 @@ to write them. Concretely:
 
 ```json
 {
-  "manifestVersion": "3.1",
+  "manifestVersion": "3.2",
   "id": "recruiting-ats",
   "name": "Recruiting ATS",
   "version": "1.0.0",
@@ -144,7 +144,7 @@ to write them. Concretely:
 
 - `manifestVersion`: required. This is the SDK version your app is built against, and it covers the
   manifest format, the view and server APIs, the `lightfern:host` and `lightfern:server` imports,
-  and the `--lf-*` theme tokens. Use "3.1".
+  and the `--lf-*` theme tokens. Use "3.2".
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every app in the library** (two apps
   sharing an `id` serve one bundle), a human-readable name, and a semver string (display metadata
@@ -295,11 +295,11 @@ read [The sandbox](sandbox.md) before you reach for a browser API.
 - **Bare** imports resolve through the host-injected import map. Nothing is installed, and nothing
   else is importable:
 
-  | Import                 | What it is                                                                                                                              |
-  | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-  | `lightfern:host`       | The view SDK: `server()` and `room()` to reach server code, `connect()` for the view's context, and their types. Needs no dependencies. |
-  | `lightfern:host/react` | React bindings: `useQuery()`, `useRoom()`, `usePath()`, `useFileId()` and `useCurrentUser()`. Requires `react` in `dependencies`.       |
-  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.      |
+  | Import                 | What it is                                                                                                                                      |
+  | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `lightfern:host`       | The view SDK: `server()` and `room()` to reach server code, `connect()` for the view's context, and their types. Needs no dependencies.         |
+  | `lightfern:host/react` | React bindings: `useQuery()`, `useRoom()`, `usePath()`, `useTitle()`, `useFileId()` and `useCurrentUser()`. Requires `react` in `dependencies`. |
+  | A declared dependency  | A locally served esm.sh browser module. `react` also serves `react/jsx-runtime`; declaring `react-dom` permits `react-dom/client`.              |
 
   Declare every bare package import in `dependencies`, including the peer dependencies of the
   packages you use. A subpath of a declared package uses the same instance as the package, so
@@ -345,8 +345,8 @@ except server code reaches everyone who uses the app; see
 
 `server()`, `room()`, `useQuery()` and `useRoom()` connect by themselves. Everything else about the
 view comes from its context, `ctx`, which `await connect()` resolves. Call it at the top of the
-entry module, before rendering: `usePath()`, `useFileId()` and `useCurrentUser()` throw if it hasn't
-resolved.
+entry module, before rendering: `usePath()`, `useTitle()`, `useFileId()` and `useCurrentUser()`
+throw if it hasn't resolved.
 
 - `ctx.path: string` is the opened route, relative to the app folder: `""` for a home view, and the
   route that was opened for any other view. Take what the view shows from it, such as a candidate's
@@ -370,6 +370,13 @@ resolved.
   link or QR code to give someone; `ctx.linkTo("")` is the home view. It's `null` while the app
   isn't shared, in the desktop app of someone it was shared with, and for a path that leaves the app
   folder. Hide the link or show something else then.
+- `ctx.setTitle(title: string | null): void` names the page for its tab, in the desktop app and in
+  the browser on a link. Without it, a tab shows the route's last part, such as `k7f2`. Call it on
+  every page with a name people know it by, taken from what the page shows (the candidate's name,
+  not their ID). A page you haven't named shows the default, as does `null`, so in React use
+  `useTitle(title)`, which names each page the view navigates to; without React, call it again in
+  `onPathChange`. A title set after the user has left its page, such as once a slow query returns,
+  is ignored, so it never lands on the next page.
 - `ctx.fileId: string | null` is the opened file's ID: the same for everyone with access to the
   file, and kept through renames and moves. A new file's ID can change once, when it first syncs;
   `onPathChange` (or `useFileId()`) tells you when it does. On a link it is `null`, so key anything
@@ -383,10 +390,11 @@ The full `ViewContext` type, with its documentation comments, lives in
 ### Staying in sync
 
 A view is long-lived: the user navigates to another node it matches (the iframe does not reload;
-module state and transitions survive), and the files behind it change. Two bindings keep a view
+module state and transitions survive), and the files behind it change. These bindings keep a view
 current:
 
 - `usePath()` turns navigation into state.
+- `useTitle(title)` names the page for its tab, and each page the view navigates to.
 - `useQuery(query, ...args)` re-renders whenever the query's result changes, because Lightfern runs
   it again when a file it read changes, whoever changed it.
 

@@ -270,6 +270,39 @@ describe("the React bindings", () => {
     expect(screen.getByText("f-1")).toBeDefined();
   });
 
+  it("names the page again after navigating, since a new page starts unnamed", async () => {
+    const port = fakeHost({});
+    await connectTo(port, "board/a");
+    const { useTitle } = await import("./react");
+    const titles: unknown[] = [];
+    const listening = new AbortController();
+    window.addEventListener(
+      "message",
+      (event) => {
+        if (event.data?.type === "title") titles.push(event.data.title);
+      },
+      { signal: listening.signal }
+    );
+
+    const View = () => {
+      useTitle("Pipeline");
+      return null;
+    };
+    render(<View />);
+    await act(async () => {
+      port.push({
+        source: "lf-plugin-host",
+        type: "path",
+        path: "board/b",
+        fileId: null,
+      });
+    });
+    await new Promise((resolve) => setTimeout(resolve));
+    listening.abort();
+
+    expect(titles).toEqual(["Pipeline", "Pipeline"]);
+  });
+
   const roomPush = (connected: boolean, names: string[]) => ({
     source: "lf-plugin-host" as const,
     type: "multiplayer.room" as const,

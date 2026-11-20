@@ -1,5 +1,5 @@
 import { connect, server } from "lightfern:host";
-import { usePath, useQuery } from "lightfern:host/react";
+import { usePath, useQuery, useTitle } from "lightfern:host/react";
 import { createRoot } from "react-dom/client";
 
 import { Candidates } from "./candidates.server";
@@ -12,6 +12,7 @@ function Candidate() {
   // `candidates/ada.md`, so drop the extension too.
   const name = usePath().slice("candidates/".length).replace(/\.md$/, "");
   const steps = useQuery(candidates.steps, name) ?? [];
+  useTitle(name);
 
   return (
     <ul className="steps">

@@ -15,7 +15,7 @@ import type {
   RpcResponse,
   SerializableContext,
   ServerPushMessage,
-  ViewReadyMessage,
+  ViewMessage,
 } from "./protocol";
 
 export class PluginRpcError extends Error {
@@ -50,15 +50,18 @@ export function connect(): Promise<ViewContext> {
       resolve(connected);
     };
     window.addEventListener("message", onMessage);
-    const ready: ViewReadyMessage = { source: "lf-plugin-view", type: "ready" };
-    // Address the ready ping to the concrete host origin where the platform exposes it
-    // (Chromium/Electron, our only host); fall back to any origin elsewhere. The ping
-    // carries no secrets — the capability transfer is the host-sent MessagePort, which
-    // the host only hands over after verifying the message came from this iframe.
-    const hostOrigin = window.location.ancestorOrigins?.[0] ?? "*";
-    window.parent.postMessage(ready, hostOrigin);
+    postToHost({ source: "lf-plugin-view", type: "ready" });
   });
   return connectPromise;
+}
+
+// Everything the view posts up to the host window goes through here. It is addressed to the
+// host's origin where the platform exposes it (Chromium); elsewhere, such as Firefox on a link,
+// to any origin. That gives away nothing new: a parent that isn't Lightfern already gets `ready`
+// and can answer it with a port of its own, after which it is the host as far as the view knows.
+// What guards the real host is that it only hands its port to a `ready` from this iframe.
+function postToHost(message: ViewMessage): void {
+  window.parent.postMessage(message, window.location.ancestorOrigins?.[0] ?? "*");
 }
 
 /** For `server` and `room`: connects, routes `server.*` pushes to `onPush`, and returns the port. */
@@ -235,6 +238,8 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
         ...segments.map(encodeURIComponent),
       ].join("/");
     },
+    setTitle: (title) =>
+      postToHost({ source: "lf-plugin-view", type: "title", title, path }),
     onPathChange: (listener) => {
       pathListeners.add(listener);
       return () => {

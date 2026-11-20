@@ -136,6 +136,12 @@ export interface ViewContext {
    */
   linkTo(path: string): string | null;
   /**
+   * Name the page the view shows, for its tab in Lightfern and the browser tab on the app's
+   * address. A page you haven't named shows the route's or app's name, as does `null`, so call it
+   * on every page; `useTitle` in React does that for you.
+   */
+  setTitle(title: string | null): void;
+  /**
    * Call `listener` with the new `path` when the user opens another node that routes to
    * this view — including one matched by a different contribution, as long as it is the
    * same entry module in the same activation folder. The view stays mounted and the

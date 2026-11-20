@@ -47,18 +47,18 @@ The host imports the same types to drive the other end of the bridge.
 
 ## What the package exports
 
-| Import                             | Contents                                                                                                                                                  |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@lightfern/plugin-sdk`            | `server()`, `room()`, `connect()`, their types, manifest types and zod schema, `matchesPattern`, wire types. Served as `lightfern:host`.                  |
-| `@lightfern/plugin-sdk/react`      | The React bindings `useQuery`, `useRoom`, `usePath`, `useFileId` and `useCurrentUser`, and the 2.x file and room hooks. Served as `lightfern:host/react`. |
-| `@lightfern/plugin-sdk/server`     | `Server`, `Room`, `query`, `UserError` and the `ctx` types, for server code. Served as `lightfern:server`.                                                |
-| `@lightfern/plugin-sdk/manifest`   | Manifest types and `MANIFEST_VERSION`.                                                                                                                    |
-| `@lightfern/plugin-sdk/match`      | The segment-aware glob matcher used for view `match` patterns.                                                                                            |
-| `@lightfern/plugin-sdk/protocol`   | The message shapes that cross the sandbox boundary.                                                                                                       |
-| `@lightfern/plugin-sdk/testing`    | `testManifest()` for tests.                                                                                                                               |
-| `@lightfern/plugin-sdk/theme.css`  | The default app theme: `--lf-*` tokens for light and dark, plus base element rules.                                                                       |
-| `@lightfern/plugin-sdk/docs/*`     | The guide as raw markdown, for tools that serve it.                                                                                                       |
-| `@lightfern/plugin-sdk/examples/*` | The reference app source.                                                                                                                                 |
+| Import                             | Contents                                                                                                                                                              |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@lightfern/plugin-sdk`            | `server()`, `room()`, `connect()`, their types, manifest types and zod schema, `matchesPattern`, wire types. Served as `lightfern:host`.                              |
+| `@lightfern/plugin-sdk/react`      | The React bindings `useQuery`, `useRoom`, `usePath`, `useTitle`, `useFileId` and `useCurrentUser`, and the 2.x file and room hooks. Served as `lightfern:host/react`. |
+| `@lightfern/plugin-sdk/server`     | `Server`, `Room`, `query`, `UserError` and the `ctx` types, for server code. Served as `lightfern:server`.                                                            |
+| `@lightfern/plugin-sdk/manifest`   | Manifest types and `MANIFEST_VERSION`.                                                                                                                                |
+| `@lightfern/plugin-sdk/match`      | The segment-aware glob matcher used for view `match` patterns.                                                                                                        |
+| `@lightfern/plugin-sdk/protocol`   | The message shapes that cross the sandbox boundary.                                                                                                                   |
+| `@lightfern/plugin-sdk/testing`    | `testManifest()` for tests.                                                                                                                                           |
+| `@lightfern/plugin-sdk/theme.css`  | The default app theme: `--lf-*` tokens for light and dark, plus base element rules.                                                                                   |
+| `@lightfern/plugin-sdk/docs/*`     | The guide as raw markdown, for tools that serve it.                                                                                                                   |
+| `@lightfern/plugin-sdk/examples/*` | The reference app source.                                                                                                                                             |
 
 Every code export points at TypeScript source; there is no build step. The root barrel stays free of
 React so Node-side consumers can import it.

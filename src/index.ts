@@ -80,6 +80,7 @@ export type {
   ViewMessage,
   ViewReadyMessage,
   ViewSelectionMessage,
+  ViewTitleMessage,
 } from "./protocol";
 export {
   type Method,
