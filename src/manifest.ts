@@ -18,7 +18,7 @@ export type PluginPermission = FilePermission | DevicePermission | "multiplayer"
 export type ManifestVersion = `${number}.${number}`;
 
 /** The contract version this SDK implements. See {@link PluginManifest.manifestVersion}. */
-export const MANIFEST_VERSION: ManifestVersion = "3.2";
+export const MANIFEST_VERSION: ManifestVersion = "3.3";
 
 /** A host on `supported` can run a plugin on the same major and the same or an older minor. */
 export function supportsManifestVersion(
@@ -59,6 +59,35 @@ export interface HomeViewContribution {
   title?: string;
 }
 
+/** The type of a widget argument. Addresses carry text, so the host converts each value to it. */
+export type WidgetArgType = "string" | "number" | "boolean" | "enum";
+
+export interface WidgetArg {
+  type: WidgetArgType;
+  /** An `enum` argument's allowed values. */
+  values?: string[];
+  /** Whether an embed may leave the argument out. An argument with a `default` is optional too. */
+  optional?: boolean;
+  default?: string | number | boolean;
+  /** What the argument means, for whoever writes an embed, the assistant included. */
+  description: string;
+}
+
+/** A widget's argument values, converted to their declared types. */
+export type WidgetArgValues = Record<string, string | number | boolean>;
+
+export interface WidgetContribution {
+  /** Unique within the app; embeds name it after `#widget=`. */
+  id: string;
+  /** The widget's entry within the plugin, same shape as a view's `entry`. */
+  entry: string;
+  title: string;
+  /** What the widget shows, for whoever chooses one, the assistant included. */
+  description: string;
+  /** Argument name → declaration. May be omitted; the schema defaults it to `{}`. */
+  args?: Record<string, WidgetArg>;
+}
+
 export interface PluginContributions {
   /**
    * May be omitted in `manifest.json`; the host normalizes an absent value to `[]`,
@@ -78,6 +107,11 @@ export interface PluginContributions {
    * which views reach with `server` and `room`. Lightfern runs them on its servers, never in a view.
    */
   servers?: string[];
+  /**
+   * Small parts of the app that notes and the assistant's replies embed, from version 3.3. Each
+   * reaches the app's data through its server code, as views do.
+   */
+  widgets?: WidgetContribution[];
 }
 
 export interface PluginManifest {
@@ -110,9 +144,10 @@ export interface PluginManifest {
   contributes: PluginContributions;
 }
 
-/** Every entry the host builds/serves: each `views[].entry` plus `home.entry` when declared. */
+/** Every entry the host builds/serves: each view's, the home view's and each widget's. */
 export function manifestEntries(manifest: PluginManifest): string[] {
   const entries = manifest.contributes.views.map((view) => view.entry);
   if (manifest.contributes.home) entries.push(manifest.contributes.home.entry);
+  for (const widget of manifest.contributes.widgets ?? []) entries.push(widget.entry);
   return entries;
 }

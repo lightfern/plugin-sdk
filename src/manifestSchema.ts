@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-import type { ManifestVersion, PluginManifest } from "./manifest";
+import type {
+  ManifestVersion,
+  PluginManifest,
+  WidgetArgValues,
+  WidgetContribution,
+} from "./manifest";
 import {
   DEVICE_PERMISSIONS,
   MANIFEST_VERSION,
@@ -45,6 +50,90 @@ const homeViewSchema = z.object({
   title: z.string().min(1).optional(),
 });
 
+// Widget and argument names travel in an address's hash, so they stay URL-safe as written.
+const WIDGET_NAME = /^[A-Za-z][A-Za-z0-9_-]*$/;
+const WIDGETS_SINCE: ManifestVersion = "3.3";
+
+const widgetArgSchema = z
+  .object({
+    type: z.enum(["string", "number", "boolean", "enum"]),
+    values: z.array(z.string().min(1)).min(1).optional(),
+    optional: z.boolean().optional(),
+    default: z.union([z.string(), z.number(), z.boolean()]).optional(),
+    description: z.string().min(1),
+  })
+  .strict()
+  .superRefine((arg, ctx) => {
+    if ((arg.type === "enum") !== (arg.values !== undefined)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "an enum argument lists its `values`, and only an enum does",
+        path: ["values"],
+      });
+    }
+    if (arg.default !== undefined) {
+      const parsed = argValueSchema("default", arg).safeParse(String(arg.default));
+      if (!parsed.success) {
+        ctx.addIssue({
+          code: "custom",
+          message: `must be a valid ${arg.type}`,
+          path: ["default"],
+        });
+      }
+    }
+  });
+
+function refuseDuplicateIds(widgets: { id: string }[], ctx: z.RefinementCtx): void {
+  const seen = new Set<string>();
+  widgets.forEach((widget, i) => {
+    if (seen.has(widget.id)) {
+      ctx.addIssue({
+        code: "custom",
+        message: `a widget with the ID "${widget.id}" is already declared`,
+        path: [i, "id"],
+      });
+    }
+    seen.add(widget.id);
+  });
+}
+
+const widgetNameSchema = z
+  .string()
+  .regex(WIDGET_NAME, "must start with a letter, then letters, digits, '-' or '_'");
+
+const widgetSchema = z.object({
+  id: widgetNameSchema,
+  entry: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  args: z.record(widgetNameSchema, widgetArgSchema).default({}),
+});
+
+/**
+ * Refuses widgets in a manifest older than the version that brought them. A host that parses an
+ * absent version, to explain it, applies this to its own copy of the schema; it skips that case.
+ */
+export function requireWidgetsVersion(
+  manifest: {
+    manifestVersion?: ManifestVersion;
+    contributes: { widgets: readonly unknown[] };
+  },
+  ctx: z.RefinementCtx
+): void {
+  const version = manifest.manifestVersion;
+  if (
+    version !== undefined &&
+    manifest.contributes.widgets.length > 0 &&
+    !supportsManifestVersion(version, WIDGETS_SINCE)
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      message: `widgets need manifestVersion ${WIDGETS_SINCE} or newer`,
+      path: ["contributes", "widgets"],
+    });
+  }
+}
+
 /** `"MAJOR.MINOR"`, or a legacy integer `N` normalized to `"N.0"`. */
 export const manifestVersionSchema = z.union([
   z
@@ -57,7 +146,7 @@ export const manifestVersionSchema = z.union([
     .transform((major): ManifestVersion => `${major}.0`),
 ]);
 
-export const manifestSchema = z.object({
+const manifestObjectSchema = z.object({
   manifestVersion: manifestVersionSchema.refine(
     (version) => supportsManifestVersion(MANIFEST_VERSION, version),
     {
@@ -114,8 +203,11 @@ export const manifestSchema = z.object({
           )
       )
       .default([]),
+    widgets: z.array(widgetSchema).default([]).superRefine(refuseDuplicateIds),
   }),
 });
+
+export const manifestSchema = manifestObjectSchema.superRefine(requireWidgetsVersion);
 
 export type ParsedManifest = z.infer<typeof manifestSchema>;
 
@@ -136,4 +228,64 @@ export function formatManifestErrors(error: z.ZodError): string[] {
     const path = issue.path.join(".");
     return path ? `${path}: ${issue.message}` : issue.message;
   });
+}
+
+type WidgetArgDeclaration = NonNullable<WidgetContribution["args"]>[string];
+
+const listOf = (values: string[], word: "and" | "or") =>
+  values.length > 1
+    ? `${values.slice(0, -1).join(", ")} ${word} ${values[values.length - 1]}`
+    : values.join("");
+
+function argValueSchema(name: string, arg: WidgetArgDeclaration) {
+  const wrong = (problem: string) => (issue: { input?: unknown }) =>
+    issue.input === undefined ? `${name} is missing.` : `${name} ${problem}.`;
+  switch (arg.type) {
+    case "string":
+      return z.string({ error: wrong("must be text") });
+    case "number":
+      // `z.coerce.number()` alone would read an empty value as 0.
+      return z
+        .string({ error: wrong("must be a number") })
+        .trim()
+        .min(1, `${name} must be a number.`)
+        .pipe(z.coerce.number({ error: `${name} must be a number.` }));
+    case "boolean":
+      return z.stringbool({ error: wrong("must be true or false") });
+    case "enum": {
+      const values = (arg.values ?? []) as [string, ...string[]];
+      return z.enum(values, {
+        error: wrong(`must be ${listOf(values, "or")}`),
+      });
+    }
+  }
+}
+
+/**
+ * The check an embed's argument values must pass, built from the widget's declaration. Values
+ * arrive as the text an address carries and leave converted to their declared types; an
+ * undeclared argument is refused.
+ */
+export function widgetArgsSchema(
+  widget: Pick<WidgetContribution, "args">
+): z.ZodType<WidgetArgValues, Record<string, string>> {
+  const shape: Record<string, z.ZodType> = {};
+  for (const [name, arg] of Object.entries(widget.args ?? {})) {
+    const value: z.ZodType = argValueSchema(name, arg);
+    shape[name] =
+      arg.default !== undefined
+        ? value.default(value.parse(String(arg.default)))
+        : arg.optional
+          ? value.optional()
+          : value;
+  }
+  return z.strictObject(shape, {
+    error: (issue) =>
+      issue.code === "unrecognized_keys"
+        ? `This widget has no argument${issue.keys.length > 1 ? "s" : ""} ${listOf(
+            issue.keys.map((key) => `"${key}"`),
+            "and"
+          )}.`
+        : undefined,
+  }) as unknown as z.ZodType<WidgetArgValues, Record<string, string>>;
 }

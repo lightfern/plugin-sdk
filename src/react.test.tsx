@@ -1,7 +1,13 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { FileEntry, HostPushMessage, RpcRequest, RpcResponse } from "./protocol";
+import type {
+  FileEntry,
+  HostPushMessage,
+  RpcRequest,
+  RpcResponse,
+  SerializableContext,
+} from "./protocol";
 
 // `connect()` memoizes its handshake in module scope, so each test loads a fresh copy.
 beforeEach(() => {
@@ -51,7 +57,11 @@ function fakeHost(
   return port;
 }
 
-async function connectTo(port: ReturnType<typeof fakeHost>, path: string) {
+async function connectTo(
+  port: ReturnType<typeof fakeHost>,
+  path: string,
+  widget?: SerializableContext["widget"]
+) {
   const { connect } = await import("./client");
   const ready = new Promise<void>((resolve) => {
     window.addEventListener("message", () => resolve(), { once: true });
@@ -63,7 +73,14 @@ async function connectTo(port: ReturnType<typeof fakeHost>, path: string) {
     data: {
       source: "lf-plugin-host",
       type: "init",
-      context: { pluginId: "deck", path, fileId: null, homePath: "deck", user: null },
+      context: {
+        pluginId: "deck",
+        path,
+        fileId: null,
+        homePath: "deck",
+        user: null,
+        widget,
+      },
     },
   });
   Object.defineProperty(init, "ports", { value: [port] });
@@ -248,6 +265,30 @@ describe("the React bindings", () => {
     act(() => unmount());
     expect(created).toEqual(["blob:mock/0"]);
     expect(revoked).toEqual(["blob:mock/0"]);
+  });
+
+  it("gives a widget its checked argument values", async () => {
+    await connectTo(fakeHost({}), "", {
+      id: "ticket",
+      args: { id: "LIG-123", compact: true },
+    });
+    const { useWidget } = await import("./react");
+
+    const Ticket = () => {
+      const widget = useWidget<{ id: string; compact: boolean }>();
+      return <span>{`${widget?.id} ${widget?.args.id} ${widget?.args.compact}`}</span>;
+    };
+    render(<Ticket />);
+    expect(screen.getByText("ticket LIG-123 true")).toBeDefined();
+  });
+
+  it("gives a home view no widget", async () => {
+    await connectTo(fakeHost({}), "");
+    const { useWidget } = await import("./react");
+
+    const Home = () => <span>{useWidget() === null ? "home" : "widget"}</span>;
+    render(<Home />);
+    expect(screen.getByText("home")).toBeDefined();
   });
 
   it("re-renders the file ID once the file syncs", async () => {

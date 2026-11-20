@@ -61,7 +61,7 @@ older app to version 3 before you do anything else with it.
    starts from the app folder rather than the code folder. Write asset URLs (`src`, `href`, `url()`)
    from `/`, the code folder: `<img src="/logo.png">`. `ctx.open(ctx.homePath)` still opens the home
    view.
-5. **Update the manifest.** Set `"manifestVersion": "3.2"`, remove the `files.read`, `files.write`
+5. **Update the manifest.** Set `"manifestVersion": "3.3"`, remove the `files.read`, `files.write`
    and `multiplayer` permissions, and add `contributes.servers`.
 6. **Check it.** Render every view and read the console. Try each change the views make, and check
    the files it saves are the same as before.

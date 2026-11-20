@@ -14,6 +14,8 @@
 // `source` discriminant; an RpcResponse carries a numeric `id` — that is how the view
 // tells them apart on the one shared channel.
 
+import type { WidgetArgValues } from "./manifest";
+
 export interface SerializableContext {
   pluginId: string;
   path: string;
@@ -23,6 +25,14 @@ export interface SerializableContext {
   user: CurrentUser | null;
   /** The app's web address, which `ctx.linkTo` builds on, or null while it has none. */
   appUrl?: string | null;
+  /** The widget this view renders, or null for a home or file view. */
+  widget?: WidgetInstance | null;
+}
+
+export interface WidgetInstance {
+  id: string;
+  /** The embed's argument values, checked and converted to their declared types. */
+  args: WidgetArgValues;
 }
 
 export interface CurrentUser {
@@ -93,12 +103,21 @@ export interface ViewTitleMessage {
 }
 
 // Everything the view posts up to the host window (not over the port).
+// A widget's content height in CSS pixels, posted by a host-authored script in the view
+// document whenever it changes, so the host can size the frame to it.
+export interface ViewSizeMessage {
+  source: "lf-plugin-view";
+  type: "size";
+  height: number;
+}
+
 export type ViewMessage =
   | ViewReadyMessage
   | ViewKeyDownMessage
   | ViewSelectionMessage
   | ViewFixRequestMessage
-  | ViewTitleMessage;
+  | ViewTitleMessage
+  | ViewSizeMessage;
 
 // Selection commands the host posts to the view window (not over the port — they are
 // answered by the same host-authored script that forwards the selection up, which runs

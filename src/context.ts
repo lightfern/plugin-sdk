@@ -9,6 +9,7 @@ import type {
   FileEncoding,
   FileEntry,
   Peer,
+  WidgetInstance,
 } from "./protocol";
 
 export interface FileWriteOptions {
@@ -120,6 +121,12 @@ export interface ViewContext {
    * when it changes.
    */
   readonly fileId: string | null;
+  /**
+   * The widget this view renders, with its embed's argument values checked and converted, or
+   * `null` for a home or file view. Fixed for the life of the view: an embed with other values
+   * gets a view of its own.
+   */
+  readonly widget: WidgetInstance | null;
   readonly files: FilesApi;
   readonly multiplayer: MultiplayerApi;
   /**

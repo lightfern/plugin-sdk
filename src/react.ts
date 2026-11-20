@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 import { hostContext, type PluginRpcError } from "./client";
 import type { Room } from "./context";
+import type { WidgetArgValues } from "./manifest";
 import type { CurrentUser, FileEncoding, FileEntry, Peer } from "./protocol";
 import type { Room as RoomClass } from "./server";
 import {
@@ -39,6 +40,17 @@ export function useTitle(title: string | null): void {
 export function useFileId(): string | null {
   const ctx = hostContext();
   return useSyncExternalStore(ctx.onPathChange, () => ctx.fileId);
+}
+
+/**
+ * The widget this view renders and its argument values, or `null` for a home or file view. Name
+ * the values' type to read them typed; Lightfern has already checked them against the manifest.
+ */
+export function useWidget<Args extends WidgetArgValues = WidgetArgValues>(): {
+  id: string;
+  args: Args;
+} | null {
+  return hostContext().widget as { id: string; args: Args } | null;
 }
 
 // One store per room name in this view, shared by every hook using that name. The room is

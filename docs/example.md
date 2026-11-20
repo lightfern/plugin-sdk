@@ -26,10 +26,10 @@ give it its own `id`, since two apps with the same `id` run one copy of the code
 
 ## `manifest.json`
 
-The manifest uses `manifestVersion` `"3.2"` and pins exact React versions in `dependencies`. It has
-a home view, one view that opens any route matching `candidates/*`, and one server module. It asks
-for no permissions, because views reach the files through the server code. There's no `package.json`
-and no build config.
+The manifest uses `manifestVersion` `"3.3"` and pins exact React versions in `dependencies`. It has
+a home view, one view that opens any route matching `candidates/*`, one server module, and the
+widget `candidate`, which takes the argument `name`. It asks for no permissions, because views reach
+the files through the server code. There's no `package.json` and no build config.
 
 ## `src/candidates.server.ts`: the server code
 
@@ -71,6 +71,13 @@ or editing the file re-renders without a reload.
 
 Toggling a checkbox calls `candidates.toggleStep(name, line)`. The view keeps no state of its own:
 once the file is saved, `steps` runs again and the box follows the file.
+
+## `src/candidateWidget.tsx`: the `candidate` widget
+
+A card with one candidate's stage and how many of their steps are done, for a note that embeds
+`![Ada](/Hiring#widget=candidate&name=ada)`. It reads `name` from `useWidget()` and reuses the same
+two queries as the views. Clicking it opens the candidate's view in a new tab. See
+[Widgets](widgets.md).
 
 ## `styles.css`
 

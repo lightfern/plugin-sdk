@@ -34,3 +34,9 @@ body {
   box-shadow: var(--lf-hairline);
   cursor: pointer;
 }
+
+.widget {
+  display: flex;
+  gap: var(--lf-gap);
+  align-items: baseline;
+}

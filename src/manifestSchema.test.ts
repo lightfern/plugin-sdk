@@ -97,7 +97,7 @@ describe("safeParseManifest", () => {
   });
 
   it("rejects a minor newer than the SDK's", () => {
-    expectErrorContaining({ ...clone(), manifestVersion: "3.3" }, "manifestVersion");
+    expectErrorContaining({ ...clone(), manifestVersion: "3.4" }, "manifestVersion");
   });
 
   it("rejects a decimal number", () => {
@@ -221,5 +221,79 @@ describe("safeParseManifest", () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(formatManifestErrors(result.error).join("\n")).toContain("name:");
+  });
+});
+
+describe("widgets", () => {
+  const ticket = {
+    id: "ticket",
+    entry: "src/ticket.tsx",
+    title: "Ticket",
+    description: "A ticket's title, status and assignee",
+    args: { id: { type: "string", description: "The ticket's ID, like LIG-123" } },
+  };
+  const withWidgets = (widgets: unknown[], manifestVersion = "3.3") => ({
+    ...clone(),
+    manifestVersion,
+    contributes: { views: [], widgets },
+  });
+  const errorsOf = (input: unknown) => {
+    const result = safeParseManifest(input);
+    return result.success ? [] : formatManifestErrors(result.error);
+  };
+
+  it("reads declared widgets and defaults an omitted list to none", () => {
+    expect(parseManifest(withWidgets([ticket])).contributes.widgets).toEqual([ticket]);
+    expect(parseManifest(clone()).contributes.widgets).toEqual([]);
+  });
+
+  it("defaults a widget's omitted args to none", () => {
+    const { args: _omitted, ...bare } = ticket;
+    expect(parseManifest(withWidgets([bare])).contributes.widgets?.[0]?.args).toEqual(
+      {}
+    );
+  });
+
+  it("refuses two widgets with the same ID, naming it", () => {
+    expect(errorsOf(withWidgets([ticket, ticket]))).toEqual([
+      'contributes.widgets.1.id: a widget with the ID "ticket" is already declared',
+    ]);
+  });
+
+  it("refuses widgets below manifest version 3.3", () => {
+    expect(errorsOf(withWidgets([ticket], "3.2"))).toEqual([
+      "contributes.widgets: widgets need manifestVersion 3.3 or newer",
+    ]);
+  });
+
+  it("refuses an argument whose type is a group of values", () => {
+    const nested = { ...ticket, args: { id: { type: "object", description: "x" } } };
+    expect(safeParseManifest(withWidgets([nested])).success).toBe(false);
+  });
+
+  it("refuses an enum without values, and values on anything else", () => {
+    for (const arg of [
+      { type: "enum", description: "x" },
+      { type: "string", values: ["a"], description: "x" },
+    ]) {
+      expect(
+        safeParseManifest(withWidgets([{ ...ticket, args: { a: arg } }])).success
+      ).toBe(false);
+    }
+  });
+
+  it("refuses a default that doesn't fit its type", () => {
+    const args = { count: { type: "number", default: "many", description: "x" } };
+    expect(errorsOf(withWidgets([{ ...ticket, args }]))).toEqual([
+      "contributes.widgets.0.args.count.default: must be a valid number",
+    ]);
+  });
+
+  it("refuses IDs and argument names that aren't safe in an address", () => {
+    expect(
+      safeParseManifest(withWidgets([{ ...ticket, id: "my ticket" }])).success
+    ).toBe(false);
+    const args = { "a&b": { type: "string", description: "x" } };
+    expect(safeParseManifest(withWidgets([{ ...ticket, args }])).success).toBe(false);
   });
 });

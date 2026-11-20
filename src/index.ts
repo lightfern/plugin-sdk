@@ -16,6 +16,10 @@ export type {
   PluginManifest,
   PluginPermission,
   ViewContribution,
+  WidgetArg,
+  WidgetArgType,
+  WidgetArgValues,
+  WidgetContribution,
 } from "./manifest";
 export {
   DEVICE_PERMISSIONS,
@@ -29,7 +33,9 @@ export {
   manifestVersionSchema,
   type ParsedManifest,
   parseManifest,
+  requireWidgetsVersion,
   safeParseManifest,
+  widgetArgsSchema,
 } from "./manifestSchema";
 export { matchesPattern, validateMatchPattern } from "./match";
 export { validateNetworkPermission } from "./network";
@@ -80,7 +86,9 @@ export type {
   ViewMessage,
   ViewReadyMessage,
   ViewSelectionMessage,
+  ViewSizeMessage,
   ViewTitleMessage,
+  WidgetInstance,
 } from "./protocol";
 export {
   type Method,
