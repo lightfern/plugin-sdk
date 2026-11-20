@@ -106,7 +106,14 @@ const widgetSchema = z.object({
   entry: z.string().min(1),
   title: z.string().min(1),
   description: z.string().min(1),
-  args: z.record(widgetNameSchema, widgetArgSchema).default({}),
+  args: z
+    .record(widgetNameSchema, widgetArgSchema)
+    // An embed's address carries the widget's ID under this name.
+    .refine((args) => !("widget" in args), {
+      message: "is reserved for the widget's ID",
+      path: ["widget"],
+    })
+    .default({}),
 });
 
 /**

@@ -296,4 +296,11 @@ describe("widgets", () => {
     const args = { "a&b": { type: "string", description: "x" } };
     expect(safeParseManifest(withWidgets([{ ...ticket, args }])).success).toBe(false);
   });
+
+  it("refuses an argument named widget, which an address keeps for the widget's ID", () => {
+    const args = { widget: { type: "string", description: "x" } };
+    expect(errorsOf(withWidgets([{ ...ticket, args }]))).toEqual([
+      "contributes.widgets.0.args.widget: is reserved for the widget's ID",
+    ]);
+  });
 });

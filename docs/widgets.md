@@ -45,8 +45,9 @@ Each argument is a simple value:
 | `default`     | The value when an embed leaves it out, which makes the argument optional too. |
 | `description` | What the argument means. Required.                                            |
 
-Argument names follow the same rule as widget IDs. Objects and lists aren't allowed: an embed's
-arguments travel in an address.
+Argument names follow the same rule as widget IDs, except that `widget` is taken: an embed's address
+uses it for the widget's ID. Objects and lists aren't allowed: an embed's arguments travel in an
+address.
 
 ## Embedding a widget
 
