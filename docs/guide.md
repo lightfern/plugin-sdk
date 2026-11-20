@@ -129,7 +129,7 @@ to write them. Concretely:
 
 ```json
 {
-  "manifestVersion": "3.2",
+  "manifestVersion": "3.3",
   "id": "recruiting-ats",
   "name": "Recruiting ATS",
   "version": "1.0.0",
@@ -144,7 +144,7 @@ to write them. Concretely:
 
 - `manifestVersion`: required. This is the SDK version your app is built against, and it covers the
   manifest format, the view and server APIs, the `lightfern:host` and `lightfern:server` imports,
-  and the `--lf-*` theme tokens. Use "3.2".
+  and the `--lf-*` theme tokens. Use "3.3".
 - `id`, `name`, `version`: a URL-safe slug of lowercase letters, digits, `.` and `-`
   (`recruiting-ats`, `com.acme.ats`) that is **unique across every app in the library** (two apps
   sharing an `id` serve one bundle), a human-readable name, and a semver string (display metadata
@@ -172,6 +172,8 @@ to write them. Concretely:
   [Routing paths to views](#routing-paths-to-views)). Optional; omit it for a home-only app.
 - `contributes.servers`: the app's server modules, as paths ending in their extension. See
   [Server code](server.md).
+- `contributes.widgets`: small parts of the app that notes and the assistant's replies embed, each
+  with the arguments it takes. Optional. See [Widgets](widgets.md).
 
 The schema is enforced by the host and is exported from this package as `manifestSchema` (zod), with
 `parseManifest`, `safeParseManifest` and `formatManifestErrors` alongside it.

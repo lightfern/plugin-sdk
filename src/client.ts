@@ -217,6 +217,7 @@ function createContext(context: SerializableContext, port: MessagePort): ViewCon
       return path;
     },
     homePath: context.homePath,
+    widget: context.widget ?? null,
     get fileId() {
       return fileId;
     },

@@ -1,5 +1,5 @@
 {
-  "manifestVersion": "3.2",
+  "manifestVersion": "3.3",
   "id": "recruiting-ats",
   "name": "Recruiting ATS",
   "version": "1.0.0",
@@ -7,6 +7,20 @@
   "contributes": {
     "home": { "entry": "src/home.tsx" },
     "views": [{ "match": "candidates/*", "entry": "src/candidate.tsx" }],
-    "servers": ["src/candidates.server.ts"]
+    "servers": ["src/candidates.server.ts"],
+    "widgets": [
+      {
+        "id": "candidate",
+        "entry": "src/candidateWidget.tsx",
+        "title": "Candidate",
+        "description": "A candidate's stage and how many interview steps are done",
+        "args": {
+          "name": {
+            "type": "string",
+            "description": "The candidate's file name, like ada"
+          }
+        }
+      }
+    ]
   }
 }

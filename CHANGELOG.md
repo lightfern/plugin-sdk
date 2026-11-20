@@ -7,6 +7,18 @@ implements.
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-11-20
+
+`manifestVersion: "3.3"`.
+
+- Apps declare widgets under `contributes.widgets`: small parts of the app that notes and the
+  assistant's replies embed with `![alt](/App#widget=<id>&name=value)`. Each widget lists the
+  arguments it takes, as simple values, under any name but `widget`. See [Widgets](docs/widgets.md).
+- `useWidget()` and `ctx.widget` give a widget its ID and its arguments, checked and converted to
+  their types. `widgetArgsSchema` builds that check from a declaration, and its errors name the
+  argument in plain words, like `size must be small or large.`
+- The reference app has a `candidate` widget.
+
 ## [3.2.0] - 2026-11-19
 
 `manifestVersion: "3.2"`.
