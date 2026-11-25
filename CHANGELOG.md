@@ -7,6 +7,14 @@ implements.
 
 ## [Unreleased]
 
+## [3.3.1] - 2026-11-25
+
+- Controls come styled: a `<button>` with no class, or one with `lf-button`, is Lightfern's
+  secondary button, and `data-variant="primary"` or `"ghost"` changes it. Text inputs and textareas
+  with no class, or with `lf-input`, are Lightfern's text field. The rules sit in `:where()`, so any
+  rule in an app's own CSS wins.
+- The widgets guide says a widget fills the note's card edge to edge.
+
 ## [3.3.0] - 2026-11-20
 
 `manifestVersion: "3.3"`.

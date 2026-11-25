@@ -95,6 +95,9 @@ createRoot(document.getElementById("root")!).render(<TicketCard />);
 
 - **Data:** call the app's server code with `server()`, `room()` and `useQuery`, as views do. The
   widget reaches it as the person looking at it, so it shows what they can see.
+- **Edges:** the note draws the widget's card, its corners and a bar with the app's name, and the
+  page already sits on the card's colour. Fill it edge to edge, with no border, radius, shadow,
+  margin or background of your own.
 - **Size:** a widget is as wide as the note's column and as tall as its content, up to a limit, past
   which it scrolls. Don't give the page a fixed height.
 - **Path:** `ctx.path` is `""`, the app folder. `ctx.open` opens the app's views, as from the home

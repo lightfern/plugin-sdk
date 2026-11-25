@@ -105,8 +105,20 @@ lines in the same colour, the doubled rim you are trying not to draw, so pick on
 
 ## Controls
 
-**Controls share one recipe.** Size every button, input and select off the same height and the same
-end padding on both sides:
+**Controls come styled.** A `<button>` with no class of its own is Lightfern's secondary button.
+Give the view's one main action `data-variant="primary"`, and a quiet button, such as a toolbar
+icon, `data-variant="ghost"`. A text input or textarea with no class is Lightfern's text field. When
+a control needs a class, add `lf-button` or `lf-input` beside it to keep the look:
+
+```html
+<button data-variant="primary">Save</button>
+<button class="lf-button share" data-variant="ghost">Share</button>
+<input placeholder="City or town" />
+```
+
+Any rule in your own CSS beats these defaults, so restyle controls only for a view with its own
+look. There, **controls share one recipe.** Size every button, input and select off the same height
+and the same end padding on both sides:
 
 ```css
 .control {
