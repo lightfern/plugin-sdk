@@ -14,6 +14,7 @@ implements.
   with no class, or with `lf-input`, are Lightfern's text field. The rules sit in `:where()`, so any
   rule in an app's own CSS wins.
 - The widgets guide says a widget fills the note's card edge to edge.
+- The guide says the home view's page always shows the app's name in the desktop app's tab.
 
 ## [3.3.0] - 2026-11-20
 

@@ -378,7 +378,8 @@ throw if it hasn't resolved.
   not their ID). A page you haven't named shows the default, as does `null`, so in React use
   `useTitle(title)`, which names each page the view navigates to; without React, call it again in
   `onPathChange`. A title set after the user has left its page, such as once a slow query returns,
-  is ignored, so it never lands on the next page.
+  is ignored, so it never lands on the next page. The home view's own page always shows the app's
+  name, so name the pages it opens, not the home page.
 - `ctx.fileId: string | null` is the opened file's ID: the same for everyone with access to the
   file, and kept through renames and moves. A new file's ID can change once, when it first syncs;
   `onPathChange` (or `useFileId()`) tells you when it does. On a link it is `null`, so key anything
